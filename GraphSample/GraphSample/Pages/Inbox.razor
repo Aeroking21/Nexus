@@ -1,0 +1,92 @@
+<!-- Copyright (c) Microsoft Corporation.
+     Licensed under the MIT license. -->
+
+@page "/inbox"
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using TimeZoneConverter
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+
+<AuthorizeView>
+    <Authorized>
+        <h1 class="mb-3">Inbox</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Sender</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var mail in allMessages)
+            {
+                <tr>
+                    <td>@mail.Subject</td>
+                    <td>@mail.Sender</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    private GraphServiceClient? graphClient;
+    private IList<Message> allMessages = new List<Message>();
+    private string? dateTimeFormat;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user
+        var user = (await authenticationStateTask).User;
+        var graphTimeZone = user.GetUserGraphTimeZone();
+        dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+
+        // Calculate the start and end of the current week in user's time zone
+        var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
+        var endOfWeek = startOfWeek.AddDays(7);
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        var mailPage = await graphClient.Me
+            .Messages
+            .GetAsync( config => 
+                {
+                    config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+                    config.QueryParameters.Select = new string[] { "subject", "sender"};
+                    config.QueryParameters.Orderby = new string[] { "receivedDateTime" };
+                });
+
+        allMessages = mailPage?.Value ?? new List<Message>();
+    }
+
+    private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
+    {
+        // Time zone returned by Graph could be Windows or IANA style
+        // TimeZoneConverter can take either
+        TimeZoneInfo userTimeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
+
+        // Assumes Sunday as first day of week
+        int diff = System.DayOfWeek.Sunday - today.DayOfWeek;
+
+        // create date as unspecified kind
+        var unspecifiedStart = DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
+
+        // convert to UTC
+        return TimeZoneInfo.ConvertTimeToUtc(unspecifiedStart, userTimeZone);
+    }
+}
