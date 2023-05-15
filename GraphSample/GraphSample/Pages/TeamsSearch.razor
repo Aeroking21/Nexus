@@ -11,14 +11,14 @@
 
 <AuthorizeView>
     <Authorized>
-        <h1 class="mb-3">Teams</h1>
+        <h1 class="mb-3">Teams Search</h1>
         <table class="table">
             <tbody>
                 @foreach (var teamsChat in chats)
                 {
                     <tr>
                         <td>@teamsChat?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Summary</td>
-                        <td> hello </td>
+                        <td> Hello </td>
                     </tr>
                 }
             </tbody>
