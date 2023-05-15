@@ -112,5 +112,4 @@ obj/Debug/net7.0/BlazorWebAssem.AssemblyInfo.cs
 .gitignore
 obj/Debug/net7.0/BlazorWebAssem.csproj.AssemblyReference.cache
 obj/Debug/net7.0/BlazorWebAssem.GlobalUsings.g.cs
-*.json
 bin/Debug/net7.0/Microsoft.Authentication.WebAssembly.Msal.dll
