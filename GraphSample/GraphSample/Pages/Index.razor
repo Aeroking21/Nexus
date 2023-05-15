@@ -44,7 +44,13 @@
     .lists {
         border: 1px solid rgba(190, 190, 190, 0.8);
         background-color: #ffffff5a;
-        padding: auto;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 2%;
+    }
+
+    .tasks{
+        text-align: left;
     }
 </style>
 
@@ -59,13 +65,22 @@
                         To Do:
                         @foreach (var key in TaskLists.Keys)
                         {
-                            <div class="lists">
-                                <h4>@key</h4>
-                                @foreach (var item in TaskLists[key].Value)
-                                {
-                                    <div>@item.Title</div>
-                                }
-                            </div>
+                            @if (TaskLists[key].Value.Count != 0){
+                                <div class="lists">
+                                    <h4>@key.Split("|")[0]</h4>
+                                    <hr>
+                                    @foreach (var item in TaskLists[key].Value)
+                                    {
+                                        <div class="tasks">@item.Title</div>
+                                        
+                                        string ListId = @key.Split("|")[1];
+                                        string TaskId = @item.Id;
+                                        
+                                        <button @onclick="() => CompleteTask(ListId,TaskId)">Click Me</button>
+                                    }
+                                </div>
+                            }
+                                
                         }
                         
                     </div>
@@ -135,11 +150,23 @@
         {
             //ids.Add(item.Id);
             var resultTasks = await graphClient.Me.Todo.Lists[item.Id].Tasks.GetAsync();
-            TaskLists[item.DisplayName] = resultTasks;
+            var key = item.DisplayName + "|" + item.Id;
+            TaskLists[key] = resultTasks;
             //toDoTasks.Add(resultTasks);
         }
 
 
+    }
+
+    public async Task CompleteTask(string ListId, string TaskId){
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new TodoTask
+        {
+            Status = Microsoft.Graph.Models.TaskStatus.Completed
+        };
+        var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
+
+        Console.WriteLine(result.Status);
     }
 
     public class TodoItem
