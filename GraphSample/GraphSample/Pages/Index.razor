@@ -2,15 +2,84 @@
      Licensed under the MIT license. -->
 
 @page "/"
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using TimeZoneConverter
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+
+<style>
+    .item {
+        color: #000000;
+        background: #2a9cb6;
+    }
+
+    .tile {
+        width: 50px;
+        height: 30px;
+        margin: 1%;
+        padding: 3%
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        padding: 10px;
+        gap: 15px;
+        height: 600px;
+    }
+
+    .grid-item {
+        background-color: #98c5ff;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
+        padding: 5px;
+        font-size: 30px;
+        text-align: center;
+        border-radius: 10px;
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 1.1rem;
+    }
+
+    .lists {
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        background-color: #ffffff5a;
+        padding: auto;
+    }
+</style>
 
 <div class="p-5 mb-4 bg-light rounded-3">
     <div class="container-fluid py-5">
-        <h1>Blazor Client-side Graph Tutorial</h1>
-        <p class="lead">This sample app shows how to use the Microsoft Graph API to access a user's data from a Blazor client-side app</p>
         <AuthorizeView>
             <Authorized>
-                <h4>Welcome @context?.User?.Identity?.Name</h4>
-                <p>Use the navigation bar on the left to get started.</p>
+                <h4>Welcome @context?.User?.Identity?.Name!</h4>
+                <h1>Dashboard</h1>
+                <div class="grid-container">
+                    <div class="grid-item">
+                        To Do:
+                        @foreach (var key in TaskLists.Keys)
+                        {
+                            <div class="lists">
+                                <h4>@key</h4>
+                                @foreach (var item in TaskLists[key].Value)
+                                {
+                                    <div>@item.Title</div>
+                                }
+                            </div>
+                        }
+                        
+                    </div>
+                    <div class="grid-item">
+                        Calendar
+                        @* <mgt-teams-channel-picker></mgt-teams-channel-picker> *@
+                    </div>
+                    <div class="grid-item">
+                        Schedule
+                        <mgt-agenda></mgt-agenda>
+                    </div>  
+                    <div class="grid-item">4</div>
+                    <div class="grid-item">5</div>
+                </div>
             </Authorized>
             <NotAuthorized>
                 <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
@@ -18,3 +87,64 @@
         </AuthorizeView>
     </div>
 </div>
+
+@code{
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    private GraphServiceClient? graphClient;
+
+    private string? dateTimeFormat;
+
+    private IList<TodoTaskList> toDos = new List<TodoTaskList>();
+    
+    private IList<TodoTaskCollectionResponse> toDoTasks = new List<TodoTaskCollectionResponse>();
+
+    Dictionary<string, TodoTaskCollectionResponse> TaskLists = new Dictionary<string, TodoTaskCollectionResponse>();    
+    //private TodoTaskCollectionResponse? resultTasks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user
+        var user = (await authenticationStateTask).User;
+
+        var graphTimeZone = user.GetUserGraphTimeZone();
+        dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+
+        // Calculate the start and end of the current week in user's time zone
+        //var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
+        //var endOfWeek = startOfWeek.AddDays(7);
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        var toDoList = await graphClient.Me.Todo.Lists.GetAsync(
+            config=>{
+                config.QueryParameters.Top = 5;
+            }
+        );
+
+        toDos = toDoList?.Value ?? new List<TodoTaskList>();
+
+        foreach(var item in toDos)
+        {
+            //ids.Add(item.Id);
+            var resultTasks = await graphClient.Me.Todo.Lists[item.Id].Tasks.GetAsync();
+            TaskLists[item.DisplayName] = resultTasks;
+            //toDoTasks.Add(resultTasks);
+        }
+
+
+    }
+
+    public class TodoItem
+    {
+        public string? Title { get; set; }
+        public bool IsDone { get; set; }
+    }
+}
