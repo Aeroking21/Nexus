@@ -22,58 +22,36 @@
                         /*<img src=""/>*/
                         <div class="emailEntryBox">
                             <div class="emailEntryData">
-                                <h3>@mail.Subject</h3>
-                                <p>@mail.Sender</p>
+                                <p class="subject">@mail.Subject</p>
+                                <p class="sender">@mail.Sender</p>
+                                <p class="content">Content</p>
                             </div>
 
-                            <div class="emailDateTime">60!</div>
+                            <div class="emailDateTime">3:30PM</div>
                         </div>
                     }
                 </div>
             </div>
 
-            <div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Organizer</th>
-                            <th>Subject</th>
-                            <th>Start</th>
-                            <th>End</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var calendarEvent in events)
-                        {
-                            <tr>
-                                <td>@calendarEvent?.Organizer?.EmailAddress?.Name</td>
-                                <td>@calendarEvent?.Subject</td>
-                                <td>@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</td>
-                                <td>@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+            <div class="calSec">
+                <div class="calList">
+                    @foreach (var calendarEvent in events)
+                    {
+                        /*<img src=""/>*/
+                        <div class="calEntryBox">
+                            <div class="calEntryData">
+                                <p class="subject">@calendarEvent?.Subject</p>
+                                <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
+                                <p class="content">Content</p>  
+                            </div>
 
-            <div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>Sender</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var mail in allMessages)
-                        {
-                            <tr>
-                                <td>@mail.Subject</td>
-                                <td>@mail.Sender</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                            <div class="calDateTime">
+                                <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
+                                <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
 
             <div>
@@ -102,48 +80,101 @@
                 display: flex;
                 justify-content: space-between;
             }
-              
+            
             .container div {
                 width: 100%;
                 padding: 5px;
             }
 
-            /* Make nice box */
-            .emailList{
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                gap: 30px;
+            /* 
+             * EMAILS 
+            */
+
+            .emailSec{
+                max-height: 78vh;
+                overflow-y: scroll;
             }
 
             .emailEntryBox {
-                position: relative;
-                width: 400px;
-                height: 100px;
-                background: #fff;
-                cursor: pointer;
-                box-shadow: 10px 10px 15px rgba(0,0,0,0.025);
-            }
-
-            .emailEntryBox::before{
-                content: '';
-                position: absolute;
-                width: 6px;
-                height: 100%;
-                background: #f00;
-            }
-
-            .emailEntryData {
-                position: relative;
                 display: flex;
-                align-items: center;
-                height: 100%;
+                /*background: linear-gradient(to right top, rgba(255,255,255,1), rgba(255,255,255,0.8);*/
+                box-shadow: 6px 6px 20px rgba(122 , 122, 122,0.2);
+                justify-content: space-between;
+            }
+
+            .emailEntryData .subject {
+                padding: 0;
+                margin-bottom: 0;
+                font-size:large
+            }
+
+            .emailEntryData .sender {
+                padding: 0;
+                margin-bottom: 0;
+                font-size: small;
+            }
+
+            .emailEntryData .content {
+                padding: 0;
+                margin-bottom: 0;
+                font-size: small;
             }
 
             .emailDateTime{
-
+                padding: 0;
+                font-size: small;
+                margin-top: 27px;
             }
             
+            /* 
+             * CALENDAR
+            */
+
+            .calSec {
+                max-height: 78vh;
+                overflow-y: scroll;
+            }
+
+            .calEntryBox {
+                display: flex;
+                /*background: linear-gradient(to right top, rgba(255,255,255,1), rgba(255,255,255,0.8);*/
+                box-shadow: 6px 6px 20px rgba(122, 122, 122,0.2);
+                justify-content: space-between;
+            }
+
+            .calEntryData .subject {
+                padding: 0;
+                margin-bottom: 0;
+                font-size: large
+            }
+
+            .calEntryData .organizer {
+                padding: 0;
+                margin-bottom: 0;
+                font-size: small;
+            }
+
+            .calEntryData .content {
+                padding: 0;
+                margin-bottom: 0;
+                font-size: small;
+            }
+
+            .calDateTime {
+                justify-content: space-between;
+            }
+
+            .calDateTime .begin{
+                padding: 0;
+                font-size: small;
+                margin-bottom: 0;
+                margin-top: 27px;
+            }
+
+            .calDateTime .fin {
+                padding: 0;
+                font-size: small;
+            }
 
         </style>
 
