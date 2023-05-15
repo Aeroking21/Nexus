@@ -63,6 +63,7 @@
         graphClient = clientFactory.GetAuthenticatedClient();
 
         var mailPage = await graphClient.Me
+            .MailFolders["Inbox"]
             .Messages
             .GetAsync( config => 
                 {
