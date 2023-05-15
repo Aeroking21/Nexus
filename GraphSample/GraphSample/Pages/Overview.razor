@@ -126,12 +126,13 @@
             });
 
         var mailPage = await graphClient.Me
+            .MailFolders["Inbox"]
             .Messages
             .GetAsync( config => 
                 {
                     config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
                     config.QueryParameters.Select = new string[] { "subject", "sender"};
-                    config.QueryParameters.Orderby = new string[] { "receivedDateTime" };
+                    config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
                 });
         
         var chatPage = await graphClient.Me
