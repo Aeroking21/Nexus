@@ -13,62 +13,139 @@
     <Authorized>
         <h1 class="mb-3">Overview</h1>
         <a href="/newevent" class="btn btn-light btn-sm mb-3">New event</a>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Organizer</th>
-                    <th>Subject</th>
-                    <th>Start</th>
-                    <th>End</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach(var calendarEvent in events)
-                {
-                    <tr>
-                        <td>@calendarEvent?.Organizer?.EmailAddress?.Name</td>
-                        <td>@calendarEvent?.Subject</td>
-                        <td>@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</td>
-                        <td>@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Subject</th>
-                    <th>Sender</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var mail in allMessages)
-            {
-                <tr>
-                    <td>@mail.Subject</td>
-                    <td>@mail.Sender</td>
-                </tr>
+        <div class="container">
+            <div class="emailSec">
+                <div class="emailList">
+                    @foreach (var mail in allMessages)
+                    {
+                        /*<img src=""/>*/
+                        <div class="emailEntryBox">
+                            <div class="emailEntryData">
+                                <h3>@mail.Subject</h3>
+                                <p>@mail.Sender</p>
+                            </div>
+
+                            <div class="emailDateTime">60!</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Organizer</th>
+                            <th>Subject</th>
+                            <th>Start</th>
+                            <th>End</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var calendarEvent in events)
+                        {
+                            <tr>
+                                <td>@calendarEvent?.Organizer?.EmailAddress?.Name</td>
+                                <td>@calendarEvent?.Subject</td>
+                                <td>@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</td>
+                                <td>@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Sender</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mail in allMessages)
+                        {
+                            <tr>
+                                <td>@mail.Subject</td>
+                                <td>@mail.Sender</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Sender</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var teamsChat in chats)
+                        {
+                            <tr>
+                                <td>@teamsChat</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <style>
+            /* Split page into 3! */
+            .container {
+                display: flex;
+                justify-content: space-between;
             }
-            </tbody>
-        </table>
+              
+            .container div {
+                width: 100%;
+                padding: 5px;
+            }
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Sender</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach(var teamsChat in chats)
-                {
-                    <tr>
-                        <td>@teamsChat</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            /* Make nice box */
+            .emailList{
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .emailEntryBox {
+                position: relative;
+                width: 400px;
+                height: 100px;
+                background: #fff;
+                cursor: pointer;
+                box-shadow: 10px 10px 15px rgba(0,0,0,0.025);
+            }
+
+            .emailEntryBox::before{
+                content: '';
+                position: absolute;
+                width: 6px;
+                height: 100%;
+                background: #f00;
+            }
+
+            .emailEntryData {
+                position: relative;
+                display: flex;
+                align-items: center;
+                height: 100%;
+            }
+
+            .emailDateTime{
+
+            }
+            
+
+        </style>
 
     </Authorized>
     <NotAuthorized>
