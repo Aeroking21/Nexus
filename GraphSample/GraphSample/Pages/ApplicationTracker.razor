@@ -1,0 +1,32 @@
+﻿@using Microsoft.Graph.Models
+@using TimeZoneConverter
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+
+<AuthorizeView>
+    <Authorized>
+        <h1 class="mb-3">Application Dashboard</h1>
+        <mgt-login></mgt-login>
+        <mgt-todo></mgt-todo>
+        <table class="table">
+            <thead>
+                <tr>
+
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+
+
+}
+
