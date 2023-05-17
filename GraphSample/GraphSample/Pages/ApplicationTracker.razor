@@ -17,6 +17,8 @@
                 <tr>
                     <th>Comapny</th>
                     <th>Role</th>
+                    <th>Associated emails</th>
+                    <th>Assessments</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,6 +27,23 @@
                     <tr>
                         <td>@timeline.company</td>
                         <td>@timeline.role</td>
+                        <td>
+                            <div class="email-container">
+                                @foreach (var email in timeline.associatedEmailAddresses)
+                                {
+                                    <div>@email</div>
+                                    <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; overflow-x: auto;">
+                                @foreach (var assessment in timeline.assessments)
+                                {
+                                    <div style="min-width: 200px;">@assessment.type</div>
+                                }
+                            </div>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -34,6 +53,19 @@
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
+
+<style>
+    .email-container {
+        height: 2.5em;
+        overflow-y: scroll;
+    }
+    .remove-button {
+        cursor: pointer;
+        color: red;
+        margin-left: 0.5em;
+    }
+</style>
+
 
 @code {
     [CascadingParameter]
@@ -78,6 +110,20 @@
         allMessages = mailPage?.Value ?? new List<Message>();
 
         timelines = await backendApiService.getUserTimelinesAsync("ks2220");//user?.Identity?.Name);
+    }
+
+
+    public async void RemoveEmail(string email, int timelineID)
+    {
+        var response = await backendApiService.removeEmail(email, "ks2220", timelineID);
+
+        if (response)
+        {
+            var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+            var timeline = timelines.Find(tl => tl.timelineID == timelineID);
+            timeline = newTimeline;
+        }
+
     }
 
 
