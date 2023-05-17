@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using GraphSample;
 using GraphSample.Graph;
+using Microsoft.Fast.Components.FluentUI;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -13,6 +14,13 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // HttpClient for passing into GraphServiceClient constructor
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://graph.microsoft.com") });
+
+builder.Services.AddFluentUIComponents(options =>
+{
+    options.HostingModel = BlazorHostingModel.WebAssembly;
+    options.IconConfiguration = ConfigurationGenerator.GetIconConfiguration();
+    options.EmojiConfiguration = ConfigurationGenerator.GetEmojiConfiguration();
+});
 
 builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAccount>(options =>
 {

@@ -6,11 +6,15 @@
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
+@using Microsoft.Fast.Components.FluentUI
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <AuthorizeView>
     <Authorized>
+        <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
+        <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
+
         <h1 class="mb-3">Overview</h1>
         <a href="/newevent" class="btn btn-light btn-sm mb-3">New event</a>
 
@@ -19,7 +23,7 @@
                 <div class="emailList">
                     @foreach (var mail in allMessages)
                     {
-                        /*<img src=""/>*/
+                        /*<img src=""/>
                         <div class="emailEntryBox">
                             <div class="emailEntryData">
                                 <p class="subject">@mail.Subject</p>
@@ -29,6 +33,16 @@
 
                             <div class="emailDateTime">3:30PM</div>
                         </div>
+                        */
+                        <FluentCard>
+                            <div class="emailEntryData">
+                                <p class="subject">@mail.Subject</p>
+                                <p class="sender">@mail.Sender</p>
+                                <p class="content">Content</p>
+                            </div>
+
+                            <div class="emailDateTime">3:30PM</div>
+                        </FluentCard>
                     }
                 </div>
             </div>
@@ -38,18 +52,21 @@
                     @foreach (var calendarEvent in events)
                     {
                         /*<img src=""/>*/
-                        <div class="calEntryBox">
-                            <div class="calEntryData">
-                                <p class="subject">@calendarEvent?.Subject</p>
-                                <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
-                                <p class="content">Content</p>  
-                            </div>
+                        <FluentCard>
+                            <div class="calEntryBox">
+                                <div class="calEntryData">
+                                    <p class="subject">@calendarEvent?.Subject</p>
+                                    <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
+                                    <p class="content">Content</p>  
+                                </div>
 
-                            <div class="calDateTime">
-                                <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
-                                <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
+                                <div class="calDateTime">
+                                    <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
+                                    <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
+                                </div>
                             </div>
-                        </div>
+                        </FluentCard>
+                    }
                     }
                 </div>
             </div>
