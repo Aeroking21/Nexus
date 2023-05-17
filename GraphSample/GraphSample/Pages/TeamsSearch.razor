@@ -8,12 +8,18 @@
 @using TimeZoneConverter
 @using System
 @using System.Text.Json;
+@using Microsoft.Fast.Components.FluentUI
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Teams Search</h1>
+
+        <FluentSearch @bind-Value="searchValue" style="width:80%;" @oninput="HandleInput" @onkeypress="HandleKeyPress" >
+           
+        </FluentSearch>
+
         <table class="table">
             <thead>
                 <tr>
@@ -47,6 +53,8 @@
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
+    private string searchValue = string.Empty;
+
     public class Author
     {
         public string Sender { get; }
@@ -67,6 +75,19 @@
     private GraphServiceClient? graphClient;
     private List<Author> data_response = new List<Author>();
 
+    private void HandleInput(ChangeEventArgs e)
+    {
+        searchValue = e.Value.ToString();
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            // call the async function from here
+            Console.WriteLine("Search value: " + searchValue);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,11 +106,11 @@
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                        {
+                    {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                            {
+                        {
                                     EntityType.Message,
                                 },
                                 Query = new SearchQuery
@@ -103,11 +124,11 @@
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                        {
+                    {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                            {
+                        {
                                     EntityType.ChatMessage,
                                 },
                                 Query = new SearchQuery
@@ -182,5 +203,5 @@
 
         //data_response.Add(new Author(searchItems?["subject"].ToString(), messageName, searchItems["webLink"].ToString()));
     }
-    }
+}
 

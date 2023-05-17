@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using GraphSample;
 using GraphSample.Graph;
 using GraphSample.Services;
+using Microsoft.Fast.Components.FluentUI;
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -36,5 +38,7 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
 
 builder.Services.AddScoped<GraphClientFactory>();
 builder.Services.AddScoped<IBackendApiService, BackendApiService>();
+builder.Services.AddFluentUIComponents();
+
 
 await builder.Build().RunAsync();
