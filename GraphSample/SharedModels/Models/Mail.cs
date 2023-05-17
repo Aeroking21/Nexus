@@ -2,8 +2,8 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace WebBackend.Models
-{
+namespace SharedModels.Models;
+
 	public class Mail
 	{
         [BsonId]
@@ -17,5 +17,5 @@ namespace WebBackend.Models
 
         public DateTime ReceivedTime { get; set; }
     }
-}
+
 
