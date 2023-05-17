@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace SharedModels.Models;
+namespace WebBackend.Models;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AssessmentType

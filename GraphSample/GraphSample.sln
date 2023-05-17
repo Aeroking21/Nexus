@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphSample", "GraphSample\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebBackend", "WebBackend\WebBackend.csproj", "{D2E12BF1-D808-47B6-B9F1-C43D85A5CFF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "SharedModels\SharedModels.csproj", "{DF9E15A1-F437-46FF-9CF7-3B8168199A33}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{D2E12BF1-D808-47B6-B9F1-C43D85A5CFF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2E12BF1-D808-47B6-B9F1-C43D85A5CFF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2E12BF1-D808-47B6-B9F1-C43D85A5CFF6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DF9E15A1-F437-46FF-9CF7-3B8168199A33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DF9E15A1-F437-46FF-9CF7-3B8168199A33}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DF9E15A1-F437-46FF-9CF7-3B8168199A33}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DF9E15A1-F437-46FF-9CF7-3B8168199A33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -14,15 +14,4 @@
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SharedModels\SharedModels.csproj">
-      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
-    </ProjectReference>
-  </ItemGroup>
 </Project>
