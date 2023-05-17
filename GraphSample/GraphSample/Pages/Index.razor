@@ -65,6 +65,11 @@
         float: left;
     }
 
+    .left-contentC {
+        float: left;
+        text-decoration: line-through;
+    }
+
     .right-content {
         float: right;
     }
@@ -141,10 +146,10 @@
                                             if (item.Status == Microsoft.Graph.Models.TaskStatus.Completed)
                                             {
                                                 <div class="tasks">
-                                                    <span class="left-content">@item.Title</span>
+                                                    <span class="left-contentC">@item.Title</span>
                                                     <span class="right-content">
 
-                                                        <button class="default-button @buttonClass" @onclick="() => { UnDoTask(ListId,TaskId); ClickedButton(); }">Completed</button>
+                                                        <button class="default-button @buttonClass" @onclick="() => { UnDoTask(ListId,TaskId); ClickedButton(); }">Undo</button>
                                                         <button class="default-button @buttonClass" @onclick="() => { DeleteTask(ListId,TaskId); ClickedButton(); }">Delete</button>
                                                     </span>
                                                 </div>
@@ -187,81 +192,7 @@
                 </div>
             </Authorized>
             <NotAuthorized>
-                <h4>Welcome @context?.User?.Identity?.Name!</h4>
-                <h1>Dashboard</h1>
-                <div class="grid-container">
-                    <div class="grid-item">
-                        To Do:
-                        @if (TaskLists.Count != 0)
-                        {
-                            @foreach (var key in TaskLists.Keys)
-                            {
-                                @if (TaskLists[key].Value?.Count != 0){
-                                    <div class="lists">
-                                        <h4>@key.Split("|")[0]</h4>
-                                        <hr>
-                                        @foreach (var item in TaskLists[key].Value)
-                                        {
-                                            string ListId = @key.Split("|")[1];
-                                            string TaskId = @item.Id;
-                                            bool isClicked = false;
-                                            string buttonClass = "";
-
-                                            void ClickedButton()
-                                            {
-                                                isClicked = true;
-                                                buttonClass = "-clicked";
-                                                Console.WriteLine(buttonClass);
-                                            }
-
-                                            if (item.Status == Microsoft.Graph.Models.TaskStatus.Completed)
-                                            {
-                                                <div class="tasks">
-                                                    <span class="left-content">@item.Title</span>
-                                                    <span class="right-content">
-
-                                                        <button class="default-button @buttonClass" @onclick="() => { UnDoTask(ListId,TaskId); ClickedButton(); }">Completed</button>
-                                                        <button class="default-button @buttonClass" @onclick="() => { DeleteTask(ListId,TaskId); ClickedButton(); }">Delete</button>
-                                                    </span>
-                                                </div>
-                                            }
-                                            else if (item.Status == Microsoft.Graph.Models.TaskStatus.NotStarted){
-                                                <div class="tasks">
-                                                    <span class="left-content">@item.Title</span>
-                                                    <span class="right-content">
-                                                        @* <button class="default-button" @onclick="() => { CompleteTask(ListId, TaskId); ClickedButton(); }">Completed</button> *@
-
-                                                        <button class="default-button @buttonClass" @onclick="() => { CompleteTask(ListId,TaskId); ClickedButton(); }">Completed</button>
-                                                        <button class="default-button @buttonClass" @onclick="() => { DeleteTask(ListId,TaskId); ClickedButton(); }">Delete</button>
-                                                    </span>
-                                                </div>
-                                            }
-                                            
-                                        }
-                                    </div>
-                                }
-                                    
-                            }
-                        }
-                        else
-                        {
-                            <p>No To Do's</p>
-
-                        }
-                        
-                    </div>
-                    <div class="grid-item">
-                        Emails
-                        <mgt-todo></mgt-todo>
-                    </div>
-                    <div class="grid-item">
-                        Schedule
-                       
-
-                    </div>  
-                    <div class="grid-item">4</div>
-                    <div class="grid-item">5</div>
-                </div>
+                <h4>Not authorized using Microsoft.AspNetCore.Components.WebAssembly.Authentication</h4>
                 <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
             </NotAuthorized>
         </AuthorizeView>
