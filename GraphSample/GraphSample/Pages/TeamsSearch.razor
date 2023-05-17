@@ -6,6 +6,8 @@
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
+@using System
+@using System.Text.Json;
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
@@ -14,28 +16,68 @@
         <h1 class="mb-3">Teams Search</h1>
         <table class="table">
             <tbody>
-                @foreach (var teamsChat in chats)
-                {
+                @foreach (var data in data_response)
+                    {
                     <tr>
-                        <td>@teamsChat?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Summary</td>
-                        <td> Hello </td>
+                        <td>hi</td>
+                        <td>
+                            @data.Sender
+                            @data.Title
+                            <a href="@data.Url"> Link</a>
+                        </td>
+
                     </tr>
                 }
             </tbody>
         </table>
     </Authorized>
+
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
 
 @code{
+
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
+    public class Author
+
+    {
+        private string sender;
+        private string title;
+        private string webLink;
+
+        public Author(string sender, string title, string webLink)
+        {
+            this.sender = sender;
+            this.title = title;
+            this.webLink = webLink;
+
+        }
+
+        public string Sender
+        {
+            get { return sender; }
+        }
+
+        public string Title
+        {
+            get { return title; }
+        }
+        public string Url
+        {
+            get { return webLink; }
+
+        }
+
+    }
+
+
     private GraphServiceClient? graphClient;
-    private List<Microsoft.Graph.Search.Query.QueryResponse> chats = new List<Microsoft.Graph.Search.Query.QueryResponse> ();
-    private string? dateTimeFormat;
+    private List<Author> data_response = new List<Author>();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,22 +95,37 @@
         var requestBody = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-    {
-        new SearchRequest
-        {
-            EntityTypes = new List<EntityType?>
-            {
-                EntityType.ChatMessage,
-            },
-            Query = new SearchQuery
-            {
-                QueryString = "dollar sign",
-            },
-        },
-    },
+                        {
+                            new SearchRequest
+                            {
+                                EntityTypes = new List<EntityType?>
+                            {
+                                    EntityType.DriveItem,
+                                },
+                                Query = new SearchQuery
+                                {
+                                    QueryString = "dollar*",
+                                },
+                            },
+                        },
         };
+
         var result = await graphClient.Search.Query.PostAsync(requestBody);
 
-        chats.Add(result);
+        var searchItems = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+
+        foreach (var key in searchItems.Keys)
+        {
+            Console.WriteLine(key);
+            Console.WriteLine(searchItems[key]);
+        }
+
+
+        JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
+        string displayName = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
+
+
+        data_response.Add(new Author(searchItems?["name"].ToString(), displayName, searchItems["webUrl"].ToString()));
     }
-}
+    }
+
