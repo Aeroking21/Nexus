@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using GraphSample;
 using GraphSample.Graph;
+using GraphSample.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -34,5 +35,6 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
 .AddAccountClaimsPrincipalFactory<RemoteAuthenticationState, RemoteUserAccount, GraphUserAccountFactory>();
 
 builder.Services.AddScoped<GraphClientFactory>();
+builder.Services.AddScoped<IBackendApiService, BackendApiService>();
 
 await builder.Build().RunAsync();
