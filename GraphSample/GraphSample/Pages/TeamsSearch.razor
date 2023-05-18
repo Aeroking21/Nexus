@@ -6,88 +6,36 @@
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
-@using System
-@using System.Text.Json;
-@using Microsoft.Fast.Components.FluentUI
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Teams Search</h1>
-
-        <FluentSearch @bind-Value="searchValue" style="width:80%;" @oninput="HandleInput" @onkeypress="HandleKeyPress" >
-           
-        </FluentSearch>
-
         <table class="table">
-            <thead>
-                <tr>
-                    <th>Application</th>
-                    <th>Sender</th>
-                    <th>Title</th>
-                    <th>URL</th>
-                </tr>
-            </thead>
             <tbody>
-                @foreach (var data in data_response)
+                @foreach (var teamsChat in chats)
                 {
                     <tr>
-                        <td>@data.App</td>
-                        <td>@data.Sender</td>
-                        <td>@data.Title</td>
-                        <td> <a href="@data.Url"> Link</a> </td>
+                        <td>@teamsChat?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Summary</td>
+                        <td> Hello </td>
                     </tr>
                 }
             </tbody>
         </table>
     </Authorized>
-
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
 
 @code{
-
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
-    private string searchValue = string.Empty;
-
-    public class Author
-    {
-        public string Sender { get; }
-        public string Title { get; }
-        public string Url { get; }
-        public string App { get; }
-
-        public Author(string sender, string title, string webLink, string app)
-        {
-            Sender = sender;
-            Title = title;
-            Url = webLink;
-            App = app;
-        }
-    }
-
-
     private GraphServiceClient? graphClient;
-    private List<Author> data_response = new List<Author>();
-
-    private void HandleInput(ChangeEventArgs e)
-    {
-        searchValue = e.Value.ToString();
-    }
-
-    private void HandleKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            // call the async function from here
-            Console.WriteLine("Search value: " + searchValue);
-        }
-    }
+    private List<Microsoft.Graph.Search.Query.QueryResponse> chats = new List<Microsoft.Graph.Search.Query.QueryResponse> ();
+    private string? dateTimeFormat;
 
     protected override async Task OnInitializedAsync()
     {
@@ -102,106 +50,25 @@
 
         graphClient = clientFactory.GetAuthenticatedClient();
 
-
-        var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
+        var requestBody = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                    {
-                            new SearchRequest
-                            {
-                                EntityTypes = new List<EntityType?>
-                        {
-                                    EntityType.Message,
-                                },
-                                Query = new SearchQuery
-                                {
-                                    QueryString = "dollar*",
-                                },
-                            },
-                        },
+    {
+        new SearchRequest
+        {
+            EntityTypes = new List<EntityType?>
+            {
+                EntityType.ChatMessage,
+            },
+            Query = new SearchQuery
+            {
+                QueryString = "dollar sign",
+            },
+        },
+    },
         };
+        var result = await graphClient.Search.Query.PostAsync(requestBody);
 
-        var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
-        {
-            Requests = new List<SearchRequest>
-                    {
-                            new SearchRequest
-                            {
-                                EntityTypes = new List<EntityType?>
-                        {
-                                    EntityType.ChatMessage,
-                                },
-                                Query = new SearchQuery
-                                {
-                                    QueryString = "dollar*",
-                                },
-                            },
-                        },
-        };
-
-
-        var batchRequestContent = new BatchRequestContent(graphClient);
-
-        //var result = await graphClient.Search.Query.PostAsync(requestBody);
-        var team = graphClient.Search.Query.ToPostRequestInformation(requestBodyTeams);
-        var mail = graphClient.Search.Query.ToPostRequestInformation(requestBodyMail);
-
-
-        var teamId = await batchRequestContent.AddBatchRequestStepAsync(team);
-        var mailId = await batchRequestContent.AddBatchRequestStepAsync(mail);
-
-        var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
-
-
-        // teams code
-        try
-        {
-            var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(teamId);
-            var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
-
-            JsonElement fromMessage = (JsonElement)searchItems["from"];
-            string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-
-            data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
-        }
-        catch (ServiceException ex)
-        {
-            Console.WriteLine($"Get user failed");
-        }
-
-        // mail code
-        try
-        {
-            var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(mailId);
-            var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
-
-            JsonElement fromMessage = (JsonElement)searchItems["from"];
-            string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-
-            data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
-        }
-        catch (ServiceException ex)
-        {
-            Console.WriteLine($"Get user failed");
-        }
-
-
-
-
-        //var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
-
-        //var searchItems = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
-
-
-        //JsonElement fromMessage = (JsonElement)searchItems["from"];
-        //string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-        //var teamsTitle = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Summary;
-
-        //JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
-        //string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
-
-
-        //data_response.Add(new Author(searchItems?["subject"].ToString(), messageName, searchItems["webLink"].ToString()));
+        chats.Add(result);
     }
 }
-

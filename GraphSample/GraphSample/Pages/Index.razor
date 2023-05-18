@@ -2,7 +2,6 @@
      Licensed under the MIT license. -->
 
 @page "/"
-@inject IJSRuntime JsRuntime
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -47,16 +46,6 @@
         background-color: #ffffff5a;
         padding: auto;
     }
-
-    .log-in-screen {
-
-       /* make the background screen a moving glitter mist on a blue background  */
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
 </style>
 
 <div class="p-5 mb-4 bg-light rounded-3">
@@ -93,11 +82,7 @@
                 </div>
             </Authorized>
             <NotAuthorized>
-                <div class="log-in-screen" >
-                    <h1>Sign in to see your dashboard</h1>
-                    <p>Sign in with your work or school account</p> 
-                <a class="btn btn-primary btn-large" href="authentication/login">Sign in</a>
-                </div>
+                <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
             </NotAuthorized>
         </AuthorizeView>
     </div>
