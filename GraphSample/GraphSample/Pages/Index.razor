@@ -134,7 +134,7 @@
     .cal{
         border: 1px solid rgba(190, 190, 190, 0.8);
         background-color: #ffffff5a;
-        padding: 3px;
+        padding: 5px;
         border-radius: 10px;
         margin-bottom: 2%;
         height: 60px;
@@ -143,16 +143,6 @@
     .cal:hover {
         box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
     }
-
-   /* .email{
-        border: 1px solid rgba(190, 190, 190, 0.8);
-        background-color: #ffffff5a;
-        padding: 3px;
-        border-radius: 10px;
-        text-align: left;
-        display: block;
-        width: 100%;
-    }*/
 
     .head{
         display: flex;
@@ -330,8 +320,17 @@
                         }
                     </div>  
                     <div class="grid-item">
-                        4
-                        <mgt-todo></mgt-todo>
+                        Teams
+                        @foreach(var team in teams)
+                        {
+                            <a href="teams">
+                                <div class="team">
+                                    <h3 >@team.DisplayName</h3>
+                                    @* <img src="@(team.Photo ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2"> *@
+                                </div>
+                            </a>
+                        }
+
                     </div>
                 </div>
             </Authorized>
@@ -364,6 +363,8 @@
     private IList<Message> allMessages = new List<Message>();
         
     private IList<Event> events = new List<Event>();
+    
+    private IList<Team> teams = new List<Team>();
 
     private string status = string.Empty;
     private bool isError;
@@ -380,8 +381,6 @@
 
     public int count = 0;
 
-   
-
     protected override async Task OnInitializedAsync()
     {   
         var tokenResult = await AccessTokenProvider.RequestAccessToken();
@@ -391,7 +390,6 @@
             count += 1;
         }
         
-
         //await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", accessToken);
 
         if (authenticationStateTask == null)
@@ -399,15 +397,18 @@
             throw new AuthenticationException(
                 "Unable to access authentication state");
         }
-        await BeginToDos();
-        await BeginCal();
-        await BeginEmail();
 
+        await RerunToDo();
+        await RerunCal();
+        await RerunEmail();
+        await BeginTeams();
+        
     }
 
     public async Task BeginToDos()
     {   
         if(count > 0) {
+            //await Task.Delay(1000);
             Console.WriteLine("Access  " + AccessToken);
             graphClient = clientFactory.GetAuthenticatedClient();
 
@@ -425,12 +426,21 @@
                 var key = item.DisplayName + "|" + item.Id;
                 TaskLists[key] = resultTasks;
             }
+            
         }
+    }
+
+    public async Task RerunToDo()
+    {
+        await BeginToDos();
+        //StateHasChanged();
+
     }
 
     public async Task BeginCal()
     {   
         if(count > 0) {
+            //await Task.Delay(1000);
             var user = (await authenticationStateTask).User;
             userTimeZone = user.GetUserGraphTimeZone() ?? "UTC";
 
@@ -475,6 +485,12 @@
 
             events = eventPage?.Value ?? new List<Event>();
         }
+    }
+
+    public async Task RerunCal()
+    {
+        await BeginCal();
+        //StateHasChanged();
 
     }
 
@@ -482,6 +498,7 @@
     {
         // Get the user
         if (count > 0){
+            //await Task.Delay(1000);
             var user = (await authenticationStateTask).User;
             var graphTimeZone = user.GetUserGraphTimeZone();
             dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
@@ -501,6 +518,13 @@
 
             allMessages = mailPage?.Value ?? new List<Message>();
         }
+    }
+
+    public async Task RerunEmail()
+    {
+        await BeginEmail();
+        //StateHasChanged();
+
     }
 
     private string FormatIso8601DateTime(string? iso8601DateTime)
@@ -535,8 +559,10 @@
         };
         var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
 
+        await BeginToDos();
         Console.WriteLine(result.Status);
-        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        StateHasChanged();
+        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
         
     }
 
@@ -544,7 +570,9 @@
         graphClient = clientFactory.GetAuthenticatedClient();
  
         await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].DeleteAsync();
-        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        await BeginToDos();
+        StateHasChanged();
+        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
 
     }
 
@@ -556,10 +584,23 @@
         };
         var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
 
+        await BeginToDos();
         Console.WriteLine(result.Status);
-        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
-        
+        StateHasChanged();
+        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 
+    public async Task BeginTeams()
+    {
+        if (count > 0){
+            graphClient = clientFactory.GetAuthenticatedClient();
+
+            var teamsPage = await graphClient.Me.JoinedTeams
+                .GetAsync();
+
+            teams = teamsPage.Value;
+            //Console.WriteLine(teamsPage.Value.Count);
+        }
+    }
     
 }

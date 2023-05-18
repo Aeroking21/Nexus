@@ -1,0 +1,290 @@
+---
+id: aurelia
+title: Aurelia
+sidebar_label: Aurelia
+custom_edit_url: https://github.com/microsoft/fast/edit/master/packages/web-components/fast-foundation/docs/integrations/aurelia.md
+---
+
+FAST works flawlessly with both Aurelia 1 and Aurelia 2, with full integration into the binding engine and component model. Let's take a look at how you can set up an Aurelia project, starting from scratch.
+
+## Aurelia 2
+
+### Setting up the Aurelia 2 project
+
+First, you'll need to make sure that you have Node.js installed. You can learn more and download that [on the official site](https://nodejs.org/).
+
+With Node.js installed, you can run the following command to create a new Aurelia 2 project:
+
+```shell
+npx makes Aurelia
+```
+
+Follow the prompts, answering each question in turn. It is recommended that you select the "Default TypeScript Aurelia 2 App" when prompted unless you have previous experience with the CLI. Be sure to choose to install dependencies when asked.
+
+When the CLI completes, you should have a basic runnable Aurelia 2 application.
+
+### Configuring packages
+
+Next, we'll install the FAST packages, along with supporting libraries. To do that, run this command from your new project folder:
+
+```shell
+npm install --save @microsoft/fast-components @microsoft/fast-element lodash-es
+```
+
+### Using the components
+
+With all the basic pieces in place, let's run our app in dev mode with `npm start`. Webpack should build your project and open your default browser with your `index.html` page. Right now, it should only have a hello message, since we haven't added any code or interesting HTML. Let's change that.
+
+First, open your `src/main.ts` file and add the following code:
+
+```ts
+import { 
+  FASTDesignSystemProvider, 
+  FASTCard, 
+  FASTButton 
+} from '@microsoft/fast-components';
+
+/*
+ * Ensure that tree-shaking doesn't remove these components from the bundle.
+ * There are multiple ways to prevent tree shaking, of which this is one.
+ */
+FASTDesignSystemProvider;
+FASTCard;
+FASTButton;
+```
+
+This code imports the `<fast-design-system-provider>` component as well as the `<fast-card>`, and `<fast-button>` components. Once you save, the dev server will rebuild and refresh your browser. However, you still won't see anything. To get some UI showing up, we need to write some HTML that uses our components. Replace your `my-app.html` file with the following markup:
+
+```html
+<fast-design-system-provider use-defaults>
+  <fast-card>
+    <h2>${message}</h2>
+    <fast-button appearance="accent" click.trigger="onClick()">Click Me</fast-button>
+  </fast-card>
+</fast-design-system-provider>
+```
+
+Replace your `my-app.ts` with this:
+
+```ts
+export class MyApp {
+  public message = 'Hello World!';
+
+  onClick() {
+    console.log('clicked!');
+  }
+}
+```
+
+To add a splash of style, replace your `my-app.css` content with this:
+
+```css
+fast-design-system-provider {
+  display: inline-block;
+}
+
+fast-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+h2 {
+  font-size: var(--type-ramp-plus-5-font-size);
+  line-height: var(--type-ramp-plus-5-line-height);
+}
+
+fast-card > fast-button {
+  align-self: flex-end;
+}
+```
+
+### Enabling two-way bindings
+
+Aurelia knows by default how to listen for changes in native elements. Now we need to teach it how to listen for changes in FAST elements. You can do so by [extending its templating syntax](https://docs.aurelia.io/examples/integration/ms-fast). We suggest to create an adapter file and then register it in your `main.ts`. Here is how:
+
+First create a `src/aurelia-fast-adapter.ts` file and copy the following code:
+
+```ts
+// aurelia-fast-adapter.ts
+import { IContainer, IAttrSyntaxTransformer, NodeObserverLocator, AppTask } from 'aurelia';
+
+export class AureliaFastAdapter {
+
+  public static register(container: IContainer) {
+    AureliaFastAdapter.extendTemplatingSyntax(container);
+  }
+
+  private static extendTemplatingSyntax(container) {
+    AppTask.with(IContainer).beforeCreate().call(container => {
+      const attrSyntaxTransformer = container.get(IAttrSyntaxTransformer);
+      const nodeObserverLocator = container.get(NodeObserverLocator);
+      attrSyntaxTransformer.useTwoWay((el, property) => {
+        switch (el.tagName) {
+          case 'FAST-SLIDER':
+          case 'FAST-TEXT-FIELD':
+          case 'FAST-TEXT-AREA':
+            return property === 'value';
+          case 'FAST-CHECKBOX':
+          case 'FAST-RADIO':
+          case 'FAST-RADIO-GROUP':
+          case 'FAST-SWITCH':
+            return property === 'checked';
+          case 'FAST-TABS':
+            return property === 'activeid';
+          default:
+            return false;
+        }
+      });
+      // Teach Aurelia what events to use to observe properties of elements.
+      const valuePropertyConfig = { events: ['input', 'change'] };
+      nodeObserverLocator.useConfig({
+        'FAST-CHECKBOX': {
+          checked: valuePropertyConfig
+        },
+        'FAST-RADIO': {
+          checked: valuePropertyConfig
+        },
+        'FAST-RADIO-GROUP': {
+          value: valuePropertyConfig
+        },
+        'FAST-SLIDER': {
+          value: valuePropertyConfig
+        },
+        'FAST-SWITCH': {
+          checked: valuePropertyConfig
+        },
+        'FAST-TABS': {
+          activeid: valuePropertyConfig
+        },
+        'FAST-TEXT-FIELD': {
+          value: valuePropertyConfig
+        },
+        'FAST-TEXT-AREA': {
+          value: valuePropertyConfig
+        }
+      });
+    }).register(container);
+  }
+}
+```
+
+Then, open your `src/main.ts` file and register your new adapter as such: 
+
+```ts
+// main.ts
+
+import { AureliaFastAdapter } from './aurelia-fast-adapter';
+
+Aurelia
+  .register(AureliaFastAdapter) // add this line
+  // other registrations...
+  .start();
+```
+
+Congratulations! You're now set up to use FAST and Aurelia 2!
+
+## Aurelia 1
+
+### Setting up the Aurelia 1 project
+
+First, you'll need to make sure that you have Node.js installed. You can learn more and download that [on the official site](https://nodejs.org/).
+
+With Node.js installed, you can run the following command to install the Aurelia 1 CLI:
+
+```shell
+npm install -g aurelia-cli
+```
+
+And then use the CLI like this:
+
+```shell
+au new fast-aurelia
+```
+
+Follow the prompts, answering each question in turn. It is recommended that you select the "Default TypeScript App" when prompted unless you have previous experience with the CLI. Be sure to choose to install dependencies when asked.
+
+When the CLI completes, you should have a basic runnable Aurelia 1 application.
+
+### Configuring packages
+
+Next, we'll install the FAST packages, along with supporting libraries. To do that, run this command from your new project folder:
+
+```shell
+npm install --save @microsoft/fast-components @microsoft/fast-element lodash-es
+```
+
+### Using the components
+
+With all the basic pieces in place, let's run our app in dev mode with `npm start`. Webpack should build your project and make it available at `http://localhost:8080/`. If you visit this address it should only have a hello message, since we haven't added any code or interesting HTML. Let's change that.
+
+First, open your `src/main.ts` file and add the following code:
+
+```ts
+import { 
+  FASTDesignSystemProvider, 
+  FASTCard, 
+  FASTButton 
+} from '@microsoft/fast-components';
+
+/*
+ * Ensure that tree-shaking doesn't remove these components from the bundle.
+ * There are multiple ways to prevent tree shaking, of which this is one.
+ */
+FASTDesignSystemProvider;
+FASTCard;
+FASTButton;
+```
+
+This code imports the `<fast-design-system-provider>` component as well as the `<fast-card>`, and `<fast-button>` components. Once you save, the dev server will rebuild and refresh your browser. However, you still won't see anything. To get some UI showing up, we need to write some HTML that uses our components. Replace your `app.html` file with the following markup:
+
+```html
+<template>
+  <fast-design-system-provider use-defaults>
+    <fast-card>
+      <h2>${message}</h2>
+      <fast-button appearance="accent" click.trigger="onClick()">Click Me</fast-button>
+    </fast-card>
+  </fast-design-system-provider>
+</template>
+```
+
+Replace your `app.ts` with this:
+
+```ts
+export class App {
+  public message: string = 'Hello World!';
+
+  onClick() {
+    console.log('clicked!');
+  }
+}
+```
+
+To add a splash of style, add the following to your `app.html` template:
+
+```html
+<style>
+  fast-design-system-provider {
+    display: inline-block;
+    color: var(--neutral-foreground-rest);
+  }
+
+  fast-card {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h2 {
+    font-size: var(--type-ramp-plus-5-font-size);
+    line-height: var(--type-ramp-plus-5-line-height);
+  }
+
+  fast-card > fast-button{
+    align-self: flex-end;
+  }
+</style>
+```
+
+Congratulations! You're now set up to use FAST and Aurelia 1!
