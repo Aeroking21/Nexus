@@ -1,21 +1,61 @@
-﻿@using Microsoft.Graph.Models
+﻿@page "/applicationtracker"
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
 @using TimeZoneConverter
+@using SharedModels.Models
+@using Microsoft.Fast.Components.FluentUI
+@using GraphSample.ReusableComponents
 
+
+@inject GraphSample.Services.IBackendApiService backendApiService
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Application Dashboard</h1>
-        <mgt-login></mgt-login>
-        <mgt-todo></mgt-todo>
         <table class="table">
             <thead>
                 <tr>
-
+                    <th>Comapny</th>
+                    <th>Role</th>
+                    <th></th>
+                    <th>
+                        Associated emails
+                    </th>
+                    <th></th>
+                    <th>Assessments</th>
                 </tr>
             </thead>
             <tbody>
-
+                @foreach (var timeline in timelines)
+                {
+                    <tr>
+                        <td>@timeline.company</td>
+                        <td>@timeline.role</td>
+                        <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
+                        <td>
+                            <div class="email-container">
+                                @foreach (var email in timeline.associatedEmailAddresses)
+                                {
+                                    <div class="email">@email</div>
+                                    <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
+                                }
+                            </div>
+                        </td>
+                        <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
+                        <td>
+                            <div style="display: flex; overflow-x: auto;">
+                                @foreach (var assessment in timeline.assessments)
+                                {
+                                    <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom)? assessment.type : assessment.customDescription)</div>
+                                    <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
             </tbody>
         </table>
     </Authorized>
@@ -24,8 +64,218 @@
     </NotAuthorized>
 </AuthorizeView>
 
-@code {
+<style>
+    .email-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        height: 2.5em;
+        overflow-y: scroll;
+    }
 
+    .add-button {
+        margin-right: 0.5em;
+        cursor: pointer;
+        color: green;
+    }
+
+    .remove-button {
+        cursor: pointer;
+        color: red;
+        margin-left: 0.5em;
+    }
+</style>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    private GraphServiceClient? graphClient;
+    private string? dateTimeFormat;
+    private string userTimeZone = string.Empty;
+    private List<ApplicationTimeline> timelines;
+
+    protected override async Task OnInitializedAsync()
+
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user's time zone
+        var user = (await authenticationStateTask).User;
+        var graphTimeZone = user.GetUserGraphTimeZone();
+        dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+
+        // Calculate the start and end of the current week in user's time zone
+        var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
+        var endOfWeek = startOfWeek.AddDays(7);
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        timelines = await backendApiService.getUserTimelinesAsync("ks2220");//user?.Identity?.Name);
+    }
+
+
+    public async void RemoveEmail(string email, int timelineID)
+    {
+        var response = await backendApiService.removeEmail(email, "ks2220", timelineID);
+
+        if (response)
+        {
+            var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+            int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
+            if (index != -1)
+            {
+                timelines[index] = newTimeline;
+                StateHasChanged();
+            }
+        }
+
+    }
+
+    public async void RemoveAssessment(Assessment assessment, int timelineID)
+    {
+        var response = await backendApiService.removeAssessment(assessment, "ks2220", timelineID);
+
+        if (response)
+        {
+            var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+            int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
+            if (index != -1)
+            {
+                timelines[index] = newTimeline;
+                StateHasChanged();
+            }
+        }
+
+    }
+
+    [CascadingParameter] IModalService ModalInputPopup { get; set; } = default!;
+
+    private async Task ShowModal(int timelineID)
+    {
+        var inputPopupModal = ModalInputPopup.Show<InputPopup>();
+        var result = await inputPopupModal.Result;
+
+        if (result.Confirmed)
+        {
+            string newEmail = result.Data?.ToString();
+            if (newEmail != "")
+            {
+                var response = await backendApiService.addEmail(newEmail, "ks2220", timelineID);
+                if (response)
+                {
+                    var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+                    int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
+                    if (index != -1)
+                    {
+                        timelines[index] = newTimeline;
+                        StateHasChanged();
+                    }
+                }
+
+            }
+        }
+    }
+
+    [CascadingParameter] IModalService ModalAddTimelinePopup { get; set; } = default!;
+
+    private async Task ShowAddTimelineModal()
+    {
+        var inputPopupModal = ModalAddTimelinePopup.Show<AddTimelinePopup>();
+        var result = await inputPopupModal.Result;
+
+        if (result.Confirmed)
+        {
+            TimelineBson? newTimelineBson = result.Data as TimelineBson;
+            if (newTimelineBson != null)
+            {
+                int newTimelineID = await backendApiService.addTimeline("ks2220", newTimelineBson);
+                if (newTimelineID != -1)
+                {
+                    try
+                    {
+                        ApplicationTimeline newTimeline = await backendApiService.getUserTimelineAsync("ks2220", newTimelineID);
+                        timelines.Add(newTimeline);
+                        StateHasChanged();
+                    }
+                    catch
+                    {
+                        ;
+                    }
+                }
+
+            }
+
+        }
+    }
+
+    [CascadingParameter] IModalService ModalAssessmentInputPopup { get; set; } = default!;
+
+    private async Task ShowAssessmentModal(int timelineID)
+    {
+        var assessmentModal = ModalAssessmentInputPopup.Show<AssessmentInputPopup>();
+        var result = await assessmentModal.Result;
+
+        if (result.Confirmed)
+        {
+            Assessment? newAssessment = result.Data as Assessment;
+            if (newAssessment != null)
+            {
+                var response = await backendApiService.addAssessment(newAssessment, "ks2220", timelineID);
+                if (response)
+                {
+                    var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+                    int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
+                    if (index != -1)
+                    {
+                        timelines[index] = newTimeline;
+                        StateHasChanged();
+                    }
+                }
+
+            }
+        }
+    }
+
+    private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
+    {
+        // Time zone returned by Graph could be Windows or IANA style
+        // TimeZoneConverter can take either
+        TimeZoneInfo userTimeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
+
+        // Assumes Sunday as first day of week
+        int diff = System.DayOfWeek.Sunday - today.DayOfWeek;
+
+        // create date as unspecified kind
+        var unspecifiedStart = DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
+
+        // convert to UTC
+        return TimeZoneInfo.ConvertTimeToUtc(unspecifiedStart, userTimeZone);
+    }
+
+    private string FormatIso8601DateTime(string? iso8601DateTime)
+    {
+        if (string.IsNullOrEmpty(iso8601DateTime))
+        {
+            return string.Empty;
+        }
+
+        // Load into a DateTime
+        var dateTime = DateTime.Parse(iso8601DateTime);
+
+        if (!string.IsNullOrWhiteSpace(dateTimeFormat))
+        {
+            // Format it using the user's settings
+            return dateTime.ToString(dateTimeFormat);
+        }
+
+        // Fallback to return original value
+        return iso8601DateTime;
+    }
 
 
 }
