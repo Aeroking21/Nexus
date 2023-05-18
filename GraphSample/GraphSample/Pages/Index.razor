@@ -2,6 +2,7 @@
      Licensed under the MIT license. -->
 
 @page "/"
+@inject IJSRuntime JsRuntime
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -163,6 +164,7 @@
         width: 100%;
     }
 
+
     .group{
         display: block;
         width: 100%;
@@ -217,6 +219,16 @@
         overflow: hidden;
         max-height: 2.8em;
         line-height: 1.4em;
+    }
+
+    .log-in-screen {
+
+       /* make the background screen a moving glitter mist on a blue background  */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
     }
 
 </style>
@@ -334,8 +346,11 @@
                 </div>
             </Authorized>
             <NotAuthorized>
-                <h4>Not authorized using Microsoft.AspNetCore.Components.WebAssembly.Authentication</h4>
-                <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
+                <div class="log-in-screen" >
+                    <h1>Sign in to see your dashboard</h1>
+                    <p>Sign in with your work or school account</p> 
+                <a class="btn btn-primary btn-large" href="authentication/login">Sign in</a>
+                </div>
             </NotAuthorized>
         </AuthorizeView>
     </div>
