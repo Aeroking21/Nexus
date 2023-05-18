@@ -52,7 +52,11 @@
     private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
     {
         // Render your custom day template here
-        builder.AddContent(0, day.DayNumber);
+        if (day.DayNumber != 0)
+        {
+            builder.AddContent(1, day.DayNumber);
+        }
+    
     };
 
     private List<CalendarDay> days = new List<CalendarDay>();
