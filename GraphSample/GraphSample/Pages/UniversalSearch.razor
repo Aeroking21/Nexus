@@ -14,54 +14,50 @@
 
 <AuthorizeView>
     <Authorized>
-        <FluentSearch @bind-Value="searchValue" style="width:80%;" @oninput="HandleInput" @onkeypress="HandleKeyPress" >
-           
+
+        <FluentSearch @bind-Value="searchValue" style="width:80%;" @oninput="HandleInput" @onkeypress="HandleKeyPress">
+
         </FluentSearch>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Application</th>
-                    <th>Sender</th>
-                    <th>Title</th>
-                    <th>URL</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var data in data_response)
-                {
-                    <tr>
-                        <td>
-                            @if (data.App == "Outlook")
-                            {
-                                <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
-                                     width="32"
-                                     height="32"
-                                     alt="Word product icon" />
-                            }
-                            else if (data.App == "Teams")
-                            {
-                                <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
-                                     width="32"
-                                     height="32"
-                                     alt="Word product icon" />
-                            }
-                            else
-                            {
-                                <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
-                                     width="32"
-                                     height="32"
-                                     alt="Word product icon" />
-                            }
+        <FluentListbox Size=7 TOption="string" Style="background-color:white; border-color:white" Height="200px" Width="80%">
 
-                        </td>
-                        <td>@data.Sender</td>
-                        <td>@data.Title</td>
-                        <td> <a href="@data.Url"> Link</a> </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            @foreach (var data in data_response)
+            {
+                <FluentOption Value="AL">
+                    @if (data.App == "Outlook")
+                    {
+                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                             width="32"
+                             height="32"
+                             alt="Outlook" />
+                    }
+                    else if (data.App == "Teams")
+                    {
+                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                             width="32"
+                             height="32"
+                             alt="Teams" />
+                    }
+                    else
+                    {
+                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                             width="32"
+                             height="32"
+                             alt="OneDrive" />
+                    }
+
+                    @data.Sender
+                    @data.Title
+                    <a href="@data.Url"> Link</a> 
+                </FluentOption>
+             }
+
+
+        </FluentListbox>
+
+        <br />
+        <br />
+
     </Authorized>
 
     <NotAuthorized>
@@ -99,6 +95,7 @@
     private void HandleInput(ChangeEventArgs e)
     {
         searchValue = e.Value.ToString();
+        data_response.Clear();
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
@@ -110,6 +107,7 @@
             searchTerm += "*";
             await CallApiAsync(searchTerm);
             Console.WriteLine("Search value: " + searchTerm);
+         
         }
     }
 
@@ -130,11 +128,11 @@
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                    {
+                {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                        {
+                    {
                                     EntityType.Message,
                                 },
                                 Query = new SearchQuery
@@ -148,11 +146,11 @@
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                    {
+                {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                        {
+                    {
                                     EntityType.ChatMessage,
                                 },
                                 Query = new SearchQuery
@@ -166,11 +164,11 @@
         var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                    {
+                {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                        {
+                    {
                                     EntityType.DriveItem,
                                 },
                                 Query = new SearchQuery
