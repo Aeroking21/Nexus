@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using GraphSample;
 using GraphSample.Graph;
 using GraphSample.Services;
+using GraphSample.ReusableComponents;
+using Microsoft.JSInterop;
+using Blazored.Modal;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -36,5 +39,7 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
 
 builder.Services.AddScoped<GraphClientFactory>();
 builder.Services.AddScoped<IBackendApiService, BackendApiService>();
+builder.Services.AddScoped<InputPopup>();
+builder.Services.AddBlazoredModal();
 
 await builder.Build().RunAsync();

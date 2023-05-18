@@ -12,13 +12,16 @@
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="7.0.5" />
     <PackageReference Include="Microsoft.Graph" Version="5.9.0" />
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
+    <PackageReference Include="Blazored.Modal" Version="7.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Services\" />
+    <None Remove="ReusableComponents\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
+    <Folder Include="ReusableComponents\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SharedModels\SharedModels.csproj">

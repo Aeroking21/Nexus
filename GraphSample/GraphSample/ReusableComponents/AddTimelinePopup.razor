@@ -1,0 +1,26 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using SharedModels.Models
+
+<div>
+    <EditForm Model="_form" OnValidSubmit="SubmitForm">
+        <label for="company">Company</label>
+        <InputText @bind-Value="_form.company" />
+        <label for="role">Role</label>
+        <InputText @bind-Value="_form.role" />
+
+        <button type="submit">Submit</button>
+        <button @onclick="Cancel">Cancel</button>
+    </EditForm>
+</div>
+
+@code {
+    private readonly TimelineBson _form = new();
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    //protected override void OnInitialized() => BlazoredModal.SetTitle("");
+
+    private async Task SubmitForm() => await BlazoredModal.CloseAsync(ModalResult.Ok(_form));
+    private async Task Cancel() => await BlazoredModal.CancelAsync();
+
+}
