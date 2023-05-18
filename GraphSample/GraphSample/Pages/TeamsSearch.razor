@@ -14,8 +14,6 @@
 
 <AuthorizeView>
     <Authorized>
-        <h1 class="mb-3">Teams Search</h1>
-
         <FluentSearch @bind-Value="searchValue" style="width:80%;" @oninput="HandleInput" @onkeypress="HandleKeyPress" >
            
         </FluentSearch>
@@ -33,7 +31,30 @@
                 @foreach (var data in data_response)
                 {
                     <tr>
-                        <td>@data.App</td>
+                        <td>
+                            @if (data.App == "Outlook")
+                            {
+                                <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                                     width="32"
+                                     height="32"
+                                     alt="Word product icon" />
+                            }
+                            else if (data.App == "Teams")
+                            {
+                                <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                     width="32"
+                                     height="32"
+                                     alt="Word product icon" />
+                            }
+                            else
+                            {
+                                <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                                     width="32"
+                                     height="32"
+                                     alt="Word product icon" />
+                            }
+
+                        </td>
                         <td>@data.Sender</td>
                         <td>@data.Title</td>
                         <td> <a href="@data.Url"> Link</a> </td>
@@ -51,9 +72,9 @@
 @code{
 
     [CascadingParameter]
-    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    protected Task<AuthenticationState>? authenticationStateTask { get; set; }
 
-    private string searchValue = string.Empty;
+    protected string searchValue = string.Empty;
 
     public class Author
     {
@@ -80,16 +101,19 @@
         searchValue = e.Value.ToString();
     }
 
-    private void HandleKeyPress(KeyboardEventArgs e)
+    private async Task HandleKeyPress(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
             // call the async function from here
-            Console.WriteLine("Search value: " + searchValue);
+            string searchTerm = searchValue;
+            searchTerm += "*";
+            await CallApiAsync(searchTerm);
+            Console.WriteLine("Search value: " + searchTerm);
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected async Task CallApiAsync(string searchTerm)
     {
         if (authenticationStateTask == null)
         {
@@ -115,7 +139,7 @@
                                 },
                                 Query = new SearchQuery
                                 {
-                                    QueryString = "dollar*",
+                                    QueryString = searchTerm ,
                                 },
                             },
                         },
@@ -133,7 +157,25 @@
                                 },
                                 Query = new SearchQuery
                                 {
-                                    QueryString = "dollar*",
+                                    QueryString = searchTerm,
+                                },
+                            },
+                        },
+        };
+
+        var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
+        {
+            Requests = new List<SearchRequest>
+                    {
+                            new SearchRequest
+                            {
+                                EntityTypes = new List<EntityType?>
+                        {
+                                    EntityType.DriveItem,
+                                },
+                                Query = new SearchQuery
+                                {
+                                    QueryString = searchTerm,
                                 },
                             },
                         },
@@ -145,10 +187,13 @@
         //var result = await graphClient.Search.Query.PostAsync(requestBody);
         var team = graphClient.Search.Query.ToPostRequestInformation(requestBodyTeams);
         var mail = graphClient.Search.Query.ToPostRequestInformation(requestBodyMail);
+        var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
+
 
 
         var teamId = await batchRequestContent.AddBatchRequestStepAsync(team);
         var mailId = await batchRequestContent.AddBatchRequestStepAsync(mail);
+        var driveId = await batchRequestContent.AddBatchRequestStepAsync(drive);
 
         var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
 
@@ -179,6 +224,22 @@
             string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
             data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Get user failed");
+        }
+
+        // drive code
+        try
+        {
+            var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(driveId);
+            var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+
+            JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
+            string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
+
+            data_response.Add(new Author(oneDriveCreator, searchItems?["name"].ToString(), searchItems["webUrl"].ToString(), "OneDrive"));
         }
         catch (ServiceException ex)
         {
