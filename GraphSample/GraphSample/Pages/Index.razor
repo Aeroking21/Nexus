@@ -2,11 +2,20 @@
      Licensed under the MIT license. -->
 
 @page "/"
+@inject IJSRuntime JsRuntime
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 @inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
+@using Microsoft.Fast.Components.FluentUI
+
+
+@inject IJSRuntime JSRuntime
 
 <style>
     .item {
@@ -23,10 +32,9 @@
 
     .grid-container {
         display: grid;
-        grid-template-columns: auto auto auto;
-        padding: 10px;
-        gap: 15px;
-        height: 600px;
+        grid-template-columns: auto auto;
+        gap: 10px;
+        height: 100%;
     }
 
     .grid-item {
@@ -39,54 +47,315 @@
         border-radius: 10px;
         color: rgba(0, 0, 0, 0.8);
         font-size: 1.1rem;
+        height: 200px;
+        width: 500px; 
+        overflow-y: scroll;
+        margin-bottom: 0%;
     }
 
     .lists {
         border: 1px solid rgba(190, 190, 190, 0.8);
         background-color: #ffffff5a;
-        padding: auto;
+        padding: 3px;
+        border-radius: 10px;
+        margin-bottom: 2%;
+        font-size: small;
     }
+
+    .tasks{
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .left-content {
+        float: left;
+    }
+
+    .left-contentC {
+        float: left;
+        text-decoration: line-through;
+    }
+
+    .right-content {
+        float: right;
+    }
+
+    .default-button{
+        background-color: #ffffffad;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        border-radius: 10px;
+        padding: 5px;
+        margin: 5px;
+    }
+
+    .default-button:hover{
+        background-color: #ffffffad;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        border-radius: 10px;
+        padding: 5px;
+        margin: 5px;
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
+    }
+
+
+    .default-button-clicked{
+        background-color: rgb(64, 165, 216);
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        border-radius: 10px;
+        padding: 5px;
+        margin: 5px;
+    }
+
+    .clicked-button:hover{
+        background-color: rgb(64, 165, 216);
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        border-radius: 10px;
+        padding: 5px;
+        margin: 5px;
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .subject h3{
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+        float: left;
+    }
+
+    .organizer{
+        font-size: 0.8rem;
+        float: left;
+        clear:both;
+    }
+
+    .time{
+        font-size: 0.8rem;
+        float: right;
+    }
+
+    .cal{
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        background-color: #ffffff5a;
+        padding: 5px;
+        border-radius: 10px;
+        margin-bottom: 2%;
+        height: 60px;
+    }
+
+    .cal:hover {
+        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+    }
+
+    .head{
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+
+    }
+
+    .body{
+        font-size: 0.9rem;
+        float: left;
+        display: block;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        margin-bottom: 2%;
+        border-radius: 10px;
+        background-color: #ffffff5a;
+        padding: 5px;
+        width: 100%;
+    }
+
+
+    .group{
+        display: block;
+        width: 100%;
+
+    }
+
+    .email {
+        padding: 10px;
+        margin: 8px 4px;
+        text-align: left;
+        border-radius: 10px;
+        background-color: #ffffff5a;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+    }
+
+    a { 
+        color: black;
+        text-decoration: none;
+    }
+
+    a:hover { 
+        color: black;
+        text-decoration: none; 
+    }
+
+    a:active { 
+        color: black;
+        text-decoration: none; 
+    }
+
+    .email:hover {
+        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        margin: 8px 4px;
+    }
+
+    .email h3 {
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+    }
+
+    .email h4 {
+        font-size: 10px;
+        margin-top: 0px;
+        margin-bottom: 4px;
+    }
+
+    .email .preview {
+        font-size: 13px;
+        text-overflow: ellipsis;
+        word-wrap: break-word;
+        overflow: hidden;
+        max-height: 2.8em;
+        line-height: 1.4em;
+    }
+
+    .log-in-screen {
+
+       /* make the background screen a moving glitter mist on a blue background  */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
 </style>
 
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
+
+<div>
+    <div>
         <AuthorizeView>
             <Authorized>
                 <h4>Welcome @context?.User?.Identity?.Name!</h4>
                 <h1>Dashboard</h1>
                 <div class="grid-container">
                     <div class="grid-item">
-                        To Do:
-                        @foreach (var key in TaskLists.Keys)
+                        <h4>To Do</h4>
+                        @if (TaskLists.Count != 0)
                         {
-                            <div class="lists">
-                                <h4>@key</h4>
-                                @foreach (var item in TaskLists[key].Value)
-                                {
-                                    <div>@item.Title</div>
+                            @foreach (var key in TaskLists.Keys)
+                            {
+                                @if (TaskLists[key].Value?.Count != 0){
+                                    <div class="lists">
+                                        <h4>@key.Split("|")[0]</h4>
+                                        <hr>
+                                        @foreach (var item in TaskLists[key].Value)
+                                        {
+                                            string ListId = @key.Split("|")[1];
+                                            string TaskId = @item.Id;
+                                            bool isClicked = false;
+                                            string buttonClass = "";
+
+                                            void ClickedButton()
+                                            {
+                                                isClicked = true;
+                                                buttonClass = "-clicked";
+                                                Console.WriteLine(buttonClass);
+                                            }
+
+                                            if (item.Status == Microsoft.Graph.Models.TaskStatus.Completed)
+                                            {
+                                                <div class="tasks">
+                                                    <span class="left-contentC">@item.Title</span>
+                                                    <span class="right-content">
+
+                                                        <button class="default-button @buttonClass" @onclick="() => { UnDoTask(ListId,TaskId); ClickedButton(); }">Undo</button>
+                                                        <button class="default-button @buttonClass" @onclick="() => { DeleteTask(ListId,TaskId); ClickedButton(); }">Delete</button>
+                                                    </span>
+                                                </div>
+                                            }
+                                            else if (item.Status == Microsoft.Graph.Models.TaskStatus.NotStarted){
+                                                <div class="tasks">
+                                                    <span class="left-content">@item.Title</span>
+                                                    <span class="right-content">
+
+                                                        <button class="default-button @buttonClass" @onclick="() => { CompleteTask(ListId,TaskId); ClickedButton(); }">Complete</button>
+                                                        <button class="default-button @buttonClass" @onclick="() => { DeleteTask(ListId,TaskId); ClickedButton(); }">Delete</button>
+                                                    </span>
+                                                </div>
+                                            }
+                                            
+                                        }
+                                    </div>
                                 }
-                            </div>
+                                    
+                            }
+                        }
+                        else
+                        {
+                            <p>No To Do's</p>
                         }
                         
                     </div>
                     <div class="grid-item">
-                        Calendar
-                        @* <mgt-teams-channel-picker></mgt-teams-channel-picker> *@
+                        <h4>What have you missed?</h4>
+                        @foreach (var mail in allMessages)
+                        {
+                            <a href="inbox">
+                                <div class="email">
+                                    <h3>@mail.Subject</h3>
+                                    <h4>
+                                        From: @mail.Sender.EmailAddress.Name
+                                    </h4>
+                                    <div class="preview">
+                                        @mail.BodyPreview
+                                    </div>
+                                </div>
+                            </a>
+                        }
                     </div>
                     <div class="grid-item">
-                        Schedule
-                        <mgt-agenda></mgt-agenda>
+                        <h4>Today</h4>
+                        @foreach(var calendarEvent in events)
+                        {
+                            <a href="calendar">
+                                <div class="cal">
+                                    <span class="subject">
+                                        <h3>@calendarEvent?.Subject</h3>
+                                    </span>
+                                    <span class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</span>
+                                    <span class="time">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime) - @FormatIso8601DateTime(calendarEvent?.End?.DateTime)</span>
+                                </div>
+                            </a>
+                        }
                     </div>  
-                    <div class="grid-item">4</div>
-                    <div class="grid-item">5</div>
+                    <div class="grid-item">
+                        Teams
+                        @foreach(var team in teams)
+                        {
+                            <a href="teams">
+                                <div class="team">
+                                    <h3 >@team.DisplayName</h3>
+                                    @* <img src="@(team.Photo ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2"> *@
+                                </div>
+                            </a>
+                        }
+                    </div>
                 </div>
             </Authorized>
             <NotAuthorized>
-                <a class="btn btn-primary btn-large" href="authentication/login">Click here to sign in</a>
+                <div class="log-in-screen" >
+                    <h1>Sign in to see your dashboard</h1>
+                    <p>Sign in with your work or school account</p> 
+                <a class="btn btn-primary btn-large" href="authentication/login">Sign in</a>
+                </div>
             </NotAuthorized>
         </AuthorizeView>
     </div>
 </div>
+
 
 @code{
     [CascadingParameter]
@@ -102,49 +371,250 @@
 
     Dictionary<string, TodoTaskCollectionResponse> TaskLists = new Dictionary<string, TodoTaskCollectionResponse>();    
     //private TodoTaskCollectionResponse? resultTasks;
+    
+    private IList<CalendarCollectionResponse> cals = new List<CalendarCollectionResponse>();
+    
+    private IList<Message> allMessages = new List<Message>();
+        
+    private IList<Event> events = new List<Event>();
+    
+    private IList<Team> teams = new List<Team>();
+
+    private string status = string.Empty;
+    private bool isError;
+    private string userTimeZone = string.Empty;
+    private string subject = string.Empty;
+    private string attendees = string.Empty;
+    private DateTime start = new DateTime(DateTime.Today.Ticks);
+    private DateTime end = new DateTime(DateTime.Today.Ticks);
+    private string body = string.Empty;
+
+    [Inject]
+    protected IAccessTokenProvider AccessTokenProvider { get; set; }
+    protected string? AccessToken { get; private set; }
+
+    public int count = 0;
 
     protected override async Task OnInitializedAsync()
-    {
+    {   
+        var tokenResult = await AccessTokenProvider.RequestAccessToken();
+        if (tokenResult.TryGetToken(out var accessToken))
+        {
+            AccessToken = accessToken.Value;
+            count += 1;
+        }
+        
+        //await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", accessToken);
+
         if (authenticationStateTask == null)
         {
             throw new AuthenticationException(
                 "Unable to access authentication state");
         }
 
-        // Get the user
-        var user = (await authenticationStateTask).User;
+        await RerunToDo();
+        await RerunCal();
+        await RerunEmail();
+        await BeginTeams();
+        
+    }
 
-        var graphTimeZone = user.GetUserGraphTimeZone();
-        dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+    public async Task BeginToDos()
+    {   
+        if(count > 0) {
+            //await Task.Delay(1000);
+            Console.WriteLine("Access  " + AccessToken);
+            graphClient = clientFactory.GetAuthenticatedClient();
 
-        // Calculate the start and end of the current week in user's time zone
-        //var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
-        //var endOfWeek = startOfWeek.AddDays(7);
+            var toDoList = await graphClient.Me.Todo.Lists.GetAsync(
+                config=>{
+                    config.QueryParameters.Top = 5;
+                }
+            );
 
-        graphClient = clientFactory.GetAuthenticatedClient();
+            toDos = toDoList?.Value ?? new List<TodoTaskList>();
 
-        var toDoList = await graphClient.Me.Todo.Lists.GetAsync(
-            config=>{
-                config.QueryParameters.Top = 5;
+            foreach(var item in toDos)
+            {
+                var resultTasks = await graphClient.Me.Todo.Lists[item.Id].Tasks.GetAsync();
+                var key = item.DisplayName + "|" + item.Id;
+                TaskLists[key] = resultTasks;
             }
-        );
+            
+        }
+    }
 
-        toDos = toDoList?.Value ?? new List<TodoTaskList>();
+    public async Task RerunToDo()
+    {
+        await BeginToDos();
+        //StateHasChanged();
 
-        foreach(var item in toDos)
+    }
+
+    public async Task BeginCal()
+    {   
+        if(count > 0) {
+            //await Task.Delay(1000);
+            var user = (await authenticationStateTask).User;
+            userTimeZone = user.GetUserGraphTimeZone() ?? "UTC";
+
+            if (authenticationStateTask == null)
+            {
+                throw new AuthenticationException(
+                    "Unable to access authentication state");
+            }
+
+            var graphTimeZone = user.GetUserGraphTimeZone();
+            dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+
+            graphClient = clientFactory.GetAuthenticatedClient();
+            
+            DateTime currentDate = DateTime.Now.Date;
+            DateTime nextDay = currentDate.AddDays(1).Date;
+            DateTime endDateTime = nextDay.AddSeconds(-1);
+
+            Console.WriteLine(currentDate.ToString("o"));
+            Console.WriteLine(endDateTime.ToString("o"));
+
+
+
+            var eventPage = await graphClient.Me
+                .CalendarView
+                .GetAsync(config =>
+                {
+                    // Send user time zone in request so date/time in
+                    // response will be in preferred time zone
+                    config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+                    // Specifies the start and end of the view on the calendar
+                    // Translates to: ?startDateTime=""&endDateTime=""
+                    config.QueryParameters.StartDateTime = currentDate.ToString("o");
+                    config.QueryParameters.EndDateTime = endDateTime.ToString("o");
+                    // Get max 50 per request
+                    config.QueryParameters.Top = 50;
+                    // Only return fields app will use
+                    config.QueryParameters.Select = new [] { "subject", "organizer", "start", "end" };
+                    // Order results chronologically
+                    config.QueryParameters.Orderby = new [] { "start/dateTime" };
+                });
+
+            events = eventPage?.Value ?? new List<Event>();
+        }
+    }
+
+    public async Task RerunCal()
+    {
+        await BeginCal();
+        //StateHasChanged();
+
+    }
+
+    public async Task BeginEmail()
+    {
+        // Get the user
+        if (count > 0){
+            //await Task.Delay(1000);
+            var user = (await authenticationStateTask).User;
+            var graphTimeZone = user.GetUserGraphTimeZone();
+            dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+
+            graphClient = clientFactory.GetAuthenticatedClient();
+
+            //Get mail from inbox
+            var mailPage = await graphClient.Me
+                .MailFolders["Inbox"]
+                .Messages
+                .GetAsync( config => 
+                    {
+                        config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+                        config.QueryParameters.Select = new string[] { "subject", "sender", "bodyPreview","receivedDateTime"};
+                        config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
+                    });
+
+            allMessages = mailPage?.Value ?? new List<Message>();
+        }
+    }
+
+    public async Task RerunEmail()
+    {
+        await BeginEmail();
+        //StateHasChanged();
+
+    }
+
+    private string FormatIso8601DateTime(string? iso8601DateTime)
+    {
+        string[] res;
+        if (string.IsNullOrEmpty(iso8601DateTime))
         {
-            //ids.Add(item.Id);
-            var resultTasks = await graphClient.Me.Todo.Lists[item.Id].Tasks.GetAsync();
-            TaskLists[item.DisplayName] = resultTasks;
-            //toDoTasks.Add(resultTasks);
+            return string.Empty;
         }
 
+        // Load into a DateTime
+        var dateTime = DateTime.Parse(iso8601DateTime);
 
+        return dateTime.ToString("hh:mm tt");
     }
 
-    public class TodoItem
+    protected async Task ConfigureMgtProvider()
     {
-        public string? Title { get; set; }
-        public bool IsDone { get; set; }
+        var tokenResult = await AccessTokenProvider.RequestAccessToken();
+        if (tokenResult.TryGetToken(out var accessToken))
+        {
+            AccessToken = accessToken.Value;
+            await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
+        }
     }
+
+    public async Task CompleteTask(string ListId, string TaskId){
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new TodoTask
+        {
+            Status = Microsoft.Graph.Models.TaskStatus.Completed
+        };
+        var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
+
+        await BeginToDos();
+        Console.WriteLine(result.Status);
+        StateHasChanged();
+        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        
+    }
+
+    public async Task DeleteTask(string ListId, string TaskId){
+        graphClient = clientFactory.GetAuthenticatedClient();
+ 
+        await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].DeleteAsync();
+        await BeginToDos();
+        StateHasChanged();
+        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+
+    }
+
+    public async Task UnDoTask(string ListId, string TaskId){
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new TodoTask
+        {
+            Status = Microsoft.Graph.Models.TaskStatus.NotStarted
+        };
+        var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
+
+        await BeginToDos();
+        Console.WriteLine(result.Status);
+        StateHasChanged();
+        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    public async Task BeginTeams()
+    {
+        if (count > 0){
+            graphClient = clientFactory.GetAuthenticatedClient();
+
+            var teamsPage = await graphClient.Me.JoinedTeams
+                .GetAsync();
+
+            teams = teamsPage.Value;
+            //Console.WriteLine(teamsPage.Value.Count);
+        }
+    }
+    
 }

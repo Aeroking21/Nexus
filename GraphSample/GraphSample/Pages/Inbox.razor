@@ -16,6 +16,7 @@
             <thead>
                 <tr>
                     <th>Subject</th>
+                    <th>Body</th>
                     <th>Sender</th>
                 </tr>
             </thead>
@@ -24,7 +25,8 @@
             {
                 <tr>
                     <td>@mail.Subject</td>
-                    <td>@mail.Sender</td>
+                    <td>@mail.BodyPreview</td>
+                    <td>@mail.Sender.EmailAddress.Name</td>
                 </tr>
             }
             </tbody>
@@ -69,11 +71,12 @@
             .GetAsync( config => 
                 {
                     config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                    config.QueryParameters.Select = new string[] { "subject", "sender"};
+                    config.QueryParameters.Select = new string[] { "subject", "sender", "bodyPreview"};
                     config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
                 });
 
         allMessages = mailPage?.Value ?? new List<Message>();
+        Console.WriteLine(allMessages.Count);
     }
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
