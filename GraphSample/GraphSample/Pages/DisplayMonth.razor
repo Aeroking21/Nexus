@@ -8,7 +8,11 @@
 
 <AuthorizeView>
     <Authorized>
+        <h2>@MonthToText() @year</h2>
+        
         <table class="calendar-table">
+            <!-- display the month and year  -->
+           
             <thead>
                 <tr>
                     <th>Sun</th>
@@ -32,6 +36,10 @@
                 }
             </tbody>
         </table>
+    <div class="d-flex justify-content-between">
+            <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+            <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+    </div>
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -70,10 +78,43 @@
         await LoadCalendar();
     }
 
+    public string MonthToText(){
+        switch (month)
+        {
+            case 1:
+                return "January";
+            case 2:
+                return "February";
+            case 3:
+                return "March";
+            case 4:
+                return "April";
+            case 5:
+                return "May";
+            case 6:
+                return "June";
+            case 7:
+                return "July";
+            case 8:
+                return "August";
+            case 9:
+                return "September";
+            case 10:
+                return "October";
+            case 11:
+                return "November";
+            case 12:
+                return "December";
+            default:
+                return "";
+        }
+    }
+
+
     public async Task LoadCalendar()
     {
         // Calendar loading logic...
-                days = new List<CalendarDay>();
+        days = new List<CalendarDay>();
 
         // Calculate the number of empty days 
         var firstDayDate = new DateTime(year, month, 1);
@@ -120,5 +161,34 @@
     }
 
         // Set the number of rows based on the days count
+
+    public async Task NextMonth()
+    {
+        if (month == 12)
+        {
+            month = 1;
+            year++;
+        }
+        else
+        {
+            month++;
+            MonthToText();
+        }
+        await LoadCalendar();
+    }
+
+    public async Task PreviousMonth()
+    {
+        if (month == 1)
+        {
+            month = 12;
+            year--;
+        }
+        else
+        {
+            month--;
+        }
+        await LoadCalendar();
+    }
 
 }
