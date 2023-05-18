@@ -4,6 +4,7 @@
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 @using SharedModels.Models
+@using Microsoft.Fast.Components.FluentUI
 @using GraphSample.ReusableComponents
 
 
@@ -73,17 +74,16 @@
     }
 
     .add-button {
-            margin-right: 0.5em;
-            cursor: pointer;
-            color: green;
-        }
+        margin-right: 0.5em;
+        cursor: pointer;
+        color: green;
+    }
 
     .remove-button {
         cursor: pointer;
         color: red;
         margin-left: 0.5em;
     }
-
 </style>
 
 @code {
@@ -163,7 +163,8 @@
         if (result.Confirmed)
         {
             string newEmail = result.Data?.ToString();
-            if (newEmail != "") {
+            if (newEmail != "")
+            {
                 var response = await backendApiService.addEmail(newEmail, "ks2220", timelineID);
                 if (response)
                 {
@@ -179,6 +180,7 @@
             }
         }
     }
+
     [CascadingParameter] IModalService ModalAddTimelinePopup { get; set; } = default!;
 
     private async Task ShowAddTimelineModal()
@@ -188,7 +190,7 @@
 
         if (result.Confirmed)
         {
-            TimelineBson newTimelineBson = result.Data as TimelineBson;
+            TimelineBson? newTimelineBson = result.Data as TimelineBson;
             if (newTimelineBson != null)
             {
                 int newTimelineID = await backendApiService.addTimeline("ks2220", newTimelineBson);
@@ -220,7 +222,7 @@
 
         if (result.Confirmed)
         {
-            Assessment newAssessment = result.Data as Assessment;
+            Assessment? newAssessment = result.Data as Assessment;
             if (newAssessment != null)
             {
                 var response = await backendApiService.addAssessment(newAssessment, "ks2220", timelineID);
@@ -276,5 +278,5 @@
     }
 
 
-    }
+}
 
