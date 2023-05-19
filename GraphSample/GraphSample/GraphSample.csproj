@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="1.0.0-beta.5" />
+    <PackageReference Include="Azure.AI.TextAnalytics" Version="5.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.5" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="7.0.5" />

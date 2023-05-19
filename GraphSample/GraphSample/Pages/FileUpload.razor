@@ -1,0 +1,121 @@
+@page "/fileupload"
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using TimeZoneConverter
+@using Microsoft.Extensions.Logging
+@using Azure;
+@using Azure.AI.OpenAI;
+@using static System.Environment
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject ILogger<FileUpload> Logger
+@inject GraphSample.AI.OpenAIService OpenAIService
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Upload File</h1>
+
+        <p>
+            <label>
+                Upload a file of up to 500kB:
+                <InputFile OnChange="@LoadFile" />
+            </label>
+        </p>
+
+        @if (isLoading)
+        {
+            <p>Uploading...</p>
+        }
+        else if (isSummarizing)
+        {
+            <p>Summarizing...</p>
+        }
+        else if (!string.IsNullOrEmpty(summary))
+        {
+            <h3>Summary:</h3>
+            <p>@summary</p>
+        }
+
+        <button @onclick="SummarizeFile" disabled="@isLoading || isSummarizing">Summarize</button>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<IBrowserFile> loadedFile = new();
+    private long maxFileSize = 1024 * 500;
+    private int maxAllowedFiles = 1;
+    private bool isLoading;
+    private bool isSummarizing;
+    private string summary;
+
+    public FileUpload(string summary)
+    {
+        this.summary = summary;
+    }
+
+    //[Inject] 
+    //public GraphSample.AI.OpenAIService OpenAIService { get; set; }
+
+    // Event handler for file upload
+    private void LoadFile(InputFileChangeEventArgs e)
+    {
+        loadedFile.Clear();
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+            loadedFile.Add(file);
+        }
+    }
+
+    // Event handler for the "Summarize" button click
+    private async Task SummarizeFile()
+    {
+        if (loadedFile.Count == 0)
+        {
+            return;
+        }
+
+        isLoading = true;
+
+        // Read the content of the file
+        var file = loadedFile[0];
+        var content = await ReadFileContentAsync(file);
+        //////////////////////////////////////////////////////////////////////////////// input key ///////////////////////////////////////////////////////////////////////
+        // Perform the file summarization using OpenAI
+        //string endpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        //string key = GetEnvironmentVariable("AZURE_OPENAI_KEY");
+        //string engine = "text-davinci-003";
+        //var client = new OpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
+        // create a new client variable using the enpoint and key in OpenAIService.cs
+        //var client = new OpenAIClient(new Uri(OpenAIService.endpoint), new AzureKeyCredential(OpenAIService.key));
+
+        // // Set the prompt for summarization and language to English (UK)
+        string prompt = $"Summarize the following text into up to 500 words:\n\n{content}\n";
+
+        Console.Write($"Input: {prompt}\n");
+
+        // Call OpenAI API to get the file summary
+        //var completionsResponse = await client.GetCompletionsAsync(OpenAIService.engine, prompt);
+        //var completion = completionsResponse.Value.Choices[0].Text;
+
+        //summary = completion;
+        summary = prompt;
+
+        isLoading = false;
+        isSummarizing = false;
+    }
+
+    // Helper method to read the content of the uploaded file
+    private async Task<string> ReadFileContentAsync(IBrowserFile file)
+    {
+        using (var stream = file.OpenReadStream(maxFileSize))
+        using (var reader = new StreamReader(stream))
+        {
+            return await reader.ReadToEndAsync();
+        }
+    }
+}
