@@ -5,3 +5,9 @@ Steps to maximize your GitHub workflow
 2. After finishing your work, make a pull request from your branch into main. 
 3. Add an approver via the settings wheel in the top right corner.
 4. Done
+
+Notes for Application dashboard:
+-Maybe schedule calendar events.
+-IA email searchbar
+-Todo if unresponded email
+-Calendar(scientia) vs linear view.
