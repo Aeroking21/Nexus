@@ -5,6 +5,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace GraphSample.Services
 {
@@ -43,6 +44,15 @@ namespace GraphSample.Services
             string responseBody = await response.Content.ReadAsStringAsync();
             int newTimelineID = int.Parse(responseBody);
             return response.IsSuccessStatusCode ? newTimelineID : -1;
+
+        }
+
+        public async Task<bool> removeTimeline(string username, int timelineID)
+        {
+
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/remove-timeline/{username}/{timelineID}");
+
+            return response.IsSuccessStatusCode;
 
         }
 

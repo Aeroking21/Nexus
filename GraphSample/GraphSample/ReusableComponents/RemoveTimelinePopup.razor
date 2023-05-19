@@ -1,0 +1,22 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<div>
+    <EditForm Model="_form" OnValidSubmit="SubmitForm">
+        <button type="submit">Submit</button>
+        <button @onclick="Cancel">Cancel</button>
+    </EditForm>
+</div>
+
+@code {
+    private readonly Form _form = new();
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    protected override void OnInitialized() => BlazoredModal.SetTitle("Are you sure you want to delete a timeline?");
+
+    private async Task SubmitForm() => await BlazoredModal.CloseAsync(ModalResult.Ok());
+    private async Task Cancel() => await BlazoredModal.CancelAsync();
+
+    class Form { };
+
+}
+

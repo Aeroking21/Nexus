@@ -5,6 +5,8 @@
 @using TimeZoneConverter
 @using SharedModels.Models
 @using Microsoft.Fast.Components.FluentUI
+@using Microsoft.AspNetCore.Components.Web
+
 @using GraphSample.ReusableComponents
 
 
@@ -14,50 +16,93 @@
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Application Dashboard</h1>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Comapny</th>
-                    <th>Role</th>
-                    <th></th>
-                    <th>
-                        Associated emails
-                    </th>
-                    <th></th>
-                    <th>Assessments</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var timeline in timelines)
-                {
+        @if (timelines == null)
+        {
+            <FluentProgressRing></FluentProgressRing>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>@timeline.company</td>
-                        <td>@timeline.role</td>
-                        <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
-                        <td>
-                            <div class="email-container">
-                                @foreach (var email in timeline.associatedEmailAddresses)
-                                {
-                                    <div class="email">@email</div>
-                                    <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
-                                }
-                            </div>
-                        </td>
-                        <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
-                        <td>
-                            <div style="display: flex; overflow-x: auto;">
-                                @foreach (var assessment in timeline.assessments)
-                                {
-                                    <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom)? assessment.type : assessment.customDescription)</div>
-                                    <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
-                                }
-                            </div>
-                        </td>
+                        <th></th>
+                        <th>Comapny</th>
+                        <th>Role</th>
+                        @if (!emailsShowing)
+                        {
+                            <th></th>
+                            <th>
+                                Associated emails
+                            </th>
+                            <th></th>
+                            <th>Assessments</th>
+                            <th></th>
+
+                        }
                     </tr>
-                }
-                <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var timeline in timelines)
+                    {
+                        <tr>
+                            @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
+                            {
+                                <td><button class="btn btn-primary red-button" @onclick="() => emailsShowing = false">Hide emails</button></td>
+                            }
+                            else
+                            {
+                                <td><button class="btn btn-primary red-button" @onclick="() => ShowEmails(timeline.timelineID, timeline.associatedEmailAddresses)">Show emails</button></td>
+                            }
+                            <td>@timeline.company</td>
+                            <td>@timeline.role</td>
+                            @if (!emailsShowing)
+                            {
+                                <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
+                                <td>
+                                    <div class="email-container">
+                                        @foreach (var email in timeline.associatedEmailAddresses)
+                                        {
+                                            <div class="email">@email</div>
+                                            <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
+                                <td>
+                                    <div style="display: flex; overflow-x: auto;">
+                                        @foreach (var assessment in timeline.assessments)
+                                        {
+                                            <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom) ? assessment.type : assessment.customDescription)</div><br />
+                                            <div style="min-width: 200px;">@assessment.date</div>
+                                            <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td><button class="btn btn-primary red-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)">Delete</button></td>
+                            }
+                        </tr>
+                    }
+                    <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
+                </tbody>
+            </table>
+            @if (emailsShowing)
+            {
+                @if (fetchingEmails)
+                    {
+                    <FluentProgressRing></FluentProgressRing>
+                    }
+                else
+                    {
+                    @foreach (var email in showingEmails)
+                        {
+                        <div>
+                            <h5>@email.Subject </h5>
+                            <h5>@email.ReceivedDateTime </h5>
+                        </div>
+                        }
+                     }
+               }
+        }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -84,6 +129,11 @@
         color: red;
         margin-left: 0.5em;
     }
+
+    .red-button {
+        background-color: red;
+        color: white;
+    }
 </style>
 
 @code {
@@ -94,6 +144,10 @@
     private string? dateTimeFormat;
     private string userTimeZone = string.Empty;
     private List<ApplicationTimeline> timelines;
+    private bool emailsShowing;
+    private int emailsShowingTimeline;
+    private List<Message>? showingEmails;
+    private bool fetchingEmails;
 
     protected override async Task OnInitializedAsync()
 
@@ -114,10 +168,36 @@
         var endOfWeek = startOfWeek.AddDays(7);
 
         graphClient = clientFactory.GetAuthenticatedClient();
+        emailsShowing = false;
 
         timelines = await backendApiService.getUserTimelinesAsync("ks2220");//user?.Identity?.Name);
     }
+    public async void ShowEmails(int timelineID, List<string> associatedEmails)
+    {
+        emailsShowing = true;
+        emailsShowingTimeline = timelineID;
+        await GetAssociatedEmails(associatedEmails);
+    }
 
+    public async Task GetAssociatedEmails(List<string> associatedEmails)
+    {
+        fetchingEmails = true;
+        List<Message>? fetchedEmails = new();
+        foreach (var email in associatedEmails)
+        {
+            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Filter = $"from/emailAddress/address eq '{email}'";
+            });
+            if (result != null)
+            {
+                fetchedEmails.AddRange(result.Value);
+            }
+        }
+        showingEmails = fetchedEmails.OrderBy(m => m.ReceivedDateTime).ToList();
+        fetchingEmails = false;
+        StateHasChanged();
+    }
 
     public async void RemoveEmail(string email, int timelineID)
     {
@@ -181,11 +261,9 @@
         }
     }
 
-    [CascadingParameter] IModalService ModalAddTimelinePopup { get; set; } = default!;
-
     private async Task ShowAddTimelineModal()
     {
-        var inputPopupModal = ModalAddTimelinePopup.Show<AddTimelinePopup>();
+        var inputPopupModal = ModalInputPopup.Show<AddTimelinePopup>();
         var result = await inputPopupModal.Result;
 
         if (result.Confirmed)
@@ -213,11 +291,9 @@
         }
     }
 
-    [CascadingParameter] IModalService ModalAssessmentInputPopup { get; set; } = default!;
-
     private async Task ShowAssessmentModal(int timelineID)
     {
-        var assessmentModal = ModalAssessmentInputPopup.Show<AssessmentInputPopup>();
+        var assessmentModal = ModalInputPopup.Show<AssessmentInputPopup>();
         var result = await assessmentModal.Result;
 
         if (result.Confirmed)
@@ -237,6 +313,22 @@
                     }
                 }
 
+            }
+        }
+    }
+
+    private async Task ShowRemoveTimelineModal(int timelineID)
+    {
+        var removeTimelinePopup = ModalInputPopup.Show<RemoveTimelinePopup>();
+        var result = await removeTimelinePopup.Result;
+
+        if (result.Confirmed)
+        {
+            var response = await backendApiService.removeTimeline("ks2220", timelineID);
+            if (response)
+            {
+                timelines = await backendApiService.getUserTimelinesAsync("ks2220");
+                StateHasChanged();
             }
         }
     }
@@ -278,5 +370,5 @@
     }
 
 
-}
+    }
 
