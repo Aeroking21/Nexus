@@ -22,55 +22,88 @@
         }
         else
         {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Comapny</th>
-                <th>Role</th>
-                <th></th>
-                <th>
-                    Associated emails
-                </th>
-                <th></th>
-                <th>Assessments</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var timeline in timelines)
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Comapny</th>
+                        <th>Role</th>
+                        @if (!emailsShowing)
+                        {
+                            <th></th>
+                            <th>
+                                Associated emails
+                            </th>
+                            <th></th>
+                            <th>Assessments</th>
+                            <th></th>
+
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var timeline in timelines)
+                    {
+                        <tr>
+                            @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
+                            {
+                                <td><button class="btn btn-primary red-button" @onclick="() => emailsShowing = false">Hide emails</button></td>
+                            }
+                            else
+                            {
+                                <td><button class="btn btn-primary red-button" @onclick="() => ShowEmails(timeline.timelineID, timeline.associatedEmailAddresses)">Show emails</button></td>
+                            }
+                            <td>@timeline.company</td>
+                            <td>@timeline.role</td>
+                            @if (!emailsShowing)
+                            {
+                                <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
+                                <td>
+                                    <div class="email-container">
+                                        @foreach (var email in timeline.associatedEmailAddresses)
+                                        {
+                                            <div class="email">@email</div>
+                                            <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
+                                <td>
+                                    <div style="display: flex; overflow-x: auto;">
+                                        @foreach (var assessment in timeline.assessments)
+                                        {
+                                            <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom) ? assessment.type : assessment.customDescription)</div><br />
+                                            <div style="min-width: 200px;">@assessment.date</div>
+                                            <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td><button class="btn btn-primary red-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)">Delete</button></td>
+                            }
+                        </tr>
+                    }
+                    <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
+                </tbody>
+            </table>
+            @if (emailsShowing)
             {
-                <tr>
-                    <td>@timeline.company</td>
-                    <td>@timeline.role</td>
-                    <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
-                    <td>
-                        <div class="email-container">
-                            @foreach (var email in timeline.associatedEmailAddresses)
-                            {
-                                <div class="email">@email</div>
-                                <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
-                            }
+                @if (fetchingEmails)
+                    {
+                    <FluentProgressRing></FluentProgressRing>
+                    }
+                else
+                    {
+                    @foreach (var email in showingEmails)
+                        {
+                        <div>
+                            <h5>@email.Subject </h5>
+                            <h5>@email.ReceivedDateTime </h5>
                         </div>
-                    </td>
-                    <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
-                    <td>
-                        <div style="display: flex; overflow-x: auto;">
-                            @foreach (var assessment in timeline.assessments)
-                            {
-                                <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom) ? assessment.type : assessment.customDescription)</div><br />
-                                <div style="min-width: 200px;">@assessment.date</div>
-                                <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
-                            }
-                        </div>
-                    </td>
-                    <td><button class="btn btn-primary red-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)">Delete</button></td>
-                </tr>
-            }
-            <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
-        </tbody>
-    </table>
-    }
-</Authorized>
+                        }
+                     }
+               }
+        }
+    </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
@@ -111,6 +144,10 @@
     private string? dateTimeFormat;
     private string userTimeZone = string.Empty;
     private List<ApplicationTimeline> timelines;
+    private bool emailsShowing;
+    private int emailsShowingTimeline;
+    private List<Message>? showingEmails;
+    private bool fetchingEmails;
 
     protected override async Task OnInitializedAsync()
 
@@ -131,10 +168,36 @@
         var endOfWeek = startOfWeek.AddDays(7);
 
         graphClient = clientFactory.GetAuthenticatedClient();
+        emailsShowing = false;
 
         timelines = await backendApiService.getUserTimelinesAsync("ks2220");//user?.Identity?.Name);
     }
+    public async void ShowEmails(int timelineID, List<string> associatedEmails)
+    {
+        emailsShowing = true;
+        emailsShowingTimeline = timelineID;
+        await GetAssociatedEmails(associatedEmails);
+    }
 
+    public async Task GetAssociatedEmails(List<string> associatedEmails)
+    {
+        fetchingEmails = true;
+        List<Message>? fetchedEmails = new();
+        foreach (var email in associatedEmails)
+        {
+            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Filter = $"from/emailAddress/address eq '{email}'";
+            });
+            if (result != null)
+            {
+                fetchedEmails.AddRange(result.Value);
+            }
+        }
+        showingEmails = fetchedEmails.OrderBy(m => m.ReceivedDateTime).ToList();
+        fetchingEmails = false;
+        StateHasChanged();
+    }
 
     public async void RemoveEmail(string email, int timelineID)
     {
@@ -307,5 +370,5 @@
     }
 
 
-}
+    }
 
