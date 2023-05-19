@@ -21,7 +21,7 @@
     private DateTime end = new DateTime(DateTime.Today.Ticks);
     private string userTimeZone = string.Empty;
 
-    private async Task JumpToToday()
+    public async Task JumpToToday()
     {
         var authenticationState = await authenticationStateTask;
         var user = (await authenticationStateTask).User;

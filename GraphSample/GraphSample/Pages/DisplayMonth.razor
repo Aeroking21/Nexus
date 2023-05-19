@@ -1,10 +1,46 @@
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
-
+@using TimeZoneConverter
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
+<style>
 
+/* .calendar-table{
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+} */
+
+
+.calendar-table {
+    width: 100%; 
+    text-align: center;
+
+}
+
+.calendar-table thead {
+    background-color: white; 
+}
+
+.calendar-table .day {
+    min-width: 125px; 
+    margin: 2px; 
+    border-radius: 5px;
+    background-color: white;
+    padding: 30px;
+    cursor: pointer;
+}
+
+.calendar-table td {
+    padding: 30px;
+    /* border: 1px solid #ccc; */
+    /* text in centre */
+    vertical-align: middle;
+}
+
+</style>
 
 <AuthorizeView>
     <Authorized>
@@ -12,7 +48,6 @@
         
         <table class="calendar-table">
             <!-- display the month and year  -->
-           
             <thead>
                 <tr>
                     <th>Sun</th>
@@ -25,21 +60,35 @@
                 </tr>
             </thead>
             <tbody>
+                
                 @for (int r = 0; r < rowsCount; r++)
                 {
                     <tr>
                         @foreach (var item in days.Skip(r * 7).Take(7))
                         {
-                            <td>@DayTemplate(item)</td>
+                            //if (DayTemplate(item) == DateTime.Date.Now then the cell is highlighted
+                            // events is a list of events for the day, display them in the right cell
+                            if (item.Date == DateTime.Now.Date)
+                            {
+                                
+                                <td class="day bg-primary text-white">@DayTemplate(item)</td>
+                            }
+                            else{
+
+                                <td class="day">@DayTemplate(item)</td>
+                            }
                         }
                     </tr>
                 }
             </tbody>
         </table>
-    <div class="d-flex justify-content-between">
-            <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
-            <button class="btn btn-primary" @onclick="NextMonth">Next</button>
-    </div>
+        <div class="d-flex justify-content-between">
+                <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+                <button class="btn btn-primary" @onclick="Today">Today</button>
+                <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+                
+        </div>
+
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -52,6 +101,8 @@
         public int DayNumber { get; set; }
         public DateTime Date { get; set; }
         public bool IsEmpty { get; set; }
+        // events is a list of events for the day
+        public List<Event> events { get; set; }
     }
 
     [Parameter]
@@ -63,6 +114,8 @@
         if (day.DayNumber != 0)
         {
             builder.AddContent(1, day.DayNumber);
+            // display the events for the day
+
         }
     
     };
@@ -188,6 +241,13 @@
         {
             month--;
         }
+        await LoadCalendar();
+    }
+
+    public async Task Today()
+    {
+        month = DateTime.Now.Month;
+        year = DateTime.Now.Year;
         await LoadCalendar();
     }
 
