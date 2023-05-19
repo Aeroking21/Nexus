@@ -94,6 +94,40 @@ public class JobApplicantsController : ControllerBase
         }
     }
 
+    [Route("add-timeline/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> AddTimeline([FromRoute] string username, [FromBody] TimelineBson timelineBson)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username));
+
+        var applicant = await _collection.Find(filter).FirstOrDefaultAsync();
+        int newTimelineID = applicant.timelineCounter;
+        applicant.timelineCounter++;
+        ApplicationTimeline newTimeline = new ApplicationTimeline
+        {
+            company = timelineBson.company,
+            role = timelineBson.role,
+            assessments = new List<Assessment>(),
+            associatedEmailAddresses = new List<string>(),
+            timelineID = newTimelineID
+        };
+
+        var timelineUpdate = Builders<JobApplicant>.Update.Push("applicationTimelines", newTimeline);
+        var counterUpdate = Builders<JobApplicant>.Update.Set("timelineCounter", (newTimelineID + 1));
+
+        try
+        {
+            var result1 = await _collection.UpdateOneAsync(filter, timelineUpdate);
+            var result2 = await _collection.UpdateOneAsync(filter, counterUpdate);
+            return Ok(newTimelineID);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
     [Route("add-email/{username}")]
     [HttpPost]
@@ -116,8 +150,6 @@ public class JobApplicantsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
-
 
 
     [Route("remove-email/{username}")]
