@@ -1,6 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -28,7 +25,7 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
         scopes = "User.Read";
     }
 
-    foreach(var scope in scopes.Split(';'))
+    foreach (var scope in scopes.Split(';'))
     {
         Console.WriteLine($"Adding {scope} to requested permissions");
         options.ProviderOptions.DefaultAccessTokenScopes.Add(scope);
@@ -40,6 +37,7 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
 
 builder.Services.AddScoped<GraphClientFactory>();
 builder.Services.AddScoped<IBackendApiService, BackendApiService>();
+builder.Services.AddScoped<GraphSample.AI.OpenAIService>();
 
 builder.Services.AddScoped<InputPopup>();
 builder.Services.AddBlazoredModal();
