@@ -4,9 +4,11 @@
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 @using Microsoft.Extensions.Logging
+@using Microsoft.Office.Interop.PowerPoint
 @using Azure;
 @using Azure.AI.OpenAI;
 @using static System.Environment
+
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject ILogger<FileUpload> Logger
@@ -37,7 +39,7 @@
             <p>@summary</p>
         }
 
-        <button @onclick="SummarizeFile" disabled="@isLoading || isSummarizing">Summarize</button>
+        <button @onclick="SummarizeFile">Summarize</button>
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -52,14 +54,6 @@
     private bool isSummarizing;
     private string summary;
 
-    public FileUpload(string summary)
-    {
-        this.summary = summary;
-    }
-
-    //[Inject] 
-    //public GraphSample.AI.OpenAIService OpenAIService { get; set; }
-
     // Event handler for file upload
     private void LoadFile(InputFileChangeEventArgs e)
     {
@@ -68,6 +62,15 @@
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
             loadedFile.Add(file);
+        }
+    }
+
+    // Helper method to split the content into smaller chunks
+    private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
+    {
+        for (int i = 0; i < content.Length; i += chunkSize)
+        {
+            yield return content.Substring(i, Math.Min(chunkSize, content.Length - i));
         }
     }
 
@@ -80,34 +83,63 @@
         }
 
         isLoading = true;
+        isSummarizing = true; // Set the flag to indicate that summarization is in progress
 
         // Read the content of the file
         var file = loadedFile[0];
-        var content = await ReadFileContentAsync(file);
-        //////////////////////////////////////////////////////////////////////////////// input key ///////////////////////////////////////////////////////////////////////
-        // Perform the file summarization using OpenAI
-        //string endpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-        //string key = GetEnvironmentVariable("AZURE_OPENAI_KEY");
-        //string engine = "text-davinci-003";
-        //var client = new OpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
-        // create a new client variable using the enpoint and key in OpenAIService.cs
-        //var client = new OpenAIClient(new Uri(OpenAIService.endpoint), new AzureKeyCredential(OpenAIService.key));
+        var stream = file.OpenReadStream(maxFileSize);
+        var reader = new StreamReader(stream);
+        var content = await reader.ReadToEndAsync();
 
-        // // Set the prompt for summarization and language to English (UK)
-        string prompt = $"Summarize the following text into up to 500 words:\n\n{content}\n";
+        // Perform summarization until the overall summary is less than 3000 characters
+        var summaries = new List<string>();
+        var overallSummary = "";
 
-        Console.Write($"Input: {prompt}\n");
+        //while (overallSummary.Length < 3000)
+        //{
+            // Split the content into smaller chunks
+            var chunkSize = 3000; // Adjust this value as per your model's character limit
+            var chunks = SplitContentIntoChunks(content, chunkSize);
 
-        // Call OpenAI API to get the file summary
-        //var completionsResponse = await client.GetCompletionsAsync(OpenAIService.engine, prompt);
-        //var completion = completionsResponse.Value.Choices[0].Text;
+            // Perform summarization for each chunk
+            foreach (var chunk in chunks)
+            {
+                string prompt = $"Summarize the following text while keeping a scientific stance on the information and in as much detail as possible:\n\n{chunk}\n";
+                Console.Write($"Input: {prompt}\n");
 
-        //summary = completion;
-        summary = prompt;
+                var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+                var completion = completionsResponse.Value.Choices[0].Text;
+
+                summaries.Add(completion);
+            }
+
+            // Combine the individual summaries into an overall summary
+            overallSummary = string.Join(" ", summaries);
+
+            // Break the loop if the overall summary exceeds 3000 characters
+            //if (overallSummary.Length >= 3000)
+            //{
+            //    break;
+            //}
+
+            // Prepare for the next round of summarization
+            content = overallSummary;
+            summaries.Clear();
+        //}
+
+        // Trim the overall summary to 3000 characters if needed
+        //if (overallSummary.Length > 3000)
+        //{
+        //    overallSummary = overallSummary.Substring(0, 3000);
+        //}
+
+        summary = overallSummary;
 
         isLoading = false;
-        isSummarizing = false;
+        isSummarizing = false; // Set the flag to indicate that summarization is complete
     }
+
+
 
     // Helper method to read the content of the uploaded file
     private async Task<string> ReadFileContentAsync(IBrowserFile file)
