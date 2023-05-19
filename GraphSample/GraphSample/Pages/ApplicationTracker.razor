@@ -5,6 +5,8 @@
 @using TimeZoneConverter
 @using SharedModels.Models
 @using Microsoft.Fast.Components.FluentUI
+@using Microsoft.AspNetCore.Components.Web
+
 @using GraphSample.ReusableComponents
 
 
@@ -14,51 +16,61 @@
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Application Dashboard</h1>
-        <table class="table">
-            <thead>
+        @if (timelines == null)
+        {
+            <FluentProgressRing></FluentProgressRing>
+        }
+        else
+        {
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Comapny</th>
+                <th>Role</th>
+                <th></th>
+                <th>
+                    Associated emails
+                </th>
+                <th></th>
+                <th>Assessments</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var timeline in timelines)
+            {
                 <tr>
-                    <th>Comapny</th>
-                    <th>Role</th>
-                    <th></th>
-                    <th>
-                        Associated emails
-                    </th>
-                    <th></th>
-                    <th>Assessments</th>
+                    <td>@timeline.company</td>
+                    <td>@timeline.role</td>
+                    <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
+                    <td>
+                        <div class="email-container">
+                            @foreach (var email in timeline.associatedEmailAddresses)
+                            {
+                                <div class="email">@email</div>
+                                <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
+                            }
+                        </div>
+                    </td>
+                    <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
+                    <td>
+                        <div style="display: flex; overflow-x: auto;">
+                            @foreach (var assessment in timeline.assessments)
+                            {
+                                <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom) ? assessment.type : assessment.customDescription)</div><br />
+                                <div style="min-width: 200px;">@assessment.date</div>
+                                <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
+                            }
+                        </div>
+                    </td>
+                    <td><button class="btn btn-primary red-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)">Delete</button></td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var timeline in timelines)
-                {
-                    <tr>
-                        <td>@timeline.company</td>
-                        <td>@timeline.role</td>
-                        <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
-                        <td>
-                            <div class="email-container">
-                                @foreach (var email in timeline.associatedEmailAddresses)
-                                {
-                                    <div class="email">@email</div>
-                                    <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
-                                }
-                            </div>
-                        </td>
-                        <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
-                        <td>
-                            <div style="display: flex; overflow-x: auto;">
-                                @foreach (var assessment in timeline.assessments)
-                                {
-                                    <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom)? assessment.type : assessment.customDescription)</div>
-                                    <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                }
-                <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
-            </tbody>
-        </table>
-    </Authorized>
+            }
+            <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
+        </tbody>
+    </table>
+    }
+</Authorized>
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
@@ -83,6 +95,11 @@
         cursor: pointer;
         color: red;
         margin-left: 0.5em;
+    }
+
+    .red-button {
+        background-color: red;
+        color: white;
     }
 </style>
 
@@ -181,11 +198,9 @@
         }
     }
 
-    [CascadingParameter] IModalService ModalAddTimelinePopup { get; set; } = default!;
-
     private async Task ShowAddTimelineModal()
     {
-        var inputPopupModal = ModalAddTimelinePopup.Show<AddTimelinePopup>();
+        var inputPopupModal = ModalInputPopup.Show<AddTimelinePopup>();
         var result = await inputPopupModal.Result;
 
         if (result.Confirmed)
@@ -213,11 +228,9 @@
         }
     }
 
-    [CascadingParameter] IModalService ModalAssessmentInputPopup { get; set; } = default!;
-
     private async Task ShowAssessmentModal(int timelineID)
     {
-        var assessmentModal = ModalAssessmentInputPopup.Show<AssessmentInputPopup>();
+        var assessmentModal = ModalInputPopup.Show<AssessmentInputPopup>();
         var result = await assessmentModal.Result;
 
         if (result.Confirmed)
@@ -237,6 +250,22 @@
                     }
                 }
 
+            }
+        }
+    }
+
+    private async Task ShowRemoveTimelineModal(int timelineID)
+    {
+        var removeTimelinePopup = ModalInputPopup.Show<RemoveTimelinePopup>();
+        var result = await removeTimelinePopup.Result;
+
+        if (result.Confirmed)
+        {
+            var response = await backendApiService.removeTimeline("ks2220", timelineID);
+            if (response)
+            {
+                timelines = await backendApiService.getUserTimelinesAsync("ks2220");
+                StateHasChanged();
             }
         }
     }
