@@ -4,9 +4,6 @@
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 @using SharedModels.Models
-@using Microsoft.Fast.Components.FluentUI
-@using Microsoft.AspNetCore.Components.Web
-
 @using GraphSample.ReusableComponents
 
 
@@ -96,7 +93,7 @@
                     @foreach (var email in showingEmails)
                         {
                         <div>
-                            <h5>@email.Subject </h5>
+                            <h5> @email.Subject</h5>
                             <h5>@email.ReceivedDateTime </h5>
                         </div>
                         }

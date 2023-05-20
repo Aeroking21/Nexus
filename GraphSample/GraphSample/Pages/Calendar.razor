@@ -58,7 +58,7 @@
                 <h2> Add Event </h2>
                 <AddEvent />
             </div>
-            <div class="col-3">
+            <div class="col-5">
                 <h2> Events </h2>
                 <table class="table">
                     <thead>
@@ -82,8 +82,8 @@
                                 <tr>
                                     <td>@calendarEvent?.Organizer?.EmailAddress?.Name</td>
                                     <td>@calendarEvent?.Subject</td>
-                                    <td>@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</td>
-                                    <td>@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</td>
+                                    <td>@FormatIso8601DateTime(calendarEvent?.Start?.DateTime).ToString()[0..10]</td>
+                                    <td>@FormatIso8601DateTime(calendarEvent?.End?.DateTime).ToString()[0..10]</td>
                                 </tr>
                                 }
                         }
@@ -161,7 +161,7 @@
         public DateTime Date { get; set; }
         public bool IsEmpty { get; set; }
         // events is a list of events for the day
-        public List<Event> dayEvents { get; set; }
+        public List<Event> dayEvents { get; set; } = new List<Event>();
     }
 
     private List<CalendarDay> days = new List<CalendarDay>();
@@ -204,10 +204,9 @@
         List<Event> eventsOfDay = new List<Event>();
         foreach(var e in events)
         {
-            string eventdate = (e.Start.DateTime).ToString()[0..10]; 
-            string daydate = (day.Date).ToString()[0..10];
 
-            if (eventdate.Split("-")[0] == daydate.Split("/")[2] && eventdate.Split("-")[1] == daydate.Split("/")[1] && eventdate.Split("-")[2] == daydate.Split("/")[0]){
+
+            if (((e.Start.DateTime).ToString()[0..10]).Split("-")[0] == ((day.Date).ToString()[0..10]).Split("/")[2] && ((e.Start.DateTime).ToString()[0..10]).Split("-")[1] == ((day.Date).ToString()[0..10]).Split("/")[1] && ((e.Start.DateTime).ToString()[0..10]).Split("-")[2] == ((day.Date).ToString()[0..10]).Split("/")[0]){
                 eventsOfDay.Add(e);
             }
         }
@@ -304,13 +303,10 @@
             rowsCount = Convert.ToInt32(days.Count / 7) + 1;
 
         foreach (var day in days){
-            Console.WriteLine("here");  
             day.dayEvents = getEventsofDay(day);
          
         }
-        foreach(var day in days){
-        Console.WriteLine( day.dayEvents.Count);
-        }
+   
 
     }
 

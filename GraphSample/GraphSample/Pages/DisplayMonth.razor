@@ -101,8 +101,8 @@
         public int DayNumber { get; set; }
         public DateTime Date { get; set; }
         public bool IsEmpty { get; set; }
-        // events is a list of events for the day
-        public List<Event> events { get; set; }
+        // events is a list of events for the day public List<Event> events { get; set; }, take care of null values
+        public List<Event> events { get; set; } = new List<Event>();
     }
 
     [Parameter]
@@ -164,7 +164,7 @@
     }
 
 
-    public async Task LoadCalendar()
+    public async  Task LoadCalendar()
     {
         // Calendar loading logic...
         days = new List<CalendarDay>();
