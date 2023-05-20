@@ -1,14 +1,53 @@
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
-
+@using TimeZoneConverter
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
+<style>
 
+/* .calendar-table{
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+} */
+
+
+.calendar-table {
+    width: 100%; 
+    text-align: center;
+
+}
+
+.calendar-table thead {
+    background-color: white; 
+}
+
+.calendar-table .day {
+    min-width: 125px; 
+    margin: 2px; 
+    border-radius: 5px;
+    background-color: white;
+    padding: 30px;
+    cursor: pointer;
+}
+
+.calendar-table td {
+    padding: 30px;
+    /* border: 1px solid #ccc; */
+    /* text in centre */
+    vertical-align: middle;
+}
+
+</style>
 
 <AuthorizeView>
     <Authorized>
+        <h2>@MonthToText() @year</h2>
+        
         <table class="calendar-table">
+            <!-- display the month and year  -->
             <thead>
                 <tr>
                     <th>Sun</th>
@@ -21,17 +60,35 @@
                 </tr>
             </thead>
             <tbody>
+                
                 @for (int r = 0; r < rowsCount; r++)
                 {
                     <tr>
                         @foreach (var item in days.Skip(r * 7).Take(7))
                         {
-                            <td>@DayTemplate(item)</td>
+                            //if (DayTemplate(item) == DateTime.Date.Now then the cell is highlighted
+                            // events is a list of events for the day, display them in the right cell
+                            if (item.Date == DateTime.Now.Date)
+                            {
+                                
+                                <td class="day bg-primary text-white">@DayTemplate(item)</td>
+                            }
+                            else{
+
+                                <td class="day">@DayTemplate(item)</td>
+                            }
                         }
                     </tr>
                 }
             </tbody>
         </table>
+        <div class="d-flex justify-content-between">
+                <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+                <button class="btn btn-primary" @onclick="Today">Today</button>
+                <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+                
+        </div>
+
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -44,6 +101,8 @@
         public int DayNumber { get; set; }
         public DateTime Date { get; set; }
         public bool IsEmpty { get; set; }
+        // events is a list of events for the day
+        public List<Event> events { get; set; }
     }
 
     [Parameter]
@@ -55,6 +114,8 @@
         if (day.DayNumber != 0)
         {
             builder.AddContent(1, day.DayNumber);
+            // display the events for the day
+
         }
     
     };
@@ -70,10 +131,43 @@
         await LoadCalendar();
     }
 
+    public string MonthToText(){
+        switch (month)
+        {
+            case 1:
+                return "January";
+            case 2:
+                return "February";
+            case 3:
+                return "March";
+            case 4:
+                return "April";
+            case 5:
+                return "May";
+            case 6:
+                return "June";
+            case 7:
+                return "July";
+            case 8:
+                return "August";
+            case 9:
+                return "September";
+            case 10:
+                return "October";
+            case 11:
+                return "November";
+            case 12:
+                return "December";
+            default:
+                return "";
+        }
+    }
+
+
     public async Task LoadCalendar()
     {
         // Calendar loading logic...
-                days = new List<CalendarDay>();
+        days = new List<CalendarDay>();
 
         // Calculate the number of empty days 
         var firstDayDate = new DateTime(year, month, 1);
@@ -120,5 +214,41 @@
     }
 
         // Set the number of rows based on the days count
+
+    public async Task NextMonth()
+    {
+        if (month == 12)
+        {
+            month = 1;
+            year++;
+        }
+        else
+        {
+            month++;
+            MonthToText();
+        }
+        await LoadCalendar();
+    }
+
+    public async Task PreviousMonth()
+    {
+        if (month == 1)
+        {
+            month = 12;
+            year--;
+        }
+        else
+        {
+            month--;
+        }
+        await LoadCalendar();
+    }
+
+    public async Task Today()
+    {
+        month = DateTime.Now.Month;
+        year = DateTime.Now.Year;
+        await LoadCalendar();
+    }
 
 }

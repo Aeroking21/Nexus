@@ -4,13 +4,54 @@
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 
-
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
+<style>
 
 
+.calendar-class {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+}
+
+
+.calendar-table {
+    width: 100%; 
+    text-align: center;
+
+}
+
+.calendar-table thead {
+    background-color: white; 
+}
+
+.calendar-table .day {
+    min-width: 125px; 
+    margin: 2px; 
+    border-radius: 5px;
+    background-color: white;
+    padding: 30px;
+    cursor: pointer;
+}
+
+.calendar-table td {
+    padding: 30px;
+    /* border: 1px solid #ccc; */
+    /* text in centre */
+    vertical-align: middle;
+}
+
+
+</style>
+
+
+<!-- include app.css here , call this div calendar-class-->
+<div class="calendar-class">
 <AuthorizeView>
     <Authorized>
+       
         <h1 class="mb-3">Calendar</h1>
         <div class="row"> 
             <div class="col-3">
@@ -18,7 +59,7 @@
                 <AddEvent />
             </div>
             <div class="col-3">
-                <h2> Today's Events </h2>
+                <h2> Events </h2>
                 <table class="table">
                     <thead>
                         <tr>
@@ -52,9 +93,56 @@
                     <FindDay />
                 </div>
             </div>
-            <div class="col-3">
+            <div class="row -4">
                 <div class="display-month">
-                    <DisplayMonth />
+                    <h2>@MonthToText() @year</h2>
+        
+                    <table class="calendar-table">
+                        <!-- display the month and year  -->
+                        <thead>
+                            <tr>
+                                <th>Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            @for (int r = 0; r < rowsCount; r++)
+                            {
+                                <tr>
+                                    @foreach (var item in days.Skip(r * 7).Take(7))
+                                    {
+                                        if (item.Date == DateTime.Now.Date)
+                                        {
+                                            <td class="day bg-primary text-white">@DayTemplate(item) </td>
+                                            
+
+                                           
+                                        }
+                                        else{
+                                            <td class="day">@DayTemplate(item) </td>
+                                            // this is where the events will be displayed
+                                          
+                                            
+                                        }
+                                        
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-between">
+                            <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+                            <button class="btn btn-primary" @onclick="Today">Today</button>
+                            <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+                            
+                    </div>
+                
                 </div>
             </div>
         </div>
@@ -64,14 +152,203 @@
     </NotAuthorized>
 </AuthorizeView>
 
+</div>
 @code{
+    
+    public class CalendarDay
+    {
+        public int DayNumber { get; set; }
+        public DateTime Date { get; set; }
+        public bool IsEmpty { get; set; }
+        // events is a list of events for the day
+        public List<Event> dayEvents { get; set; }
+    }
+
+    private List<CalendarDay> days = new List<CalendarDay>();
+    private int year = DateTime.Now.Year;
+    private int month = DateTime.Now.Month;
+    private int rowsCount = 0;
 
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
-
     private GraphServiceClient? graphClient;
-    private IList<Event> events = new List<Event>();
+    public IList<Event> events = new List<Event>();
     private string? dateTimeFormat;
+
+
+    [Parameter]
+    public RenderFragment<CalendarDay> DayTemplate { get; set; } = DefaultDayTemplate;
+
+    private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
+    {
+   
+        if (day.DayNumber != 0)
+        {
+     
+            builder.AddContent(1, day.DayNumber);
+            // display the events for the day
+            if(day.dayEvents != null)
+            {
+               
+                foreach(var e in day.dayEvents)
+                {
+                    builder.AddContent(1, e.Subject); 
+                }
+            }
+        }
+    
+    };
+
+    public List<Event> getEventsofDay(CalendarDay day)
+    {
+        List<Event> eventsOfDay = new List<Event>();
+        foreach(var e in events)
+        {
+            string eventdate = (e.Start.DateTime).ToString()[0..10]; 
+            string daydate = (day.Date).ToString()[0..10];
+
+            if (eventdate.Split("-")[0] == daydate.Split("/")[2] && eventdate.Split("-")[1] == daydate.Split("/")[1] && eventdate.Split("-")[2] == daydate.Split("/")[0]){
+                eventsOfDay.Add(e);
+            }
+        }
+        return eventsOfDay;
+    } 
+
+    public CalendarDay selectedDay = new  CalendarDay
+    {
+        Date = DateTime.Now
+    };
+
+    public string MonthToText(){
+        
+
+        switch (month)
+        {
+            case 1:
+                return "January";
+            case 2:
+                return "February";
+            case 3:
+                return "March";
+            case 4:
+                return "April";
+            case 5:
+                return "May";
+            case 6:
+                return "June";
+            case 7:
+                return "July";
+            case 8:
+                return "August";
+            case 9:
+                return "September";
+            case 10:
+                return "October";
+            case 11:
+                return "November";
+            case 12:
+                return "December";
+            default:
+                return "";
+        }
+    }
+
+    public async Task LoadCalendar() {
+        // Calendar loading logic...
+        days = new List<CalendarDay>();
+
+
+        // Calculate the number of empty days 
+        var firstDayDate = new DateTime(year, month, 1);
+        int weekDayNumber = (int)firstDayDate.DayOfWeek;
+        int numberOfEmptyDays = 0;
+        // list of 
+        if (weekDayNumber == 7) // Sunday 
+        {
+            numberOfEmptyDays = 0;
+        }
+        else
+        {
+            numberOfEmptyDays = weekDayNumber;
+        }
+
+        // Add the empty days 
+        for (int i = 0; i < numberOfEmptyDays; i++)
+        {
+            days.Add(new CalendarDay
+            {
+                DayNumber = 0,
+                IsEmpty = true
+            });
+        }
+
+        // Add the month days 
+        int numberOfDaysInMonth = DateTime.DaysInMonth(year, month);
+
+        for (int i = 0; i < numberOfDaysInMonth; i++)
+        {
+            days.Add(new CalendarDay
+            {
+                DayNumber = i + 1,
+                IsEmpty = false,
+                Date = new DateTime(year, month, i + 1),
+                dayEvents = new List<Event>()                
+            });
+        }
+
+        // 2- Calcualte the number of rows 
+        int remaning = days.Count % 7;
+        if (remaning == 0)
+            rowsCount = days.Count / 7;
+        else
+            rowsCount = Convert.ToInt32(days.Count / 7) + 1;
+
+        foreach (var day in days){
+            Console.WriteLine("here");  
+            day.dayEvents = getEventsofDay(day);
+         
+        }
+        foreach(var day in days){
+        Console.WriteLine( day.dayEvents.Count);
+        }
+
+    }
+
+    public async Task NextMonth()
+    {
+        if (month == 12)
+        {
+            month = 1;
+            year++;
+        }
+        else
+        {
+            month++;
+            MonthToText();
+        }
+        await LoadCalendar();
+    }
+
+    public async Task PreviousMonth()
+    {
+        if (month == 1)
+        {
+            month = 12;
+            year--;
+        }
+        else
+        {
+            month--;
+        }
+        await LoadCalendar();
+    }
+
+    public async Task Today()
+    {
+        month = DateTime.Now.Month;
+        year = DateTime.Now.Year;
+        await LoadCalendar();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,8 +364,11 @@
         dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
 
         // Calculate the start and end of the current week in user's time zone
-        var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
-        var endOfWeek = startOfWeek.AddDays(7);
+        var startOfWeek = new DateTime(year, month, 1);
+       // GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
+        var endOfWeek = startOfWeek.AddMonths(1);
+        //startOfWeek.AddDays(7);
+
 
         graphClient = clientFactory.GetAuthenticatedClient();
 
@@ -112,6 +392,9 @@
             });
 
         events = eventPage?.Value ?? new List<Event>();
+        // for each day, if theres an event, add it to the dayEvents list
+        await base.OnInitializedAsync();
+        await LoadCalendar();
     }
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
@@ -139,7 +422,6 @@
 
         // Load into a DateTime
         var dateTime = DateTime.Parse(iso8601DateTime);
-
         if (!string.IsNullOrWhiteSpace(dateTimeFormat))
         {
             // Format it using the user's settings
