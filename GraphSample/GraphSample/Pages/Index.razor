@@ -253,12 +253,10 @@
                                         {
                                             string ListId = @key.Split("|")[1];
                                             string TaskId = @item.Id;
-                                            bool isClicked = false;
                                             string buttonClass = "";
 
                                             void ClickedButton()
                                             {
-                                                isClicked = true;
                                                 buttonClass = "-clicked";
                                                 Console.WriteLine(buttonClass);
                                             }
