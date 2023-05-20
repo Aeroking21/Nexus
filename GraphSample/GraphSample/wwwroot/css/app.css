@@ -2,6 +2,8 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    width: fit-content;
+    height: fit-content;
 }
 
 h1:focus {
@@ -20,6 +22,7 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
+    width: fit-content;
 }
 
 .valid.modified:not([type=checkbox]) {
