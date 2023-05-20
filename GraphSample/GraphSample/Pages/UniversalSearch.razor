@@ -15,15 +15,15 @@
 <AuthorizeView>
     <Authorized>
 
-        <FluentSearch @bind-Value="searchValue" style="width:80%;" @oninput="HandleInput" @onkeypress="HandleKeyPress">
+        <FluentSearch @bind-Value="searchValue" style="width:60%;" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
         </FluentSearch>
 
-        <FluentListbox Size=7 TOption="string" Style="background-color:white; border-color:white" Height="200px" Width="80%">
+        <FluentListbox Size=7 TOption="string" Style="background-color:white; border-color:white" Height="200px" Width="60%">
 
             @foreach (var data in data_response)
             {
-                <FluentOption Value="AL">
+                <FluentOption Style="height:50px" Value="AL">
                     @if (data.App == "Outlook")
                     {
                         <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
@@ -48,9 +48,9 @@
 
                     @data.Sender
                     @data.Title
-                    <a href="@data.Url"> Link</a> 
+
                 </FluentOption>
-             }
+            }
 
 
         </FluentListbox>
@@ -71,6 +71,7 @@
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     protected string searchValue = string.Empty;
+    protected string userPhoto = string.Empty;
 
     public class Author
     {
@@ -105,9 +106,11 @@
             // call the async function from here
             string searchTerm = searchValue;
             searchTerm += "*";
+
+
             await CallApiAsync(searchTerm);
             Console.WriteLine("Search value: " + searchTerm);
-         
+
         }
     }
 
@@ -128,16 +131,16 @@
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                {
+        {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                    {
+            {
                                     EntityType.Message,
                                 },
                                 Query = new SearchQuery
                                 {
-                                    QueryString = searchTerm ,
+                                    QueryString = "*amazon*" ,
                                 },
                             },
                         },
@@ -146,11 +149,11 @@
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                {
+        {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                    {
+            {
                                     EntityType.ChatMessage,
                                 },
                                 Query = new SearchQuery
@@ -164,11 +167,11 @@
         var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-                {
+        {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-                    {
+            {
                                     EntityType.DriveItem,
                                 },
                                 Query = new SearchQuery
@@ -178,6 +181,9 @@
                             },
                         },
         };
+
+
+
 
 
         var batchRequestContent = new BatchRequestContent(graphClient);
@@ -199,13 +205,26 @@
         // teams code
         try
         {
+
+
             var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(teamId);
-            var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+            // check for hits is 0 or not then it is empty
+            if (user1?.Value?[0]?.HitsContainers?[0]?.Total == 0)
+            {
+                Console.WriteLine("Nothing found in Teams");
+            }
 
-            JsonElement fromMessage = (JsonElement)searchItems["from"];
-            string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
+            else
+            {
+                var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
 
-            data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
+                JsonElement fromMessage = (JsonElement)searchItems["from"];
+                string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
+
+                data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
+            }
+
+
         }
         catch (ServiceException ex)
         {
@@ -216,12 +235,23 @@
         try
         {
             var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(mailId);
-            var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
 
-            JsonElement fromMessage = (JsonElement)searchItems["from"];
-            string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
+            if (user1?.Value?[0]?.HitsContainers?[0]?.Total == 0)
+            {
+                Console.WriteLine("Nothing found in Mail");
+            }
 
-            data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
+            else
+            {
+                var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+
+                JsonElement fromMessage = (JsonElement)searchItems["from"];
+                string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
+
+                data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
+            }
+
+
         }
         catch (ServiceException ex)
         {
@@ -232,20 +262,32 @@
         try
         {
             var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(driveId);
-            var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
 
-            JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
-            string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
+            if (user1?.Value?[0]?.HitsContainers?[0]?.Total == 0)
+            {
+                Console.WriteLine("Nothing found in OneDrive");
+            }
 
-            data_response.Add(new Author(oneDriveCreator, searchItems?["name"].ToString(), searchItems["webUrl"].ToString(), "OneDrive"));
+            else
+            {
+                var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+
+                JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
+                string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
+
+                data_response.Add(new Author(oneDriveCreator, searchItems?["name"].ToString(), searchItems["webUrl"].ToString(), "OneDrive"));
+            }
+
         }
+
         catch (ServiceException ex)
         {
             Console.WriteLine($"Get user failed");
         }
 
 
-
+        // Check if size of list is empty, then add Null Author
+        // Then in Razor page check for Null and render "Not find"
 
         //var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
 
