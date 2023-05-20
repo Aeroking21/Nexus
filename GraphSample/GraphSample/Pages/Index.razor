@@ -230,6 +230,17 @@
         height: 100%;
     }
 
+    .searchbar{
+        width: 100%;
+        position: relative;
+        display: flex;
+        justify-content: right;
+        align-items: right;
+        position: relative;
+        top: 0;
+        left: 0;
+    }
+   
 </style>
 
 
@@ -237,7 +248,13 @@
     <div>
         <AuthorizeView>
             <Authorized>
+                <div class="searchbar">
+                    <h3 style="color: #1b6ec2">Search Bar </h3>
+                    <input type="text" placeholder="Search.." name="search">
+                    <button type="submit"><i class="fa fa-search"></i></button>
+                </div>
                 <h1>Dashboard</h1>
+                
                 <div class="grid-container">
                     <div class="grid-item">
                         <h4>To Do</h4>
