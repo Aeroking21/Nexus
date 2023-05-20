@@ -1,22 +1,54 @@
-﻿<!-- Copyright (c) Microsoft Corporation.
-     Licensed under the MIT license. -->
-
-@using Microsoft.AspNetCore.Components.Authorization
+﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
 
+<style>
+    .nav-profile-photo {
+        width: 32px;
+        height: 32px;
+    }
+    ::backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .dropdown-item{
+        color: white;
+    }
+    
+    .dropdown-menu{
+        min-width: 10rem;
+        background-color: #04163C;
+        color-scheme: light;
+    }
+
+    .white-text{
+        color: white !important;
+    }
+    
+    .dropdown-divider{
+        border-color: white;
+    }
+
+    a {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+</style>
+
 <AuthorizeView>
     <Authorized>
+        <h4 style="color: white">Welcome @context?.User?.Identity?.Name!</h4>
         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">
             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
         </a>
         <div class="dropdown-menu dropdown-menu-end">
-            <h5 class="dropdown-item-text mb-0">@context?.User?.Identity?.Name</h5>
-            <p class="dropdown-item-text text-muted mb-0">@context?.User?.GetUserGraphEmail()</p>
+            <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
+            <p class="dropdown-item-text text-muted mb-0 white-text" >@context?.User?.GetUserGraphEmail()</p>
             <div class="dropdown-divider"></div>
-            <button class="dropdown-item" @onclick="BeginLogout">Log out</button>
+            <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
         </div>
     </Authorized>
     <NotAuthorized>
