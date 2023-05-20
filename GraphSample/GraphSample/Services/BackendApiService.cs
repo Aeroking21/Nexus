@@ -4,6 +4,8 @@ using SharedModels.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace GraphSample.Services
 {
@@ -22,10 +24,78 @@ namespace GraphSample.Services
 			var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/get-timelines/{username}");
             string responseBody = await response.Content.ReadAsStringAsync();
 
-            // Deserialize the response body into your custom model
             List<ApplicationTimeline> timelines = BsonSerializer.Deserialize<List<ApplicationTimeline>>(responseBody);
 			return timelines;
         }
-	}
+
+
+        public async Task<ApplicationTimeline> getUserTimelineAsync(string username, int timelineID)
+        {
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/get-timeline/{username}/{timelineID}");
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            ApplicationTimeline timelines = BsonSerializer.Deserialize<ApplicationTimeline>(responseBody);
+            return timelines;
+        }
+
+        public async Task<int> addTimeline(string username, TimelineBson newTimelineBson)
+        {
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-timeline/{username}", newTimelineBson);
+            string responseBody = await response.Content.ReadAsStringAsync();
+            int newTimelineID = int.Parse(responseBody);
+            return response.IsSuccessStatusCode ? newTimelineID : -1;
+
+        }
+
+        public async Task<bool> removeTimeline(string username, int timelineID)
+        {
+
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/remove-timeline/{username}/{timelineID}");
+
+            return response.IsSuccessStatusCode;
+
+        }
+
+
+        public async Task<bool> removeEmail(string email, string username, int timelineID)
+        {
+            var selectedEmail = new EmailBson { emailAddress = email, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/remove-email/{username}", selectedEmail);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
+        public async Task<bool> addEmail(string email, string username, int timelineID)
+        {
+            var selectedEmail = new EmailBson { emailAddress = email, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-email/{username}", selectedEmail);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
+        public async Task<bool> removeAssessment(Assessment assessment, string username, int timelineID)
+        {
+            var selectedAssessment = new AssessmentBson { assessment =  assessment, timelineID = timelineID};
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/remove-assessment/{username}", selectedAssessment);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
+        public async Task<bool> addAssessment(Assessment assessment, string username, int timelineID)
+        {
+            var selectedEmail = new AssessmentBson { assessment = assessment, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-assessment/{username}", selectedEmail);
+
+            return response.IsSuccessStatusCode;
+
+        }
+    }
 }
 

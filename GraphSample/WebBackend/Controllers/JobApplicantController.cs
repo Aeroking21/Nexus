@@ -8,6 +8,7 @@ using SharedModels.Models;
 using static MongoDB.Driver.WriteConcern;
 using System.Net.Mail;
 using System.Collections.Generic;
+using System;
 
 namespace WebBackend.Controllers;
 
@@ -94,6 +95,68 @@ public class JobApplicantsController : ControllerBase
         }
     }
 
+    [Route("add-timeline/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> AddTimeline([FromRoute] string username, [FromBody] TimelineBson timelineBson)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username));
+
+        var applicant = await _collection.Find(filter).FirstOrDefaultAsync();
+        int newTimelineID = applicant.timelineCounter;
+        applicant.timelineCounter++;
+        ApplicationTimeline newTimeline = new ApplicationTimeline
+        {
+            company = timelineBson.company,
+            role = timelineBson.role,
+            assessments = new List<Assessment>(),
+            associatedEmailAddresses = new List<string>(),
+            timelineID = newTimelineID
+        };
+
+        var timelineUpdate = Builders<JobApplicant>.Update.Push("applicationTimelines", newTimeline);
+        var counterUpdate = Builders<JobApplicant>.Update.Set("timelineCounter", (newTimelineID + 1));
+
+        try
+        {
+            var result1 = await _collection.UpdateOneAsync(filter, timelineUpdate);
+            var result2 = await _collection.UpdateOneAsync(filter, counterUpdate);
+            return Ok(newTimelineID);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Route("remove-timeline/{username}/{timelineID}")]
+    [HttpGet]
+    public async Task<IActionResult> RemoveTimeline(string username, int timelineID)
+    {
+
+        var filter = Builders<JobApplicant>.Filter.Eq(a => a.username, username);
+        List<string> associatedEmails = new();
+        var applicant = _collection.Find(filter).ToList();
+        var timelines = applicant[0].applicationTimelines;
+        int prevOunt = timelines.Count;
+        timelines.RemoveAll(t => t.timelineID == timelineID);
+        int newCount = timelines.Count;
+        if (prevOunt != newCount)
+        {
+            try
+            {
+                var update = Builders<JobApplicant>.Update.Set("applicationTimelines", timelines);
+                var result = await _collection.UpdateOneAsync(filter, update);
+                return Ok();
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+        return NotFound();
+    }
+
 
     [Route("add-email/{username}")]
     [HttpPost]
@@ -116,8 +179,6 @@ public class JobApplicantsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
-
 
 
     [Route("remove-email/{username}")]
@@ -168,19 +229,60 @@ public class JobApplicantsController : ControllerBase
 
 
 
+    //[Route("add-assessment/{username}")]
+    //[HttpPost]
+    //public async Task<IActionResult> AddAssesment([FromRoute] string username, [FromBody] AssessmentBson assessmentBson)
+    //{
+    //    var filter = Builders<JobApplicant>.Filter.And(
+    //        Builders<JobApplicant>.Filter.Eq("username", username),
+    //        Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", assessmentBson.timelineID)
+    //    );
+
+    //    var update = Builders<JobApplicant>.Update.Push("applicationTimelines.$.assessments", assessmentBson.assessment);
+
+    //    try
+    //    {
+    //        var result = await _collection.UpdateOneAsync(filter, update);
+    //        return Ok();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
+
     [Route("add-assessment/{username}")]
     [HttpPost]
     public async Task<IActionResult> AddAssesment([FromRoute] string username, [FromBody] AssessmentBson assessmentBson)
     {
-        var filter = Builders<JobApplicant>.Filter.And(
+        var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
+
+        var timelineFilter = Builders<ApplicationTimeline>.Filter.Eq(at => at.timelineID, assessmentBson.timelineID);
+
+        //var update = Builders<JobApplicant>.Update.PullFilter("ApplicationTimelines.$.AssociatedEmailAddresses", Builders<string>.Filter.Where(e => e == email.EmailAddress));
+        List<Assessment> assessments = new();
+        List<Assessment> orderedAssessments = new();
+        var applicant = _collection.Find(userFilter).ToList();
+        var timelines = applicant[0].applicationTimelines;
+        foreach (ApplicationTimeline timeline in timelines)
+        {
+            if (timeline.timelineID == assessmentBson.timelineID)
+            {
+                assessments = timeline.assessments;
+                break;
+            }
+        }
+        try
+        {
+            assessments.Add(assessmentBson.assessment);
+            orderedAssessments = assessments.OrderBy(a => a.date).ToList();
+            var filter = Builders<JobApplicant>.Filter.And(
             Builders<JobApplicant>.Filter.Eq("username", username),
             Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", assessmentBson.timelineID)
         );
 
-        var update = Builders<JobApplicant>.Update.Push("applicationTimelines.$.assessments", assessmentBson.assessment);
+            var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.assessments", orderedAssessments);
 
-        try
-        {
             var result = await _collection.UpdateOneAsync(filter, update);
             return Ok();
         }

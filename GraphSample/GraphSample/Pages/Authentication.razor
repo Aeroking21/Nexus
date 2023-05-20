@@ -1,13 +1,19 @@
-﻿<!-- Copyright (c) Microsoft Corporation.
-     Licensed under the MIT license. -->
+﻿@page "/authentication/{action}"
+@using Microsoft.AspNetCore.Components;
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
-@page "/authentication/{action}"
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Threading.Tasks;
+
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JSRuntime
+
 <RemoteAuthenticatorView Action="@Action" LogInFailed="LogInFailedFragment" />
 
-@code{
-    [Parameter] public string? Action { get; set; }
 
+@code {
+    [Parameter] public string? Action { get; set; }
+    
     private static RenderFragment LogInFailedFragment(string message)
     {
         return builder =>
@@ -27,4 +33,5 @@
             builder.CloseElement();
         };
     }
+
 }
