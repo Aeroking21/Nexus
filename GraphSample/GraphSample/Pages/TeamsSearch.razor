@@ -8,8 +8,6 @@
 @using TimeZoneConverter
 @using System
 @using System.Text.Json;
-@using Microsoft.Fast.Components.FluentUI
-
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <AuthorizeView>
@@ -42,7 +40,6 @@
             </tbody>
         </table>
     </Authorized>
-
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
@@ -77,7 +74,8 @@
 
     private void HandleInput(ChangeEventArgs e)
     {
-        searchValue = e.Value.ToString();
+        // take into account null reference on this: searchValue = e.Value.ToString();
+        searchValue = e.Value?.ToString() ?? string.Empty;
     }
 
     private void HandleKeyPress(KeyboardEventArgs e)
@@ -161,12 +159,13 @@
 
             JsonElement fromMessage = (JsonElement)searchItems["from"];
             string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-
             data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
+            
         }
         catch (ServiceException ex)
         {
-            Console.WriteLine($"Get user failed");
+            ex.Message.ToString();
+            Console.WriteLine($"Get user failed with error: {ex.Message}");
         }
 
         // mail code
@@ -182,7 +181,7 @@
         }
         catch (ServiceException ex)
         {
-            Console.WriteLine($"Get user failed");
+            Console.WriteLine($"Get user failed ", ex.Message);
         }
 
 

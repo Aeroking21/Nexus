@@ -1,6 +1,5 @@
 ﻿<!-- Copyright (c) Microsoft Corporation.
      Licensed under the MIT license. -->
-
 @page "/"
 @inject IJSRuntime JsRuntime
 @using System.Security.Authentication
@@ -181,17 +180,18 @@
     }
 
     a { 
-        color: black;
+        color: white;
         text-decoration: none;
+        font-size: 1.5rem;
     }
 
     a:hover { 
-        color: black;
+        color: white;
         text-decoration: none; 
     }
 
     a:active { 
-        color: black;
+        color: white;
         text-decoration: none; 
     }
 
@@ -231,6 +231,17 @@
         height: 100%;
     }
 
+    .searchbar{
+        width: 100%;
+        position: relative;
+        display: flex;
+        justify-content: right;
+        align-items: right;
+        position: relative;
+        top: 0;
+        left: 0;
+    }
+   
 </style>
 
 
@@ -238,8 +249,13 @@
     <div>
         <AuthorizeView>
             <Authorized>
-                <h4>Welcome @context?.User?.Identity?.Name!</h4>
+                <div class="searchbar">
+                    <h3 style="color: #1b6ec2">Search Bar </h3>
+                    <input type="text" placeholder="Search.." name="search">
+                    <button type="submit"><i class="fa fa-search"></i></button>
+                </div>
                 <h1>Dashboard</h1>
+                
                 <div class="grid-container">
                     <div class="grid-item">
                         <h4>To Do</h4>
@@ -255,12 +271,10 @@
                                         {
                                             string ListId = @key.Split("|")[1];
                                             string TaskId = @item.Id;
-                                            bool isClicked = false;
                                             string buttonClass = "";
 
                                             void ClickedButton()
                                             {
-                                                isClicked = true;
                                                 buttonClass = "-clicked";
                                                 Console.WriteLine(buttonClass);
                                             }
@@ -381,7 +395,6 @@
     private IList<Team> teams = new List<Team>();
 
     private string status = string.Empty;
-    private bool isError;
     private string userTimeZone = string.Empty;
     private string subject = string.Empty;
     private string attendees = string.Empty;
@@ -436,6 +449,10 @@
 
             foreach(var item in toDos)
             {
+                if (item == null)
+                {
+                    throw new ArgumentNullException(nameof(item));
+                }
                 var resultTasks = await graphClient.Me.Todo.Lists[item.Id].Tasks.GetAsync();
                 var key = item.DisplayName + "|" + item.Id;
                 TaskLists[key] = resultTasks;
@@ -543,7 +560,6 @@
 
     private string FormatIso8601DateTime(string? iso8601DateTime)
     {
-        string[] res;
         if (string.IsNullOrEmpty(iso8601DateTime))
         {
             return string.Empty;
@@ -618,3 +634,4 @@
     }
     
 }
+

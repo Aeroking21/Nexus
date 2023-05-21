@@ -21,9 +21,9 @@
     private DateTime end = new DateTime(DateTime.Today.Ticks);
     private string userTimeZone = string.Empty;
 
-    private async Task JumpToToday()
+    public async Task JumpToToday()
     {
-        var authenticationState = await authenticationStateTask;
+        var authenticationState = await authenticationStateTask ?? throw new AuthenticationException();
         var user = (await authenticationStateTask).User;
         userTimeZone = user.GetUserGraphTimeZone() ?? "UTC";
         var today = DateTime.Today;
