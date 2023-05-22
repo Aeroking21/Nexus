@@ -12,49 +12,81 @@
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
+<style>
+    .dropdown {
+        position: relative;
+
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f6f6f6;
+        max-height: 300px;
+        overflow: scroll;
+        border: 1px solid #ddd;
+        z-index: 10;
+        max-width: 28%;
+    }
+
+    .dropdown-content FluentOption {
+        background-color: #ddd;
+        width:98%;
+    }
+
+
+</style>
+
 <AuthorizeView>
     <Authorized>
 
-        <FluentSearch @bind-Value="searchValue" style="width:60%;" @oninput="HandleInput" @onkeypress="HandleKeyPress">
+        <div class="search-container">
 
-        </FluentSearch>
+            <FluentSearch @bind-Value="searchValue" class="dropdown" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
-        <FluentListbox Size=7 TOption="string" Style="background-color:white; border-color:white" Height="200px" Width="60%">
+            </FluentSearch>
 
-            @foreach (var data in data_response)
-            {
-                <FluentOption Style="height:50px" Value="AL">
-                    @if (data.App == "Outlook")
-                    {
-                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
-                             width="32"
-                             height="32"
-                             alt="Outlook" />
-                    }
-                    else if (data.App == "Teams")
-                    {
-                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
-                             width="32"
-                             height="32"
-                             alt="Teams" />
-                    }
-                    else
-                    {
-                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
-                             width="32"
-                             height="32"
-                             alt="OneDrive" />
-                    }
-
-                    @data.Sender
-                    @data.Title
-
-                </FluentOption>
-            }
+            <FluentListbox Size=7 TOption="string" class="dropdown-content" style="@DropDownStyle" Height="200px">
 
 
-        </FluentListbox>
+                @foreach (var data in data_response)
+                {
+                    <FluentOption Style="height:100px" Value="AL">
+                        @if (data.App == "Outlook")
+                        {
+                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                                 width="32"
+                                 height="32"
+                                 alt="Outlook" />
+                        }
+                        else if (data.App == "Teams")
+                        {
+                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                 width="32"
+                                 height="32"
+                                 alt="Teams" />
+                        }
+                        else
+                        {
+                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                                 width="32"
+                                 height="32"
+                                 alt="OneDrive" />
+                        }
 
+                        @data.Sender
+                        @data.Title
+
+                    </FluentOption>
+                }
+
+
+            </FluentListbox>
+
+
+        </div>
+
+        <h1> hwllo </h1>
         <br />
         <br />
 
@@ -72,6 +104,28 @@
 
     protected string searchValue = string.Empty;
     protected string userPhoto = string.Empty;
+    bool isDropdownVisible = false;
+    protected string DropDownStyle = string.Empty;
+
+    public string GetDropdownStyle()
+    {
+        return isDropdownVisible ? "display: block;" : "display: none;";
+    }
+
+    protected void ToggleDropdown()
+    {
+        isDropdownVisible = !isDropdownVisible;
+        if (isDropdownVisible)
+        {
+            DropDownStyle = "display: block;";
+        }
+
+        else
+        {
+            DropDownStyle = "display: none;";
+
+        }
+    }
 
     public class Author
     {
@@ -93,10 +147,18 @@
     private GraphServiceClient? graphClient;
     private List<Author> data_response = new List<Author>();
 
+    // Use style no for handle input
+    // use style yes for entering
+    // only use no when string is empty or null
+
     private void HandleInput(ChangeEventArgs e)
     {
         searchValue = e.Value.ToString();
         data_response.Clear();
+        if (String.IsNullOrEmpty(searchValue))
+        {
+            ToggleDropdown();
+        }
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
@@ -107,8 +169,8 @@
             string searchTerm = searchValue;
             searchTerm += "*";
 
-
             await CallApiAsync(searchTerm);
+            ToggleDropdown();
             Console.WriteLine("Search value: " + searchTerm);
 
         }
@@ -142,7 +204,7 @@
             },
             Query = new SearchQuery
             {
-                QueryTemplate = "*{searchQuery}*",
+                QueryTemplate = "searchTerm",
             },
         },
     },
@@ -231,7 +293,7 @@
         }
         catch (ServiceException ex)
         {
-            Console.WriteLine($"Get user failed");
+            Console.WriteLine($"Get Teams failed");
         }
 
         // mail code
@@ -258,7 +320,7 @@
         }
         catch (ServiceException ex)
         {
-            Console.WriteLine($"Get user failed");
+            Console.WriteLine($"Get Mail Failed");
         }
 
         // drive code
@@ -285,7 +347,7 @@
 
         catch (ServiceException ex)
         {
-            Console.WriteLine($"Get user failed");
+            Console.WriteLine($"Get OneDrive");
         }
 
 
