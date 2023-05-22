@@ -130,14 +130,14 @@
 
         var searchQuery = "amazon"; // The dynamic value to replace the placeholder in the query template
 
-        var requestBody = new Microsoft.Graph.Search.Query.QueryPostRequestBody
+        var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-    {
+{
         new SearchRequest
         {
             EntityTypes = new List<EntityType?>
-            {
+        {
                 EntityType.Message,
             },
             Query = new SearchQuery
@@ -152,11 +152,11 @@
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-        {
+    {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-            {
+        {
                                     EntityType.ChatMessage,
                                 },
                                 Query = new SearchQuery
@@ -170,11 +170,11 @@
         var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-        {
+    {
                             new SearchRequest
                             {
                                 EntityTypes = new List<EntityType?>
-            {
+        {
                                     EntityType.DriveItem,
                                 },
                                 Query = new SearchQuery
