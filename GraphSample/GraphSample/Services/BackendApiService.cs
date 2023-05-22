@@ -47,6 +47,13 @@ namespace GraphSample.Services
 
         }
 
+        public async Task<bool> updateReadEmailsDict(string username, ReadEmailsBson readEmails)
+        {
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-read-emails/{username}", readEmails);
+            return response.IsSuccessStatusCode;
+        }
+
+
         public async Task<bool> removeTimeline(string username, int timelineID)
         {
 
@@ -92,6 +99,15 @@ namespace GraphSample.Services
             var selectedEmail = new AssessmentBson { assessment = assessment, timelineID = timelineID };
 
             var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-assessment/{username}", selectedEmail);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
+        public async Task<bool> updateReadEmails(string username, int timelineID, int newCount)
+        {
+
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/update-read-count/{username}/{timelineID}/{newCount}");
 
             return response.IsSuccessStatusCode;
 

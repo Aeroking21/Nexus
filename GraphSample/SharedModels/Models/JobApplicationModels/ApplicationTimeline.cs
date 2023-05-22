@@ -22,5 +22,11 @@ public class ApplicationTimeline
     //[BsonElement("AssociatedEmailAddresses")]
     public List<string> associatedEmailAddresses { get; set; }
 
+    public int readEmailCount { get; set; }
+
+    public bool hasUnreadEmails { get; set; }
+
+    public Dictionary<string, bool> readEmails {get; set;}
+
 }
 

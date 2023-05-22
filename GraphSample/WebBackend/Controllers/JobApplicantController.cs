@@ -111,7 +111,10 @@ public class JobApplicantsController : ControllerBase
             role = timelineBson.role,
             assessments = new List<Assessment>(),
             associatedEmailAddresses = new List<string>(),
-            timelineID = newTimelineID
+            timelineID = newTimelineID,
+            readEmailCount = 0,
+            hasUnreadEmails = false,
+            readEmails = new()
         };
 
         var timelineUpdate = Builders<JobApplicant>.Update.Push("applicationTimelines", newTimeline);
@@ -155,6 +158,54 @@ public class JobApplicantsController : ControllerBase
             }
         }
         return NotFound();
+    }
+
+    [Route("update-timeline/{username}/{timelineID}")]
+    [HttpPost]
+    public async Task<IActionResult> UpdateTimeline(string username, [FromBody] ApplicationTimeline updatedTimeline)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", updatedTimeline.timelineID)
+);
+
+        var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$", updatedTimeline);
+
+        try
+        {
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+
+
+    }
+
+    [Route("update-read-emails/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> UpdateReadEmails(string username, [FromBody] ReadEmailsBson readEmails)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", readEmails.timelineID)
+);
+
+        var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.readEmails", readEmails.readEmails);
+
+        try
+        {
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+
+
     }
 
 
@@ -383,6 +434,30 @@ public class JobApplicantsController : ControllerBase
             }
 
             return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+
+    [Route("update-read-count/{username}/{timelineID}/{newCount}")]
+    [HttpGet]
+    public async Task<IActionResult> AddEmail(string username, int timelineID, int newCount)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", timelineID)
+        );
+
+        var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.readEmailCount", newCount)
+            .Set("applicationTimelines.$.hasUnreadEmails", false); ;
+
+        try
+        {
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
         }
         catch (Exception ex)
         {
