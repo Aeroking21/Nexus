@@ -1,7 +1,7 @@
 ﻿<!-- Copyright (c) Microsoft Corporation.
      Licensed under the MIT license. -->
 
-@page "/search"
+@page "/UniversalSearch"
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -128,23 +128,26 @@
         graphClient = clientFactory.GetAuthenticatedClient();
 
 
-        var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
+        var searchQuery = "amazon"; // The dynamic value to replace the placeholder in the query template
+
+        var requestBody = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
+    {
+        new SearchRequest
         {
-                            new SearchRequest
-                            {
-                                EntityTypes = new List<EntityType?>
+            EntityTypes = new List<EntityType?>
             {
-                                    EntityType.Message,
-                                },
-                                Query = new SearchQuery
-                                {
-                                    QueryString = "*amazon*" ,
-                                },
-                            },
-                        },
+                EntityType.Message,
+            },
+            Query = new SearchQuery
+            {
+                QueryTemplate = "*{searchQuery}*",
+            },
+        },
+    },
         };
+
 
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
