@@ -39,12 +39,9 @@
                                       @oninput=handleMailSearchInput
                                       @onchange=handleMailSearchInput
                                       @bind-Value="@mailListValue"
-                                      Placeholder="Search for State" />
+                                      Placeholder="Mailing account" />
                         <br />
                         <FluentListbox Items=@mailResults TOption="string" SelectedOptionChanged="@(e => mailListValue = (e != defaultResultsText ? e : string.Empty) )" />
-                        <p>
-                            You searched for: @mailListValue
-                        </p>
                     </div>
 
                     <div class="searchBoxes">
@@ -52,12 +49,9 @@
                                       @oninput=handleTeamSearchInput
                                       @onchange=handleTeamSearchInput
                                       @bind-Value="@teamNameValue"
-                                      Placeholder="Search for State" />
+                                      Placeholder="Team Chat" />
                         <br />
                         <FluentListbox Items=@teamResults TOption="string" SelectedOptionChanged="@(e => teamNameValue = (e != defaultResultsText ? e : string.Empty) )" />
-                        <p>
-                            You searched for: @teamNameValue
-                        </p>
                     </div>
 
                     <div class="searchBoxes">
@@ -65,12 +59,9 @@
                                       @oninput=handleCalSearchInput
                                       @onchange=handleCalSearchInput
                                       @bind-Value="@calendarValue"
-                                      Placeholder="Search for State" />
+                                      Placeholder="Calendar" />
                         <br />
                         <FluentListbox Items=@calResults TOption="string" SelectedOptionChanged="@(e => calendarValue = (e != defaultResultsText ? e : string.Empty) )" />
-                        <p>
-                            You searched for: @calendarValue
-                        </p>
                     </div>
                 </div>
 
@@ -133,13 +124,13 @@
             <FluentTabPanel>
                 <div class="row">
                     <div class="splitleft">
-                        <div class="calSec">
-                            @foreach (var teamsChat in chats)
+                        <div class="teamSec">
+                            @foreach (var teamsChat in teams)
                             {
                                 <FluentCard>
-                                    <div class="calEntryBox">
-                                        <div class="calEntryData">
-                                            <p class="subject">@teamsChat?</p>
+                                    <div class="teamEntryBox">
+                                        <div class="teamEntryData">
+                                            <p class="subject">@teamsChat?.DisplayName</p>
                                         </div>
                                     </div>
                                 </FluentCard>
@@ -296,6 +287,36 @@
             }
 
             /*
+             * TEAMS
+            */
+
+            .teamSec {
+                max-height: 78vh;
+                overflow-y: scroll;
+            }
+
+            .teamEntryBox {
+                display: flex;
+                padding-bottom: 5px;
+                padding-top: 5px;
+            }
+
+            .teamEntryData {
+                flex: 100%;
+            }
+
+                .teamEntryData .subject {
+                    padding: 0;
+                    padding-right: 10px;
+                    margin-bottom: 0;
+                    font-size: large;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 300px;
+                }
+
+            /*
              * CALENDAR
             */
 
@@ -360,7 +381,7 @@
     private GraphServiceClient? graphClient;
     private IList<Event> events = new List<Event>();
     private IList<Message> allMessages = new List<Message>();
-    private IList<Chat> chats = new List<Chat>();
+    private IList<Team> teams = new List<Team>();
 
     private string? dateTimeFormat;
     private string? oldData;
@@ -410,16 +431,9 @@
         /*
          * GET RECENT TEAM CHATS
          */
-        var chatPage = await graphClient.Me
-            .Chats
-            .GetAsync(config =>
-            {
-                config.QueryParameters.Top = 50;
-            });
-        /*
-         * Set to non-async variable. Can then be accessed in html.
-         */
-        chats = chatPage?.Value ?? new List<Chat>();
+
+        var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
+        teams = teamPage?.Value ?? new List<Team>();
     }
 
     public async Task BeginCal()
