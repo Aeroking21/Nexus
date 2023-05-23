@@ -15,20 +15,21 @@
         <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
         <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
 
-        <h1 class="mb-3">Overview</h1>
-
         <div class="groupSec">
             <div class="seeGroups">
-                <FluentListbox TOption="string" ValueChanged="@(e => listboxValue = e)">
+                <FluentSelect Id="state" name="state" TOption="GroupItem" @bind-Value="selectedGroupValue">
+                    <FluentOption Selected="true" Value=null>All</FluentOption>
                     @foreach (var group in myGroups)
                     {
-                        <FluentOption>@group.Name</FluentOption>
+                        <FluentOption Value="@(group.mailName+';'+group.teamName+';'+group.calName)">@group.Name</FluentOption>
                     }
-                </FluentListbox>
+                </FluentSelect>
+
             </div>
 
             <div class="addGroup">
                 <div class="groupSettings">
+
                     <div class="nameBox">
                         <FluentTextField @bind-Value=placename></FluentTextField>
                     </div>
@@ -77,7 +78,6 @@
                     <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add</FluentButton>
                 </div>
             </div>
-
         </div>
 
         <FluentTabs ActiveId="@activeid" OnTabChange="HandleOnTabChange">
@@ -357,6 +357,7 @@
     private IList<Chat> chats = new List<Chat>();
 
     private string? dateTimeFormat;
+    private string? oldData;
 
     protected override async Task OnInitializedAsync()
     {
@@ -377,6 +378,9 @@
 
         graphClient = clientFactory.GetAuthenticatedClient();
 
+        /*
+         * GET ALL CALENDAR EVENTS
+         */
         var eventPage = await graphClient.Me
             .CalendarView
             .GetAsync(config =>
@@ -396,6 +400,9 @@
                 config.QueryParameters.Orderby = new[] { "start/dateTime" };
             });
 
+        /*
+         * GET RECENT MAIL EVENTS
+         */
         var mailPage = await graphClient.Me
             .MailFolders["Inbox"]
             .Messages
@@ -403,10 +410,18 @@
             {
                 config.Headers.Add("Prefer", "outlook.body-content-type='text'");
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+
+                if (selectedGroupValue != "null"){
+                    config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + selectedGroupValue.Split(';')[0] + "'";
+                }
+
                 config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
                 config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
 
+        /*
+         * GET RECENT TEAM CHATS
+         */
         var chatPage = await graphClient.Me
             .Chats
             .GetAsync(config =>
@@ -418,10 +433,35 @@
 
             });
 
+        /*
+         * Set to non-async variable. Can then be accessed in html.
+         */
         chats = chatPage?.Value ?? new List<Chat>();
         allMessages = mailPage?.Value ?? new List<Message>();
         events = eventPage?.Value ?? new List<Event>();
     }
+
+    public async Task BeginMail()
+    {
+
+    }
+
+    public async Task BeginTeams()
+    {
+
+    }
+
+    public async Task BeginCal()
+    {
+
+    }
+
+    public async Task UpdateGroup()
+    {
+        if (oldData != selectedGroupValue) { Console.WriteLine("updating"); StateHasChanged(); }
+        oldData = selectedGroupValue;
+    }
+
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
@@ -459,24 +499,23 @@
         return iso8601DateTime;
     }
 
-    // Handling tabs
+    /*
+     * HANDLE WHICH TAB IS BEING PRESENTED
+    */
     string? activeid = "Mail";
     FluentTab? changedto;
-    private void HandleOnTabChange(FluentTab tab)
-    {
-        changedto = tab;
-    }
+    private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    // Hide or reveal content
+    /*
+     * SHOW THE DETAILS OF THE CURRENT EMAIL
+    */
     private Message currentEmail { get; set; } = null;
+    private void Toggle(Message email) { currentEmail = email; }
 
-    private void Toggle(Message email)
-    {
-        currentEmail = email;
-    }
-
-    string? listboxValue = null;
-
+    /*
+     * ALL INPUT BOXES TO CREATE GROUPS
+     * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+     */
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -485,8 +524,8 @@
     string? calendarValue = string.Empty;
 
     List<string> searchData = new()
-{
-        "Angus",
+    {
+        "ajp20@7qp7mb.onmicrosoft.com",
         "Brendon",
         "Charmaine",
         "Indraneel",
@@ -504,25 +543,6 @@
         return new() { defaultResultsText };
     }
 
-    public class GroupItem
-    {
-        public string? Name { get; set; }
-        public string? mailName { get; set; }
-        public string? teamName { get; set; }
-        public string? calName { get; set; }
-    }
-
-    string? placename { get; set; } = string.Empty;
-
-    private List<GroupItem> myGroups = new();
-    void addToGroup(string m, string t, string c)
-    {
-        if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
-        {
-            myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
-        }
-    }
-
     void handleMailSearchInput(ChangeEventArgs args)
     {
         if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
@@ -532,10 +552,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0)
-                {
-                    mailResults = temp;
-                }
+                if (temp.Count() > 0) { mailResults = temp; }
             }
         }
         else
@@ -554,10 +571,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0)
-                {
-                    teamResults = temp;
-                }
+                if (temp.Count() > 0) { mailResults = temp; }
             }
         }
         else
@@ -577,9 +591,7 @@
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
                 if (temp.Count() > 0)
-                {
-                    calResults = temp;
-                }
+                    if (temp.Count() > 0) { mailResults = temp; }
             }
         }
         else
@@ -588,4 +600,29 @@
             calendarValue = string.Empty;
         }
     }
+
+    /*
+     * CREATE LOCAL CLASS TO STORE GROUPS.
+     * ALSO SEND TO API MONGO DB
+     */
+    public class GroupItem
+    {
+        public string? Name { get; set; }
+        public string? mailName { get; set; }
+        public string? teamName { get; set; }
+        public string? calName { get; set; }
+    }
+
+    string? placename { get; set; } = string.Empty;
+    string? selectedGroupValue;
+    private List<GroupItem> myGroups = new();
+
+    void addToGroup(string m, string t, string c)
+    {
+        if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
+        {
+            myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
+        }
+    }
+
 }
