@@ -190,8 +190,6 @@
         graphClient = clientFactory.GetAuthenticatedClient();
 
 
-        var searchQuery = "amazon"; // The dynamic value to replace the placeholder in the query template
-
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
@@ -204,7 +202,7 @@
             },
             Query = new SearchQuery
             {
-                QueryTemplate = "searchTerm",
+                QueryTemplate = searchTerm,
             },
         },
     },

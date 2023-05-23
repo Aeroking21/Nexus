@@ -1,0 +1,136 @@
+﻿@page "/AiSummarize"
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using TimeZoneConverter
+@using System
+@using System.Text.Json;
+@using Microsoft.Fast.Components.FluentUI
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+
+
+
+<AuthorizeView>
+    <Authorized>
+
+        <h3> Component </h3>
+
+    </Authorized>
+
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+
+    [CascadingParameter]
+    protected Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+
+    public class Author
+    {
+        public string Sender { get; }
+        public string Title { get; }
+        public string Url { get; }
+        public string App { get; }
+
+        public Author(string sender, string title, string webLink, string app)
+        {
+            Sender = sender;
+            Title = title;
+            Url = webLink;
+            App = app;
+        }
+    }
+
+
+    private GraphServiceClient? graphClient;
+    private List<Author> data_response = new List<Author>();
+
+    // Use style no for handle input
+    // use style yes for entering
+    // only use no when string is empty or null
+
+
+    protected async Task CallApiAsync(string searchTerm)
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user
+        var user = (await authenticationStateTask).User;
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+
+        var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
+        {
+            Requests = new List<SearchRequest>
+{
+                            new SearchRequest
+                            {
+                                EntityTypes = new List<EntityType?>
+{
+                                    EntityType.DriveItem,
+                                },
+                                Query = new SearchQuery
+                                {
+                                    QueryString = searchTerm,
+                                },
+                            },
+                        },
+        };
+
+
+
+
+
+        var batchRequestContent = new BatchRequestContent(graphClient);
+
+        //var result = await graphClient.Search.Query.PostAsync(requestBody);
+        var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
+
+        var driveId = await batchRequestContent.AddBatchRequestStepAsync(drive);
+
+        var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
+
+
+        // teams code
+        try
+        {
+
+
+            var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(driveId);
+            // check for hits is 0 or not then it is empty
+            if (user1?.Value?[0]?.HitsContainers?[0]?.Total == 0)
+            {
+                Console.WriteLine("Nothing found in Teams");
+            }
+
+            else
+            {
+                var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+
+                JsonElement fromMessage = (JsonElement)searchItems["from"];
+                string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
+
+                data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
+            }
+
+
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Get Teams failed");
+        }
+
+   
+    }
+}
+
+
