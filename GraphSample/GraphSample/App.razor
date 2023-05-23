@@ -30,21 +30,3 @@
 </CascadingAuthenticationState>
 
 
-
-@code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await jsRuntime.InvokeVoidAsync("windowResizeInterop");
-        }
-    }
-
-    [JSInvokable]
-    public void WindowResized()
-    {
-        // Handle the window resize event
-        // Update the calendar element's dimensions here
-        StateHasChanged();
-    }
-}

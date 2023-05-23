@@ -1,6 +1,6 @@
 .item {
     color: #000000;
-    background: #2a9cb6;
+    background: #053b47;
 }
 
 .tile {
@@ -201,15 +201,6 @@ a:active {
     line-height: 1.4em;
 }
 
-.log-in-screen {
-
-   /* make the background screen a moving glitter mist on a blue background  */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-}
 
 .searchbar{
     width: 100%;
