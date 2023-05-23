@@ -33,7 +33,7 @@
         display: grid;
         /*grid-template-columns: auto auto;*/
         grid-template-columns: 50% 50%;
-        grid-template-rows: 50% 50%;
+        grid-template-rows: 300px 300px;
         height: 100%;
         width: 100%;
         gap: 10px;
@@ -232,17 +232,12 @@
 
     .searchbar{
         width: 100%;
-        position: relative;
-        display: flex;
-        justify-content: right;
-        align-items: right;
-        position: relative;
-        top: 0;
-        left: 0;
+
+
     }
 
     h1 {
-        font-size: 72px;
+        font-size: 65px;
         background: -webkit-linear-gradient(#005C97,#363795);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -256,6 +251,7 @@
         margin: 5px;
         color: white;
     }
+
    
 </style>
 
@@ -265,15 +261,19 @@
         <AuthorizeView>
             <Authorized>
                 <div class="searchbar">
+                    <span class="left-content"><h1>Dashboard</h1></span>
                     @* <h3 style="color: #1b6ec2">Search Bar </h3> *@
-                    <input type="text" placeholder="Search..." name="search">
-                    <button type="submit" style="background-color: #5680E9; border-radius: 3px; padding: 5px; margin: 5px; border: 0px;"><i class="oi oi-magnifying-glass" style="color:white;"></i></button>
+                    <span class="right-content">
+                        <input type="text" placeholder="Search..." name="search">
+                        <button type="submit" style="background-color: #5680E9; border-radius: 3px; padding: 5px; margin: 5px; border: 0px;"><i class="oi oi-magnifying-glass" style="color:white;"></i></button>
+                    </span>
                 </div>
-                <h1>Dashboard</h1>
                 
                 <div class="grid-container">
                     <div class="grid-item">
-                        <h4>To Do</h4>
+                        <div class="header-bar">
+                            <h4>To Do</h4>
+                        </div>
                         @if (TaskLists.Count != 0)
                         {
                             @foreach (var key in TaskLists.Keys)
@@ -330,7 +330,15 @@
                                 <a href="inbox">
                                     @* @mail.WebLink *@
                                     <div class="email">
-                                        <h3>@mail.Subject</h3>
+                                        @if (mail.Subject.Length != 0)
+                                        {
+                                            <h3>@mail.Subject</h3>
+                                        }
+                                        else
+                                        {
+                                            <h3>(No Subject)</h3>
+                                        }
+                                        
                                         <h4>
                                             From: @mail.Sender.EmailAddress.Name
                                         </h4>
@@ -420,6 +428,9 @@
 
     public int count = 0;
 
+    public System.Security.Claims.ClaimsPrincipal user { get; set; }
+
+
     protected override async Task OnInitializedAsync()
     {   
         var tokenResult = await AccessTokenProvider.RequestAccessToken();
@@ -436,6 +447,8 @@
             throw new AuthenticationException(
                 "Unable to access authentication state");
         }
+        user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
 
         await RerunToDo();
         await RerunCal();
@@ -448,8 +461,8 @@
     {   
         if(count > 0) {
             //await Task.Delay(1000);
-            Console.WriteLine("Access  " + AccessToken);
-            graphClient = clientFactory.GetAuthenticatedClient();
+            //Console.WriteLine("Access  " + AccessToken);
+            //graphClient = clientFactory.GetAuthenticatedClient();
 
             var toDoList = await graphClient.Me.Todo.Lists.GetAsync(
                 config=>{
@@ -475,6 +488,7 @@
 
     public async Task RerunToDo()
     {
+
         await BeginToDos();
         //StateHasChanged();
 
@@ -484,7 +498,7 @@
     {   
         if(count > 0) {
             //await Task.Delay(1000);
-            var user = (await authenticationStateTask).User;
+            //var user = (await authenticationStateTask).User;
             userTimeZone = user.GetUserGraphTimeZone() ?? "UTC";
 
             if (authenticationStateTask == null)
@@ -496,14 +510,14 @@
             var graphTimeZone = user.GetUserGraphTimeZone();
             dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
 
-            graphClient = clientFactory.GetAuthenticatedClient();
+           // graphClient = clientFactory.GetAuthenticatedClient();
             
             DateTime currentDate = DateTime.Now.Date;
             DateTime nextDay = currentDate.AddDays(1).Date;
             DateTime endDateTime = nextDay.AddSeconds(-1);
 
-            Console.WriteLine(currentDate.ToString("o"));
-            Console.WriteLine(endDateTime.ToString("o"));
+            //Console.WriteLine(currentDate.ToString("o"));
+            //Console.WriteLine(endDateTime.ToString("o"));
 
 
 
@@ -533,20 +547,15 @@
     public async Task RerunCal()
     {
         await BeginCal();
-        //StateHasChanged();
-
     }
 
     public async Task BeginEmail()
     {
         // Get the user
         if (count > 0){
-            //await Task.Delay(1000);
-            var user = (await authenticationStateTask).User;
+            await Task.Delay(1000);
             var graphTimeZone = user.GetUserGraphTimeZone();
             dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-
-            graphClient = clientFactory.GetAuthenticatedClient();
 
             //Get mail from inbox
             var mailPage = await graphClient.Me
@@ -566,7 +575,7 @@
     public async Task RerunEmail()
     {
         await BeginEmail();
-        //StateHasChanged();
+        StateHasChanged();
 
     }
 
@@ -583,18 +592,8 @@
         return dateTime.ToString("hh:mm tt");
     }
 
-    protected async Task ConfigureMgtProvider()
-    {
-        var tokenResult = await AccessTokenProvider.RequestAccessToken();
-        if (tokenResult.TryGetToken(out var accessToken))
-        {
-            AccessToken = accessToken.Value;
-            await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
-        }
-    }
-
     public async Task CompleteTask(string ListId, string TaskId){
-        graphClient = clientFactory.GetAuthenticatedClient();
+        
         var requestBody = new TodoTask
         {
             Status = Microsoft.Graph.Models.TaskStatus.Completed
@@ -609,7 +608,6 @@
     }
 
     public async Task DeleteTask(string ListId, string TaskId){
-        graphClient = clientFactory.GetAuthenticatedClient();
  
         await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].DeleteAsync();
         await BeginToDos();
@@ -619,7 +617,6 @@
     }
 
     public async Task UnDoTask(string ListId, string TaskId){
-        graphClient = clientFactory.GetAuthenticatedClient();
         var requestBody = new TodoTask
         {
             Status = Microsoft.Graph.Models.TaskStatus.NotStarted
@@ -635,7 +632,6 @@
     public async Task BeginTeams()
     {
         if (count > 0){
-            graphClient = clientFactory.GetAuthenticatedClient();
 
             var teamsPage = await graphClient.Me.JoinedTeams
                 .GetAsync();
