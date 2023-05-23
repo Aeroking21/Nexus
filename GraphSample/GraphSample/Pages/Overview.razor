@@ -15,20 +15,21 @@
         <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
         <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
 
-        <h1 class="mb-3">Overview</h1>
-
         <div class="groupSec">
             <div class="seeGroups">
-                <FluentListbox TOption="string" ValueChanged="@(e => listboxValue = e)">
+                <FluentSelect Id="state" name="state" TOption="GroupItem" @onchange="UpdateGroup" @bind-Value="selectedGroupValue">
+                    <FluentOption Selected="true" Value="@null">All</FluentOption>
                     @foreach (var group in myGroups)
                     {
-                        <FluentOption>@group.Name</FluentOption>
+                        <FluentOption Value="@(group.mailName+';'+group.teamName+';'+group.calName)">@group.Name</FluentOption>
                     }
-                </FluentListbox>
+                </FluentSelect>
+
             </div>
 
             <div class="addGroup">
                 <div class="groupSettings">
+
                     <div class="nameBox">
                         <FluentTextField @bind-Value=placename></FluentTextField>
                     </div>
@@ -77,7 +78,6 @@
                     <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add</FluentButton>
                 </div>
             </div>
-
         </div>
 
         <FluentTabs ActiveId="@activeid" OnTabChange="HandleOnTabChange">
@@ -129,6 +129,31 @@
 
             </FluentTabPanel>
 
+
+            <FluentTabPanel>
+                <div class="row">
+                    <div class="splitleft">
+                        <div class="calSec">
+                            @foreach (var teamsChat in chats)
+                            {
+                                <FluentCard>
+                                    <div class="calEntryBox">
+                                        <div class="calEntryData">
+                                            <p class="subject">@teamsChat?</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="splitright">
+
+                    </div>
+                </div>
+
+            </FluentTabPanel>
+
             <FluentTabPanel>
                 <div class="row">
                     <div class="splitleft">
@@ -157,30 +182,6 @@
                         hi
                     </div>
                 </div>
-            </FluentTabPanel>
-
-            <FluentTabPanel>
-                <div class="row">
-                    <div class="splitleft">
-                        <div class="calSec">
-                            @foreach (var teamsChat in chats)
-                            {
-                                <FluentCard>
-                                    <div class="calEntryBox">
-                                        <div class="calEntryData">
-                                            <p class="subject">@teamsChat?</p>
-                                        </div>
-                                    </div>
-                                </FluentCard>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="splitright">
-
-                    </div>
-                </div>
-
             </FluentTabPanel>
         </FluentTabs>
 
@@ -362,6 +363,7 @@
     private IList<Chat> chats = new List<Chat>();
 
     private string? dateTimeFormat;
+    private string? oldData;
 
     protected override async Task OnInitializedAsync()
     {
@@ -371,61 +373,103 @@
                 "Unable to access authentication state");
         }
 
-        // Get the user
-        var user = (await authenticationStateTask).User;
-        var graphTimeZone = user.GetUserGraphTimeZone();
-        dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+        await BeginMail("All");
+        await BeginTeam();
+        //await BeginCal();
+    }
 
-        // Calculate the start and end of the current week in user's time zone
-        var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
-        var endOfWeek = startOfWeek.AddDays(7);
-
+    public async Task BeginMail(string addresses)
+    {
+        Console.WriteLine("GOT IN HERE??");
         graphClient = clientFactory.GetAuthenticatedClient();
-
-        var eventPage = await graphClient.Me
-            .CalendarView
-            .GetAsync(config =>
-            {
-                // Send user time zone in request so date/time in
-                // response will be in preferred time zone
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                // Specifies the start and end of the view on the calendar
-                // Translates to: ?startDateTime=""&endDateTime=""
-                config.QueryParameters.StartDateTime = startOfWeek.ToString("o");
-                config.QueryParameters.EndDateTime = endOfWeek.ToString("o");
-                // Get max 50 per request
-                config.QueryParameters.Top = 50;
-                // Only return fields app will use
-                config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
-                // Order results chronologically
-                config.QueryParameters.Orderby = new[] { "start/dateTime" };
-            });
-
+        /*
+         * GET RECENT MAIL EVENTS
+         */
         var mailPage = await graphClient.Me
             .MailFolders["Inbox"]
             .Messages
             .GetAsync(config =>
             {
                 config.Headers.Add("Prefer", "outlook.body-content-type='text'");
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
-                config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
-            });
+                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
 
+                if (addresses != "All") { config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + addresses; }
+
+                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
+                //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
+            });
+        /*
+         * Set to non-async variable. Can then be accessed in html.
+         */
+        allMessages = mailPage?.Value ?? new List<Message>();
+    }
+
+    public async Task BeginTeam()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        /*
+         * GET RECENT TEAM CHATS
+         */
         var chatPage = await graphClient.Me
             .Chats
             .GetAsync(config =>
             {
                 config.QueryParameters.Top = 50;
-                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                //config.QueryParameters.Select = new string[] { "subject", "sender"};
-                //config.QueryParameters.Orderby = new string[] { "receivedDateTime" };
-
             });
-
+        /*
+         * Set to non-async variable. Can then be accessed in html.
+         */
         chats = chatPage?.Value ?? new List<Chat>();
-        allMessages = mailPage?.Value ?? new List<Message>();
+    }
+
+    public async Task BeginCal()
+    {
+        // Get the user
+        //var user = (await authenticationStateTask).User;
+        //var graphTimeZone = user.GetUserGraphTimeZone();
+        //dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+
+        // Calculate the start and end of the current week in user's time zone
+        //var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
+        //var endOfWeek = startOfWeek.AddDays(7);
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        /*
+         * GET ALL CALENDAR EVENTS
+         */
+        var eventPage = await graphClient.Me
+            .CalendarView
+            .GetAsync(config =>
+            {
+                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+                //config.QueryParameters.StartDateTime = startOfWeek.ToString("o");
+                //config.QueryParameters.EndDateTime = endOfWeek.ToString("o");
+                config.QueryParameters.Top = 50;
+                config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
+                config.QueryParameters.Orderby = new[] { "start/dateTime" };
+            });
+        /*
+         * Set to non-async variable. Can then be accessed in html.
+         */
         events = eventPage?.Value ?? new List<Event>();
+    }
+
+    async void UpdateGroup(ChangeEventArgs args)
+    {
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+            if (searchTerm == "all") { await BeginMail("All"); StateHasChanged(); }
+            else
+            {
+                string mailQuery = searchTerm.Split(';')[0] + "'";
+                string teamQuery = searchTerm.Split(';')[1] + "'";
+                string calQuery = searchTerm.Split(';')[2] + "'";
+                await BeginMail(mailQuery);
+                StateHasChanged();
+            }
+        }
     }
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
@@ -464,24 +508,23 @@
         return iso8601DateTime;
     }
 
-    // Handling tabs
+    /*
+     * HANDLE WHICH TAB IS BEING PRESENTED
+    */
     string? activeid = "Mail";
     FluentTab? changedto;
-    private void HandleOnTabChange(FluentTab tab)
-    {
-        changedto = tab;
-    }
+    private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    // Hide or reveal content
+    /*
+     * SHOW THE DETAILS OF THE CURRENT EMAIL
+    */
     private Message currentEmail { get; set; } = null;
+    private void Toggle(Message email) { currentEmail = email; }
 
-    private void Toggle(Message email)
-    {
-        currentEmail = email;
-    }
-
-    string? listboxValue = null;
-
+    /*
+     * ALL INPUT BOXES TO CREATE GROUPS
+     * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+     */
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -490,8 +533,8 @@
     string? calendarValue = string.Empty;
 
     List<string> searchData = new()
-{
-        "Angus",
+    {
+        "ajp20@7qp7mb.onmicrosoft.com",
         "Brendon",
         "Charmaine",
         "Indraneel",
@@ -509,25 +552,6 @@
         return new() { defaultResultsText };
     }
 
-    public class GroupItem
-    {
-        public string? Name { get; set; }
-        public string? mailName { get; set; }
-        public string? teamName { get; set; }
-        public string? calName { get; set; }
-    }
-
-    string? placename { get; set; } = string.Empty;
-
-    private List<GroupItem> myGroups = new();
-    void addToGroup(string m, string t, string c)
-    {
-        if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
-        {
-            myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
-        }
-    }
-
     void handleMailSearchInput(ChangeEventArgs args)
     {
         if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
@@ -537,10 +561,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0)
-                {
-                    mailResults = temp;
-                }
+                if (temp.Count() > 0) { mailResults = temp; }
             }
         }
         else
@@ -559,10 +580,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0)
-                {
-                    teamResults = temp;
-                }
+                if (temp.Count() > 0) { teamResults = temp; }
             }
         }
         else
@@ -581,10 +599,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0)
-                {
-                    calResults = temp;
-                }
+                if (temp.Count() > 0) { calResults = temp; }
             }
         }
         else
@@ -593,4 +608,29 @@
             calendarValue = string.Empty;
         }
     }
+
+    /*
+     * CREATE LOCAL CLASS TO STORE GROUPS.
+     * ALSO SEND TO API MONGO DB
+     */
+    public class GroupItem
+    {
+        public string? Name { get; set; }
+        public string? mailName { get; set; }
+        public string? teamName { get; set; }
+        public string? calName { get; set; }
+    }
+
+    string? placename { get; set; } = string.Empty;
+    string? selectedGroupValue;
+    private List<GroupItem> myGroups = new();
+
+    void addToGroup(string m, string t, string c)
+    {
+        if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
+        {
+            myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
+        }
+    }
+
 }
