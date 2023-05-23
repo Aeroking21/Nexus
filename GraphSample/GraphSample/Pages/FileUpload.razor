@@ -1,9 +1,11 @@
 @page "/fileupload"
 @using System.Security.Authentication
+@using System.Text
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 @using Microsoft.Extensions.Logging
+@using GrapeCity.Documents.Pdf
 @using Azure;
 @using Azure.AI.OpenAI;
 @using static System.Environment
@@ -47,7 +49,7 @@
 
 @code {
     private List<IBrowserFile> loadedFile = new();
-    private long maxFileSize = 1024 * 500;
+    private long maxFileSize = 1024 * 100000;
     private int maxAllowedFiles = 1;
     private bool isLoading;
     private bool isSummarizing;
@@ -56,21 +58,50 @@
     // Event handler for file upload
     private void LoadFile(InputFileChangeEventArgs e)
     {
+        isLoading = true;
         loadedFile.Clear();
 
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
             loadedFile.Add(file);
         }
+        isLoading = false;
     }
 
     // Helper method to split the content into smaller chunks
     private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
     {
-        for (int i = 0; i < content.Length; i += chunkSize)
+        var sentences = content.Split('.', '!', '?');
+        var currentChunk = new StringBuilder();
+
+        foreach (var sentence in sentences)
         {
-            yield return content.Substring(i, Math.Min(chunkSize, content.Length - i));
+            if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
+            {
+                currentChunk.Append(sentence).Append('.');
+            }
+            else
+            {
+                yield return currentChunk.ToString();
+                currentChunk.Clear().Append(sentence).Append('.');
+            }
         }
+
+        if (currentChunk.Length > 0)
+        {
+            yield return currentChunk.ToString();
+        }
+    }
+
+
+    private async Task<string> ExtractAllTextAsync(IBrowserFile file)
+    {
+        using var memoryStream = new MemoryStream();
+        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+        var document = new GcPdfDocument();
+        document.Load(memoryStream);
+        var text = document.GetText();
+        return text;
     }
 
     // Event handler for the "Summarize" button click
@@ -80,73 +111,78 @@
         {
             return;
         }
-
-        isLoading = true;
         isSummarizing = true; // Set the flag to indicate that summarization is in progress
 
         // Read the content of the file
         var file = loadedFile[0];
-        var stream = file.OpenReadStream(maxFileSize);
-        var reader = new StreamReader(stream);
-        var content = await reader.ReadToEndAsync();
+        //var stream = file.OpenReadStream(maxFileSize);
+        //var reader = new StreamReader(stream);
+        var content = await ExtractAllTextAsync(file);
 
         // Perform summarization until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
 
-        //while (overallSummary.Length < 3000)
-        //{
-            // Split the content into smaller chunks
-            var chunkSize = 3000; // Adjust this value as per your model's character limit
-            var chunks = SplitContentIntoChunks(content, chunkSize);
+        
+        // Split the content into smaller chunks
+        var chunkSize = 750; // Adjust this value as per your model's character limit
+        var chunks = SplitContentIntoChunks(content, chunkSize);
 
-            // Perform summarization for each chunk
-            foreach (var chunk in chunks)
-            {
-                string prompt = $"Summarize the following text while keeping a scientific stance on the information and in as much detail as possible:\n\n{chunk}\n";
-                Console.Write($"Input: {prompt}\n");
+        // Perform summarization for each chunk
+        foreach (var chunk in chunks)
+        {
+            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (aim for 1000 characters minimum):\n\n{chunk}\n";
+            Console.Write($"Input: {prompt}\n");
 
-                var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-                var completion = completionsResponse.Value.Choices[0].Text;
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}\n");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
 
-                summaries.Add(completion);
-            }
+        // Combine the individual summaries into an overall summary
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
 
-            // Combine the individual summaries into an overall summary
-            overallSummary = string.Join(" ", summaries);
+        //Break the loop if the overall summary exceeds 2500 characters
+        if (overallSummary.Length >= 2500)
+        {
+            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}\n");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+        //Break the loop if the overall summary exceeds 2500 characters
+        else if (overallSummary.Length <= 500)
+        {
+            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}\n");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
 
-            // Break the loop if the overall summary exceeds 3000 characters
-            //if (overallSummary.Length >= 3000)
-            //{
-            //    break;
-            //}
-
-            // Prepare for the next round of summarization
-            content = overallSummary;
-            summaries.Clear();
-        //}
-
-        // Trim the overall summary to 3000 characters if needed
-        //if (overallSummary.Length > 3000)
-        //{
-        //    overallSummary = overallSummary.Substring(0, 3000);
-        //}
-
+        
         summary = overallSummary;
 
-        isLoading = false;
         isSummarizing = false; // Set the flag to indicate that summarization is complete
-    }
-
-
-
-    // Helper method to read the content of the uploaded file
-    private async Task<string> ReadFileContentAsync(IBrowserFile file)
-    {
-        using (var stream = file.OpenReadStream(maxFileSize))
-        using (var reader = new StreamReader(stream))
-        {
-            return await reader.ReadToEndAsync();
-        }
     }
 }
