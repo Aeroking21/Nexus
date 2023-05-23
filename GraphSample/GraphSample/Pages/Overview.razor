@@ -6,127 +6,290 @@
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
+@using Microsoft.Fast.Components.FluentUI
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <AuthorizeView>
     <Authorized>
+        <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
+        <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
+
         <h1 class="mb-3">Overview</h1>
-        <a href="/newevent" class="btn btn-light btn-sm mb-3">New event</a>
 
-        <div class="container">
-            <div class="emailSec">
-                <div class="emailList">
-                    @foreach (var mail in allMessages)
+        <div class="groupSec">
+            <div class="seeGroups">
+                <FluentListbox TOption="string" ValueChanged="@(e => listboxValue = e)">
+                    @foreach (var group in myGroups)
                     {
-                        /*<img src=""/>*/
-                        <div class="emailEntryBox">
-                            <div class="emailEntryData">
-                                <p class="subject">@mail.Subject</p>
-                                <p class="sender">@mail.Sender</p>
-                                <p class="content">Content</p>
-                            </div>
-
-                            <div class="emailDateTime">3:30PM</div>
-                        </div>
+                        <FluentOption>@group.Name</FluentOption>
                     }
+                </FluentListbox>
+            </div>
+
+            <div class="addGroup">
+                <div class="groupSettings">
+                    <div class="nameBox">
+                        <FluentTextField @bind-Value=placename></FluentTextField>
+                    </div>
+
+                    <div class="searchBoxes">
+                        <FluentSearch @ref=mailSearchTest
+                                      @oninput=handleMailSearchInput
+                                      @onchange=handleMailSearchInput
+                                      @bind-Value="@mailListValue"
+                                      Placeholder="Search for State" />
+                        <br />
+                        <FluentListbox Items=@mailResults TOption="string" SelectedOptionChanged="@(e => mailListValue = (e != defaultResultsText ? e : string.Empty) )" />
+                        <p>
+                            You searched for: @mailListValue
+                        </p>
+                    </div>
+
+                    <div class="searchBoxes">
+                        <FluentSearch @ref=teamSearchTest
+                                      @oninput=handleTeamSearchInput
+                                      @onchange=handleTeamSearchInput
+                                      @bind-Value="@teamNameValue"
+                                      Placeholder="Search for State" />
+                        <br />
+                        <FluentListbox Items=@teamResults TOption="string" SelectedOptionChanged="@(e => teamNameValue = (e != defaultResultsText ? e : string.Empty) )" />
+                        <p>
+                            You searched for: @teamNameValue
+                        </p>
+                    </div>
+
+                    <div class="searchBoxes">
+                        <FluentSearch @ref=calSearchTest
+                                      @oninput=handleCalSearchInput
+                                      @onchange=handleCalSearchInput
+                                      @bind-Value="@calendarValue"
+                                      Placeholder="Search for State" />
+                        <br />
+                        <FluentListbox Items=@calResults TOption="string" SelectedOptionChanged="@(e => calendarValue = (e != defaultResultsText ? e : string.Empty) )" />
+                        <p>
+                            You searched for: @calendarValue
+                        </p>
+                    </div>
+                </div>
+
+                <div class="groupAdd">
+                    <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add</FluentButton>
                 </div>
             </div>
 
-            <div class="calSec">
-                <div class="calList">
-                    @foreach (var calendarEvent in events)
-                    {
-                        /*<img src=""/>*/
-                        <div class="calEntryBox">
-                            <div class="calEntryData">
-                                <p class="subject">@calendarEvent?.Subject</p>
-                                <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
-                                <p class="content">Content</p>  
-                            </div>
-
-                            <div class="calDateTime">
-                                <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
-                                <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Sender</th>
-                            <th>Message</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var teamsChat in chats)
-                        {
-                            <tr>
-                                <td>@teamsChat</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
         </div>
 
+        <FluentTabs ActiveId="@activeid" OnTabChange="HandleOnTabChange">
+            <FluentTab Text="Mail" />
+            <FluentTab Text="Teams" />
+            <FluentTab Text="Calendar" />
+
+            @* OUTLOOK TAB *@
+            <FluentTabPanel>
+                <div class="row">
+                    <div class="splitleft">
+                        <div class="emailSec">
+                            @foreach (var mail in allMessages)
+                            {
+                                <FluentCard @onclick="() => Toggle(mail)">
+                                    <div class="emailEntryBox">
+                                        <div class="emailEntryData">
+                                            <p class="subject">@mail?.Subject</p>
+                                            <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
+                                            <p class="content">@mail?.Body?.Content</p>
+                                        </div>
+
+                                        <div class="emailDateTime">3:30PM</div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="splitright">
+                        <div class="majorContent">
+                            <div class="heading">@currentEmail?.Subject</div>
+                            <div class="email">
+                                <div class="send">
+                                    @currentEmail?.Sender.EmailAddress.Name
+                                </div>
+
+                                <div class="sendee">
+                                    @currentEmail?.ToRecipients
+                                </div>
+
+                                <div class="emailContent">
+                                    @currentEmail?.Body?.Content
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </FluentTabPanel>
+
+            <FluentTabPanel>
+                <div class="row">
+                    <div class="splitleft">
+                        <div class="calSec">
+                            @foreach (var calendarEvent in events)
+                            {
+                                <FluentCard>
+                                    <div class="calEntryBox">
+                                        <div class="calEntryData">
+                                            <p class="subject">@calendarEvent?.Subject</p>
+                                            <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
+                                            <p class="content">Content</p>
+                                        </div>
+
+                                        <div class="calDateTime">
+                                            <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
+                                            <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="splitright">
+                        hi
+                    </div>
+                </div>
+            </FluentTabPanel>
+
+            <FluentTabPanel>
+                <div class="row">
+                    <div class="splitleft">
+                        <div class="calSec">
+                            @foreach (var teamsChat in chats)
+                            {
+                                <FluentCard>
+                                    <div class="calEntryBox">
+                                        <div class="calEntryData">
+                                            <p class="subject">@teamsChat?</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="splitright">
+
+                    </div>
+                </div>
+
+            </FluentTabPanel>
+        </FluentTabs>
+
         <style>
-            /* Split page into 3! */
-            .container {
+
+            /* Split page into 2 */
+            /* Control the left side */
+            .row {
                 display: flex;
-                justify-content: space-between;
-            }
-            
-            .container div {
-                width: 100%;
-                padding: 5px;
             }
 
-            /* 
-             * EMAILS 
+            .splitleft {
+                max-width: 33.3%;
+            }
+
+            .splitright {
+                max-width: 66.6%;
+            }
+
+            /*
+             * Group settings
+            */
+            .groupSec {
+                display: flex;
+            }
+
+            .groupSettings {
+                display: flex;
+            }
+
+            .addGroup {
+                display: flex;
+            }
+
+            /*
+             * EMAILS
             */
 
-            .emailSec{
+            .emailSec {
                 max-height: 78vh;
                 overflow-y: scroll;
             }
 
             .emailEntryBox {
                 display: flex;
-                /*background: linear-gradient(to right top, rgba(255,255,255,1), rgba(255,255,255,0.8);*/
-                box-shadow: 6px 6px 20px rgba(122 , 122, 122,0.2);
-                justify-content: space-between;
+                padding-bottom: 5px;
+                padding-top: 5px;
             }
 
-            .emailEntryData .subject {
-                padding: 0;
-                margin-bottom: 0;
-                font-size:large
+            .emailEntryData {
+                flex: 100%;
             }
 
-            .emailEntryData .sender {
+                .emailEntryData .subject {
+                    padding: 0;
+                    padding-right: 10px;
+                    margin-bottom: 0;
+                    font-size: large;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 300px;
+                }
+
+                .emailEntryData .sender {
+                    padding: 0;
+                    margin-bottom: 0;
+                    font-size: small;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 300px;
+                }
+
+                .emailEntryData .content {
+                    padding: 0;
+                    margin-bottom: 0;
+                    font-size: small;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 200px;
+                }
+
+            .emailDateTime {
                 padding: 0;
-                margin-bottom: 0;
+                flex: 15%;
                 font-size: small;
             }
 
-            .emailEntryData .content {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
+            .heading {
+                white-space: nowrap;
+                overflow-wrap: break-all;
             }
 
-            .emailDateTime{
-                padding: 0;
-                font-size: small;
-                margin-top: 27px;
+            .send {
+                overflow-wrap: break-all;
             }
-            
-            /* 
+
+            .sendee {
+                overflow-wrap: break-all;
+            }
+
+            .emailContent {
+                overflow-wrap: break-all;
+                word-wrap: break-word;
+            }
+
+            /*
              * CALENDAR
             */
 
@@ -137,15 +300,14 @@
 
             .calEntryBox {
                 display: flex;
-                /*background: linear-gradient(to right top, rgba(255,255,255,1), rgba(255,255,255,0.8);*/
-                box-shadow: 6px 6px 20px rgba(122, 122, 122,0.2);
                 justify-content: space-between;
+                padding-top: 50px;
             }
 
             .calEntryData .subject {
                 padding: 0;
                 margin-bottom: 0;
-                font-size: large
+                font-size: large;
             }
 
             .calEntryData .organizer {
@@ -164,24 +326,25 @@
                 justify-content: space-between;
             }
 
-            .calDateTime .begin{
-                padding: 0;
-                font-size: small;
-                margin-bottom: 0;
-                margin-top: 27px;
-            }
+                .calDateTime .begin {
+                    padding: 0;
+                    font-size: small;
+                    margin-bottom: 0;
+                    margin-top: 27px;
+                }
 
-            .calDateTime .fin {
-                padding: 0;
-                font-size: small;
-            }
-
+                .calDateTime .fin {
+                    padding: 0;
+                    font-size: small;
+                }
         </style>
 
     </Authorized>
+
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
+
 </AuthorizeView>
 
 @code{
@@ -228,21 +391,22 @@
                 // Get max 50 per request
                 config.QueryParameters.Top = 50;
                 // Only return fields app will use
-                config.QueryParameters.Select = new [] { "subject", "organizer", "start", "end" };
+                config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
                 // Order results chronologically
-                config.QueryParameters.Orderby = new [] { "start/dateTime" };
+                config.QueryParameters.Orderby = new[] { "start/dateTime" };
             });
 
         var mailPage = await graphClient.Me
             .MailFolders["Inbox"]
             .Messages
-            .GetAsync( config => 
-                {
-                    config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                    config.QueryParameters.Select = new string[] { "subject", "sender"};
-                    config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
-                });
-        
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", "outlook.body-content-type='text'");
+                config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
+                config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
+            });
+
         var chatPage = await graphClient.Me
             .Chats
             .GetAsync(config =>
@@ -293,5 +457,135 @@
 
         // Fallback to return original value
         return iso8601DateTime;
+    }
+
+    // Handling tabs
+    string? activeid = "Mail";
+    FluentTab? changedto;
+    private void HandleOnTabChange(FluentTab tab)
+    {
+        changedto = tab;
+    }
+
+    // Hide or reveal content
+    private Message currentEmail { get; set; } = null;
+
+    private void Toggle(Message email)
+    {
+        currentEmail = email;
+    }
+
+    string? listboxValue = null;
+
+    FluentSearch? mailSearchTest;
+    FluentSearch? teamSearchTest;
+    FluentSearch? calSearchTest;
+    string? mailListValue = string.Empty;
+    string? teamNameValue = string.Empty;
+    string? calendarValue = string.Empty;
+
+    List<string> searchData = new()
+{
+        "Angus",
+        "Brendon",
+        "Charmaine",
+        "Indraneel",
+        "Konstantinos",
+        "Mahanoor"
+    };
+
+    List<string> mailResults = defaultResults();
+    List<string> teamResults = defaultResults();
+    List<string> calResults = defaultResults();
+    static string defaultResultsText = "no results";
+
+    static List<string> defaultResults()
+    {
+        return new() { defaultResultsText };
+    }
+
+    public class GroupItem
+    {
+        public string? Name { get; set; }
+        public string? mailName { get; set; }
+        public string? teamName { get; set; }
+        public string? calName { get; set; }
+    }
+
+    string? placename { get; set; } = string.Empty;
+
+    private List<GroupItem> myGroups = new();
+    void addToGroup(string m, string t, string c)
+    {
+        if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
+        {
+            myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
+        }
+    }
+
+    void handleMailSearchInput(ChangeEventArgs args)
+    {
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+
+            if (searchTerm.Length > 0)
+            {
+                List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                if (temp.Count() > 0)
+                {
+                    mailResults = temp;
+                }
+            }
+        }
+        else
+        {
+            mailResults = defaultResults();
+            mailListValue = string.Empty;
+        }
+    }
+
+    void handleTeamSearchInput(ChangeEventArgs args)
+    {
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+
+            if (searchTerm.Length > 0)
+            {
+                List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                if (temp.Count() > 0)
+                {
+                    teamResults = temp;
+                }
+            }
+        }
+        else
+        {
+            teamResults = defaultResults();
+            teamNameValue = string.Empty;
+        }
+    }
+
+    void handleCalSearchInput(ChangeEventArgs args)
+    {
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+
+            if (searchTerm.Length > 0)
+            {
+                List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                if (temp.Count() > 0)
+                {
+                    calResults = temp;
+                }
+            }
+        }
+        else
+        {
+            calResults = defaultResults();
+            calendarValue = string.Empty;
+        }
     }
 }

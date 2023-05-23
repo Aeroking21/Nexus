@@ -2,7 +2,17 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    width: fit-content;
+    height: fit-content;
 }
+
+@media screen and (min-width: 400px) {
+    html, body {
+        width: 100%;
+        height: 100%;
+    }
+}
+    
 
 h1:focus {
     outline: none;
@@ -20,6 +30,7 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
+    width: fit-content;
 }
 
 .valid.modified:not([type=checkbox]) {
@@ -41,7 +52,6 @@ a, .btn-link {
     display: none;
     left: 0;
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
     width: 100%;
     z-index: 1000;
 }
@@ -70,3 +80,4 @@ a, .btn-link {
 .nav-link {
     padding: 0.5rem 1rem;
 }
+

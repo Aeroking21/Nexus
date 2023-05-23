@@ -22,6 +22,8 @@
 
     class Form
     {
-        public string Message;
+        // take care of the nullability of the string public string Message;
+        public string Message { get; set; } = string.Empty;
+
     }
 }
