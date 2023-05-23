@@ -19,13 +19,18 @@ namespace GraphSample.Services
 			this.httpClient = httpClient;
 		}
 
-		public async Task<List<ApplicationTimeline>> getUserTimelinesAsync(string username)
+		public async Task<List<ApplicationTimeline>?> getUserTimelinesAsync(string username)
 		{
 			var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/get-timelines/{username}");
-            string responseBody = await response.Content.ReadAsStringAsync();
 
-            List<ApplicationTimeline> timelines = BsonSerializer.Deserialize<List<ApplicationTimeline>>(responseBody);
-			return timelines;
+            if (response.IsSuccessStatusCode)
+            {
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                List<ApplicationTimeline>? timelines = BsonSerializer.Deserialize<List<ApplicationTimeline>>(responseBody);
+                return timelines;
+            }
+            return null;
         }
 
 
@@ -37,6 +42,13 @@ namespace GraphSample.Services
             ApplicationTimeline timelines = BsonSerializer.Deserialize<ApplicationTimeline>(responseBody);
             return timelines;
         }
+
+        public async Task<bool> createApplicant(string username)
+        {
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/create-applicant/{username}");
+            return response.IsSuccessStatusCode;
+        }
+
 
         public async Task<int> addTimeline(string username, TimelineBson newTimelineBson)
         {
