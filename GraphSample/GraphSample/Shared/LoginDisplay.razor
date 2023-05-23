@@ -31,16 +31,72 @@
         border-color: white;
     }
 
-    a {
+
+    .left-content-bar {
+        float: left;
         color: white;
-        font-size: 1.5rem;
+        /*margin-right: 10px;*/
+    }
+
+    a {
+        color: rgb(255, 255, 255);
+        font-size: 0.1 rem;
+        text-decoration: none;
+    }
+
+    a:hover { 
+        color: rgb(255, 255, 255);
+        text-decoration: none; 
+    }
+
+    a:active { 
+        color: rgb(255, 255, 255);
+        text-decoration: none; 
+    }
+
+    .buttons {
+        color: white;
+        margin-right: 10px;
+        border: none;
+        background-color: transparent;
+
     }
 
 </style>
 
 <AuthorizeView>
     <Authorized>
-        <h4 style="color: white">Welcome @context?.User?.Identity?.Name!</h4>
+        <div class="left-content-bar">
+            <a href="">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </a>
+
+            <a href="/calendar">
+                <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
+            </a>
+
+            <a href="/inbox">
+                <span class="oi oi-envelope-open" aria-hidden="true"></span> Inbox
+            </a>
+
+            <a href="/teams">
+                <span class="oi oi-people" aria-hidden="true"></span> Teams
+            </a>
+
+            <a href="/overview">
+                <span class="oi oi-cloud" aria-hidden="true"></span> Overview
+            </a>
+
+            <a href="/UniversalSearch">
+                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Teams Search
+            </a>
+           
+            <a href="/applicationtracker">
+                <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
+            </a>
+
+        </div>
+        <a style="color:white;"> Welcome @context?.User?.Identity?.Name!</a>
         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">
             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
         </a>
