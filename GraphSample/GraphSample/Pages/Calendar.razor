@@ -46,7 +46,6 @@
     background-color: #A2CFFA; /* Egg blue color */
 }
 
-/* Add the selected day highlight */
 .calendar-table .day.selected {
     background-color: #A2CFFA; /* Egg blue color */
 }
@@ -148,8 +147,13 @@
                                         }
                                         else{
                                             // onclick getEventsOfSelectedDay(item)
-                                            <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item) </td>
-                                            // this is where the events will be displayed
+                                            if(item.Date.ToString()[0..10] == selectedDay.Date.ToString()[0..10]){
+                                                <td class="day selected" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item) </td>
+                                            }
+                                            else{
+                                            <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item) </td> // this is where the events will be displayed
+                                            }
+                                            
                                           
                                             
                                         }
