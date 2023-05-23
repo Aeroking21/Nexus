@@ -10,21 +10,19 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-    ::deep > fluent-dialog::part(control) {
-        --dialog-width: 300px;
-        --dialog-height: 350px;
-        padding: 2rem;
+    h3 {
+        color:blue;
     }
 </style>
 
 <AuthorizeView>
     <Authorized>
 
-        <h3> Component </h3>
+        <h2> Component </h2>
 
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                <FluentButton Appearance="Appearance.Accent" Autofocus="true" @onclick="OnClose">Close dialog</FluentButton>
+                <h3> hi </h3>
             </FluentDialog>
         </div>
 
@@ -45,21 +43,15 @@
     private FluentDialog? MyFluentDialog;
     public bool Modal = true;
 
-    //protected override void OnAfterRender(bool firstRender)
-    //{
-    //    if (firstRender)
-    //        MyFluentDialog!.Hide();
-    //}
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
 
     private void OnOpen()
     {
         MyFluentDialog!.Show();
-    }
-
-    private void OnClose()
-    {
-        MyFluentDialog!.Hide();
-
     }
 
     private void OnDismiss(DialogEventArgs args)
@@ -90,11 +82,6 @@
 
     private GraphServiceClient? graphClient;
     private List<Author> data_response = new List<Author>();
-
-    // Use style no for handle input
-    // use style yes for entering
-    // only use no when string is empty or null
-
 
     protected async Task CallApiAsync(string searchTerm)
     {
@@ -134,7 +121,6 @@
 
         var batchRequestContent = new BatchRequestContent(graphClient);
 
-        //var result = await graphClient.Search.Query.PostAsync(requestBody);
         var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
 
         var driveId = await batchRequestContent.AddBatchRequestStepAsync(drive);
@@ -142,7 +128,6 @@
         var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
 
 
-        // teams code
         try
         {
 
