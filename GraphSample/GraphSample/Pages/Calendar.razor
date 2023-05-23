@@ -7,52 +7,50 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
+    .calendar-class {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
 
+    }
 
-.calendar-class {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    .calendar-table {
+        width: 100%; 
+        text-align: center;
 
-}
+    }
 
-.calendar-table {
-    width: 100%; 
-    text-align: center;
+    .calendar-table thead {
+        background-color: white; 
+    }
 
-}
+    .calendar-table .day {
+        min-width: 125px; 
+        margin: 2px; 
+        border-radius: 5px;
+        background-color: white;
+        padding: 30px;
+        cursor: pointer; 
+    }
 
-.calendar-table thead {
-    background-color: white; 
-}
+    .calendar-table td {
+        padding: 30px;
+        /* border: 1px solid #ccc; */
+        /* text in centre */
+        vertical-align: middle;
+    }
 
-.calendar-table .day {
-    min-width: 125px; 
-    margin: 2px; 
-    border-radius: 5px;
-    background-color: white;
-    padding: 30px;
-    cursor: pointer; 
-}
+    .calendar-table .day:hover {
+        background-color: #A2CFFA; /* Egg blue color */
+    }
 
-.calendar-table td {
-    padding: 30px;
-    /* border: 1px solid #ccc; */
-    /* text in centre */
-    vertical-align: middle;
-}
+    .calendar-table .day.selected {
+        background-color: #A2CFFA; /* Egg blue color */
+    }
 
-.calendar-table .day:hover {
-    background-color: #A2CFFA; /* Egg blue color */
-}
-
-.calendar-table .day.selected {
-    background-color: #A2CFFA; /* Egg blue color */
-}
-
-.event-row:hover {
-    background-color: #A2CFFA; /* Egg blue color */
-}
+    .event-row:hover {
+        background-color: #A2CFFA; /* Egg blue color */
+    }
 
 </style>
 
@@ -153,11 +151,7 @@
                                             else{
                                             <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item) </td> // this is where the events will be displayed
                                             }
-                                            
-                                          
-                                            
                                         }
-                                        
                                     }
                                 </tr>
                             }
@@ -372,6 +366,7 @@
             MonthToText();
         }
         await LoadCalendar();
+        StateHasChanged();
     }
 
     public async Task PreviousMonth()
@@ -386,6 +381,7 @@
             month--;
         }
         await LoadCalendar();
+        StateHasChanged();
     }
 
     public async Task Today()
@@ -395,6 +391,7 @@
         month = DateTime.Now.Month;
         year = DateTime.Now.Year;
         await LoadCalendar();
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
@@ -442,6 +439,7 @@
         // for each day, if theres an event, add it to the dayEvents list
         await base.OnInitializedAsync();
         await LoadCalendar();
+        StateHasChanged();
     }
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
