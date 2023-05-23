@@ -13,56 +13,24 @@
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Application Dashboard</h1>
-        @if (fetchingTimelines)
+        @if (fetchingTimelines || creatingApplicant)
         {
             <FluentProgressRing></FluentProgressRing>
         }
+        else if (!isRegistered)
+        {
+            <button class="btn btn-primary" @onclick="() => CreateApplicant()">Start Your Application Journey Now!</button>
+        }
         else
         {
-        <div class="container">
-            <div class="main-div">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Comapny</th>
-                            <th>Role</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var timeline in timelines)
-                        {
-                            <tr height="2.5em">
-                                @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
-                                {
-                                    <td><button class="fixed-height-row button " @onclick="() => emailsShowing = false">Hide emails</button></td>
-                                }
-                                else
-                                {
-                                    <td><button class="fixed-height-row button " @onclick="() => ShowEmails(timeline)">Show emails</button></td>
-                                }
-                                <td><div class="company-content">@timeline.company</div></td>
-                                <td><div class="role-content">@timeline.role</div></td>
-                                <td>@timeline.hasUnreadEmails</td>
-                            </tr>
-                        }
-                        <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
-                    </tbody>
-                </table>
-            </div>
-            <div class="main-div">
-                @if (!emailsShowing)
-                {
+            <div class="container">
+                <div class="main-div">
                     <table class="table">
                         <thead>
                             <tr>
                                 <th></th>
-                                <th>
-                                    Associated emails
-                                </th>
-                                <th></th>
-                                <th>Assessments</th>
+                                <th>Comapny</th>
+                                <th>Role</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -70,68 +38,104 @@
                             @foreach (var timeline in timelines)
                             {
                                 <tr height="2.5em">
-                                    <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
-                                    <td>
-                                        <div class="email-container">
-                                            @foreach (var email in timeline.associatedEmailAddresses)
-                                            {
-                                                <div class="email">@email</div>
-                                                <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
-                                            }
-                                        </div>
-                                    </td>
-                                    <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
-                                    <td>
-                                        <div style="display: flex; overflow-x: auto;">
-                                            @foreach (var assessment in timeline.assessments)
-                                            {
-                                                <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom) ? assessment.type : assessment.customDescription)</div><br />
-                                                <div style="min-width: 200px;">@assessment.date</div>
-                                                <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
-                                            }
-                                        </div>
-                                    </td>
-                                    <td><button class="btn btn-primary red-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)">Delete</button></td>
+                                    @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
+                                    {
+                                        <td><button class="fixed-height-row button " @onclick="() => emailsShowing = false">Hide emails</button></td>
+                                    }
+                                    else
+                                    {
+                                        <td><button class="fixed-height-row button " @onclick="() => ShowEmails(timeline)">Show emails</button></td>
+                                    }
+                                    <td><div class="company-content">@timeline.company</div></td>
+                                    <td><div class="role-content">@timeline.role</div></td>
+                                    <td>@timeline.hasUnreadEmails</td>
                                 </tr>
                             }
+                            <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
                         </tbody>
                     </table>
-                }
-                else
-                {
-                    @if (fetchingEmails)
+                </div>
+                <div class="main-div">
+                    @if (!emailsShowing)
                     {
-                        <FluentProgressRing></FluentProgressRing>
-                    }
-                    else
-                    {
-                        <table>
+                        <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Sender</th>
-                                    <th>Sent Time</th>
-                                    <th>Subject</th>
-                                    <th>Body</th>
-                                    <th>Unread</th>
+                                    <th></th>
+                                    <th>
+                                        Associated emails
+                                    </th>
+                                    <th></th>
+                                    <th>Assessments</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var email in selectedAssociatedEmails)
+                                @foreach (var timeline in timelines)
                                 {
-                                    <tr>
-                                        <td>@email.Item2.Sender.EmailAddress.Address</td>
-                                        <td>@email.Item2.ReceivedDateTime</td>
-                                        <td>@email.Item2.Subject</td>
-                                        <td>@(new MarkupString(email.Item2.Body.Content))</td>
-                                        <td>@email.Item1</td>
+                                    <tr height="2.5em">
+                                        <td> <span class="add-button" @onclick="() => ShowModal(timeline.timelineID)">+</span></td>
+                                        <td>
+                                            <div class="email-container">
+                                                @foreach (var email in timeline.associatedEmailAddresses)
+                                                {
+                                                    <div class="email">@email</div>
+                                                    <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">x</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td> <span class="add-button" @onclick="() => ShowAssessmentModal(timeline.timelineID)">+</span></td>
+                                        <td>
+                                            <div style="display: flex; overflow-x: auto;">
+                                                @foreach (var assessment in timeline.assessments)
+                                                {
+                                                    <div style="min-width: 200px;">@((assessment.type != AssessmentType.Custom) ? assessment.type : assessment.customDescription)</div><br />
+                                                    <div style="min-width: 200px;">@assessment.date</div>
+                                                    <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)">x</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td><button class="btn btn-primary red-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)">Delete</button></td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     }
-                }
+                    else
+                    {
+                        @if (fetchingEmails)
+                        {
+                            <FluentProgressRing></FluentProgressRing>
+                        }
+                        else
+                        {
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sender</th>
+                                        <th>Sent Time</th>
+                                        <th>Subject</th>
+                                        <th>Body</th>
+                                        <th>Unread</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var email in selectedAssociatedEmails)
+                                    {
+                                        <tr>
+                                            <td>@email.Sender.EmailAddress.Address</td>
+                                            <td>@email.ReceivedDateTime</td>
+                                            <td>@email.Subject</td>
+                                            <td>@(new MarkupString(email.Body.Content))</td>
+                                            <td>@email.IsRead</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    }
+                </div>
             </div>
-        </div>
         }
     </Authorized>
     <NotAuthorized>
@@ -201,13 +205,16 @@
     private GraphServiceClient? graphClient;
     private string? dateTimeFormat;
     private string userTimeZone = string.Empty;
-    private List<ApplicationTimeline> timelines;
+    private List<ApplicationTimeline>? timelines;
     private bool emailsShowing;
     private int emailsShowingTimeline;
     //private List<Message>? selectedAssociatedEmails;
-    private List<Tuple<bool, Message>> selectedAssociatedEmails;
-    private bool fetchingEmails;
-    private bool fetchingTimelines;
+    private List<Message> selectedAssociatedEmails;
+    private bool fetchingEmails = false;
+    private bool fetchingTimelines = false;
+    private bool creatingApplicant = false;
+    private string Username;
+    private bool isRegistered;
 
     protected override async Task OnInitializedAsync()
 
@@ -220,87 +227,95 @@
 
         // Get the user's time zone
         var user = (await authenticationStateTask).User;
+        Username = user.Identity?.Name;
         var graphTimeZone = user.GetUserGraphTimeZone();
         dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-
         // Calculate the start and end of the current week in user's time zone
         var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
         var endOfWeek = startOfWeek.AddDays(7);
 
         graphClient = clientFactory.GetAuthenticatedClient();
         emailsShowing = false;
-
         fetchingTimelines = true;
+        timelines = await backendApiService.getUserTimelinesAsync(Username);
 
-        timelines = await backendApiService.getUserTimelinesAsync("ks2220");//user?.Identity?.Name);
-
-        //experimental
-        List<Message> allAssociatedEmails = new();
-        List<string> allAssociatedEmailStrings = new();
-        Dictionary<string, int> emailCounts = new Dictionary<string, int>();
-        foreach (var currentAssociatedEmails in timelines.Select(t => t.associatedEmailAddresses))
+        if (timelines != null)
         {
-            foreach (var email in currentAssociatedEmails)
+
+            //experimental
+            isRegistered = true;
+            List<Message> allAssociatedEmails = new();
+            List<string> allAssociatedEmailStrings = new();
+            //Dictionary<string, int> emailCounts = new Dictionary<string, int>();
+            foreach (var currentAssociatedEmails in timelines.Select(t => t.associatedEmailAddresses))
             {
-                allAssociatedEmailStrings.Add(email);
-            }
-        }
-
-        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
-        var filter = string.Join(" or ", emailFilters);
-
-        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.Filter = filter;
-        });
-
-        //if (result != null)
-        //{
-
-        //    foreach (var email in allAssociatedEmailStrings)
-        //    {
-        //        int count = result.Value.Count(msg => msg.Sender.EmailAddress.Address == email);
-        //        emailCounts[email] = count;
-        //    }
-        //}
-        //foreach (var timeline in timelines)
-        //{
-        //    int totalCount = 0;
-        //    foreach (var email in timeline.associatedEmailAddresses) { totalCount += emailCounts[email]; }
-        //    if (totalCount != timeline.readEmailCount) { timeline.hasUnreadEmails = true; }
-        //}
-
-        var groupedIds = result.Value.GroupBy(msg => msg.Sender.EmailAddress.Address).
-            ToDictionary(group => group.Key, group => group.ToList());
-
-        for (int i = 0; i < timelines.Count(); i++)
-        {
-            var timeline = timelines[i];
-            bool loopFlag = false;
-            foreach (var email in timeline.associatedEmailAddresses)
-            {
-                if (loopFlag) { break; }
-                if (groupedIds.ContainsKey(email))
+                foreach (var email in currentAssociatedEmails)
                 {
-                    var messages = groupedIds[email];
-                    foreach (var msg in messages)
+                    allAssociatedEmailStrings.Add(email);
+                }
+            }
+
+            var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
+            var filter = string.Join(" or ", emailFilters);
+
+            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Filter = filter;
+            });
+
+            //if (result != null)
+            //{
+
+            //    foreach (var email in allAssociatedEmailStrings)
+            //    {
+            //        int count = result.Value.Count(msg => msg.Sender.EmailAddress.Address == email);
+            //        emailCounts[email] = count;
+            //    }
+            //}
+            //foreach (var timeline in timelines)
+            //{
+            //    int totalCount = 0;
+            //    foreach (var email in timeline.associatedEmailAddresses) { totalCount += emailCounts[email]; }
+            //    if (totalCount != timeline.readEmailCount) { timeline.hasUnreadEmails = true; }
+            //}
+
+            var groupedEmails = result.Value.GroupBy(msg => msg.Sender.EmailAddress.Address).
+                ToDictionary(group => group.Key, group => group.ToList());
+
+            for (int i = 0; i < timelines.Count(); i++)
+            {
+                var timeline = timelines[i];
+                bool loopFlag = false;
+                foreach (var email in timeline.associatedEmailAddresses)
+                {
+                    if (loopFlag) { break; }
+                    if (groupedEmails.ContainsKey(email))
                     {
-                        if (!timeline.readEmails.ContainsKey(msg.Id))
+                        var messages = groupedEmails[email];
+                        foreach (var msg in messages)
                         {
-                            timelines[i].hasUnreadEmails = true;
-                            loopFlag = true;
-                            break;
+                            if (msg.IsRead == false)
+                            {
+                                timelines[i].hasUnreadEmails = true;
+                                loopFlag = true;
+                                break;
+                            }
                         }
                     }
                 }
             }
+
+
+
+            fetchingTimelines = false;
         }
-
-
+        else
+        {
+            isRegistered = false;
+        }
 
         fetchingTimelines = false;
 
-        //experimental
     }
     public async void ShowEmails(ApplicationTimeline timeline)
     {
@@ -313,54 +328,27 @@
     {
         fetchingEmails = true;
         //List<Message>? fetchedEmails = new();
-        List<Tuple<bool, Message>> fetchedEmails = new();
+        List<string> allAssociatedEmailStrings = new();
+        List<Message>? fetchedEmails = new();
+
         foreach (var email in timeline.associatedEmailAddresses)
         {
-            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-            {
-                requestConfiguration.QueryParameters.Filter = $"from/emailAddress/address eq '{email}'";
-            });
-            if (result != null)
-            {
-                //fetchedEmails.AddRange(result.Value);
-                foreach (var msg in result.Value)
-                {
-                    if (!timeline.readEmails.ContainsKey(msg.Id))
-                    {
-                        fetchedEmails.Add(new Tuple<bool, Message>(true, msg));
-                        timeline.readEmails[msg.Id] = true;
-                    }
-                    else
-                    {
-                        fetchedEmails.Add(new Tuple<bool, Message>(false, msg));
-                    }
-                }
-            }
+            allAssociatedEmailStrings.Add(email);
         }
 
-        //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
-        selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.Item2.ReceivedDateTime).ToList();
+        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
+        var filter = string.Join(" or ", emailFilters);
 
-
-        //bool setSuccess = await backendApiService.updateReadEmails("ks2220", timeline.timelineID, fetchedEmails.Count());
-        //if (setSuccess)
-        //{
-        //    timeline.hasUnreadEmails = false;
-        //    timeline.readEmailCount = fetchedEmails.Count();
-        //}
-        ReadEmailsBson readEmailsBson = new ReadEmailsBson
-        { readEmails = timeline.readEmails,
-            timelineID = timeline.timelineID };
-        var response = await backendApiService.updateReadEmailsDict("ks2220", readEmailsBson);
-
-        if (response)
+        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
         {
-            var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timeline.timelineID);
-            int index = timelines.FindIndex(tl => tl.timelineID == timeline.timelineID);
-            if (index != -1)
-            {
-                timelines[index] = newTimeline;
-            }
+            requestConfiguration.QueryParameters.Filter = filter;
+        });
+
+        fetchedEmails = result?.Value;
+        //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
+        if (fetchedEmails != null)
+        {
+            selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
         }
 
         fetchingEmails = false;
@@ -369,37 +357,87 @@
 
     public async void RemoveEmail(string email, int timelineID)
     {
-        var response = await backendApiService.removeEmail(email, "ks2220", timelineID);
+        var response = await backendApiService.removeEmail(email, Username, timelineID);
+
 
         if (response)
         {
-            var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+            var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
             int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
-            if (index != -1)
+            List<string?> allAssociatedEmailStrings = new();
+            foreach (var emailString in newTimeline.associatedEmailAddresses)
             {
-                timelines[index] = newTimeline;
-                StateHasChanged();
+                allAssociatedEmailStrings.Add(emailString);
+            }
+
+            if (allAssociatedEmailStrings.Count() == 0)
+            {
+                if (index != -1)
+                {
+                    newTimeline.hasUnreadEmails = false;
+                    timelines[index] = newTimeline;
+
+                    StateHasChanged();
+                }
+
+            }
+            else
+            {
+                var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
+                var filter = string.Join(" or ", emailFilters);
+
+                var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+                {
+                    requestConfiguration.QueryParameters.Filter = filter;
+                });
+
+                var fetchedEmails = result?.Value;
+                Console.WriteLine(fetchedEmails.Count());
+
+                if (index != -1)
+                {
+                    newTimeline.hasUnreadEmails = fetchedEmails.Exists(msg => msg.IsRead.HasValue ? !msg.IsRead.Value : false);
+                    timelines[index] = newTimeline;
+
+                    StateHasChanged();
+                }
             }
         }
-
     }
 
     public async void RemoveAssessment(Assessment assessment, int timelineID)
     {
-        var response = await backendApiService.removeAssessment(assessment, "ks2220", timelineID);
+        var response = await backendApiService.removeAssessment(assessment, Username, timelineID);
 
         if (response)
         {
-            var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+            var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
             int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
             if (index != -1)
             {
+                newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
                 timelines[index] = newTimeline;
                 StateHasChanged();
             }
         }
 
     }
+
+    public async void CreateApplicant()
+    {
+        creatingApplicant = true;
+        var response = await backendApiService.createApplicant(Username);
+
+        if (response)
+        {
+            timelines = new List<ApplicationTimeline>();
+            isRegistered = true;
+            creatingApplicant = false;
+            StateHasChanged();
+        }
+
+    }
+
 
     [CascadingParameter] IModalService ModalInputPopup { get; set; } = default!;
 
@@ -413,13 +451,24 @@
             string newEmail = result.Data?.ToString();
             if (newEmail != "")
             {
-                var response = await backendApiService.addEmail(newEmail, "ks2220", timelineID);
+                var response = await backendApiService.addEmail(newEmail, Username, timelineID);
+                var filter = $"from/emailAddress/address eq '{newEmail}'";
+
+                var emailsResponse = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+                {
+                    requestConfiguration.QueryParameters.Filter = filter;
+                });
+
+                var fetchedEmails = emailsResponse?.Value;
+                bool newHasUnread = fetchedEmails.Exists(msg => msg.IsRead.HasValue ? !msg.IsRead.Value : false);
                 if (response)
                 {
-                    var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+                    var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
                     int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                     if (index != -1)
                     {
+
+                        newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails ? true : newHasUnread;
                         timelines[index] = newTimeline;
                         StateHasChanged();
                     }
@@ -439,12 +488,12 @@
             TimelineBson? newTimelineBson = result.Data as TimelineBson;
             if (newTimelineBson != null)
             {
-                int newTimelineID = await backendApiService.addTimeline("ks2220", newTimelineBson);
+                int newTimelineID = await backendApiService.addTimeline(Username, newTimelineBson);
                 if (newTimelineID != -1)
                 {
                     try
                     {
-                        ApplicationTimeline newTimeline = await backendApiService.getUserTimelineAsync("ks2220", newTimelineID);
+                        ApplicationTimeline newTimeline = await backendApiService.getUserTimelineAsync(Username, newTimelineID);
                         timelines.Add(newTimeline);
                         StateHasChanged();
                     }
@@ -469,13 +518,14 @@
             Assessment? newAssessment = result.Data as Assessment;
             if (newAssessment != null)
             {
-                var response = await backendApiService.addAssessment(newAssessment, "ks2220", timelineID);
+                var response = await backendApiService.addAssessment(newAssessment, Username, timelineID);
                 if (response)
                 {
-                    var newTimeline = await backendApiService.getUserTimelineAsync("ks2220", timelineID);
+                    var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
                     int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                     if (index != -1)
                     {
+                        newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
                         timelines[index] = newTimeline;
                         StateHasChanged();
                     }
@@ -492,10 +542,10 @@
 
         if (result.Confirmed)
         {
-            var response = await backendApiService.removeTimeline("ks2220", timelineID);
+            var response = await backendApiService.removeTimeline(Username, timelineID);
             if (response)
             {
-                timelines = await backendApiService.getUserTimelinesAsync("ks2220");
+                timelines = await backendApiService.getUserTimelinesAsync(Username);
                 StateHasChanged();
             }
         }
