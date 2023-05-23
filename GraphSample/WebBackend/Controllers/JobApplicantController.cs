@@ -80,13 +80,20 @@ public class JobApplicantsController : ControllerBase
 
 
 
-    [Route("create-applicant")]
-    [HttpPost]
-    public async Task<IActionResult> CreateApplicant([FromBody] JobApplicant jobApplicant)
+    [Route("create-applicant/{username}")]
+    [HttpGet]
+    public async Task<IActionResult> CreateApplicant(string username)
     {
+
+        JobApplicant newApplicant = new JobApplicant
+        {
+            username = username,
+            applicationTimelines = new List<ApplicationTimeline>(),
+            timelineCounter = 0
+        };
         try
         {
-            await _collection.InsertOneAsync(jobApplicant);
+            await _collection.InsertOneAsync(newApplicant);
             return Ok();
         }
         catch (Exception ex)
@@ -112,7 +119,6 @@ public class JobApplicantsController : ControllerBase
             assessments = new List<Assessment>(),
             associatedEmailAddresses = new List<string>(),
             timelineID = newTimelineID,
-            readEmailCount = 0,
             hasUnreadEmails = false,
             readEmails = new()
         };
@@ -444,7 +450,7 @@ public class JobApplicantsController : ControllerBase
 
     [Route("update-read-count/{username}/{timelineID}/{newCount}")]
     [HttpGet]
-    public async Task<IActionResult> AddEmail(string username, int timelineID, int newCount)
+    public async Task<IActionResult> updateReadCountEmail(string username, int timelineID, int newCount)
     {
         var filter = Builders<JobApplicant>.Filter.And(
             Builders<JobApplicant>.Filter.Eq("username", username),

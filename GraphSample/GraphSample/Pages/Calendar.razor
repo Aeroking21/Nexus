@@ -14,11 +14,19 @@
 
     }
 
+
+    .calendar-class {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+
+    }
+
     .calendar-table {
         width: 100%; 
         text-align: center;
-
-    }
+        }
 
     .calendar-table thead {
         background-color: white; 
@@ -35,8 +43,6 @@
 
     .calendar-table td {
         padding: 30px;
-        /* border: 1px solid #ccc; */
-        /* text in centre */
         vertical-align: middle;
     }
 
@@ -92,6 +98,7 @@
 
                         @if (getEventsOfSelectedDay(selectedDay).Count == 0)
                         {
+                            Console.WriteLine(selectedDay.Date);
                             <tr >
                                 <td colspan="4">No events for this day</td>
                             </tr>
@@ -235,7 +242,9 @@
 
     public List<Event> getEventsOfSelectedDay(CalendarDay day){
         selectedDay = day;
-        return day.dayEvents;
+        Console.WriteLine ("selected day is " + selectedDay.Date.ToString()[0..10]);
+        Console.WriteLine ("day "+ day.Date.ToString()[0..10]);
+        return selectedDay.dayEvents;
         }
 
     public List<Event> getEventsofToday(CalendarDay day)
@@ -386,8 +395,9 @@
 
     public async Task Today()
     {
-        selectedDay = new CalendarDay();
+        
         selectedDay.Date = DateTime.Now.Date;
+        selectedDay.dayEvents = getEventsofToday(selectedDay);
         month = DateTime.Now.Month;
         year = DateTime.Now.Year;
         await LoadCalendar();
