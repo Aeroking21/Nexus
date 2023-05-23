@@ -17,8 +17,8 @@
 
         <div class="groupSec">
             <div class="seeGroups">
-                <FluentSelect Id="state" name="state" TOption="GroupItem" @bind-Value="selectedGroupValue">
-                    <FluentOption Selected="true" Value=null>All</FluentOption>
+                <FluentSelect Id="state" name="state" TOption="GroupItem" @onchange="UpdateGroup" @bind-Value="selectedGroupValue">
+                    <FluentOption Selected="true" Value="@null">All</FluentOption>
                     @foreach (var group in myGroups)
                     {
                         <FluentOption Value="@(group.mailName+';'+group.teamName+';'+group.calName)">@group.Name</FluentOption>
@@ -129,6 +129,31 @@
 
             </FluentTabPanel>
 
+
+            <FluentTabPanel>
+                <div class="row">
+                    <div class="splitleft">
+                        <div class="calSec">
+                            @foreach (var teamsChat in chats)
+                            {
+                                <FluentCard>
+                                    <div class="calEntryBox">
+                                        <div class="calEntryData">
+                                            <p class="subject">@teamsChat?</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="splitright">
+
+                    </div>
+                </div>
+
+            </FluentTabPanel>
+
             <FluentTabPanel>
                 <div class="row">
                     <div class="splitleft">
@@ -157,30 +182,6 @@
                         hi
                     </div>
                 </div>
-            </FluentTabPanel>
-
-            <FluentTabPanel>
-                <div class="row">
-                    <div class="splitleft">
-                        <div class="calSec">
-                            @foreach (var teamsChat in chats)
-                            {
-                                <FluentCard>
-                                    <div class="calEntryBox">
-                                        <div class="calEntryData">
-                                            <p class="subject">@teamsChat?</p>
-                                        </div>
-                                    </div>
-                                </FluentCard>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="splitright">
-
-                    </div>
-                </div>
-
             </FluentTabPanel>
         </FluentTabs>
 
@@ -367,14 +368,65 @@
                 "Unable to access authentication state");
         }
 
+        await BeginMail("All");
+        await BeginTeam();
+        //await BeginCal();
+    }
+
+    public async Task BeginMail(string addresses)
+    {
+        Console.WriteLine("GOT IN HERE??");
+        graphClient = clientFactory.GetAuthenticatedClient();
+        /*
+         * GET RECENT MAIL EVENTS
+         */
+        var mailPage = await graphClient.Me
+            .MailFolders["Inbox"]
+            .Messages
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", "outlook.body-content-type='text'");
+                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+
+                if (addresses != "All") { config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + addresses; }
+
+                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
+                //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
+            });
+        /*
+         * Set to non-async variable. Can then be accessed in html.
+         */
+        allMessages = mailPage?.Value ?? new List<Message>();
+    }
+
+    public async Task BeginTeam()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        /*
+         * GET RECENT TEAM CHATS
+         */
+        var chatPage = await graphClient.Me
+            .Chats
+            .GetAsync(config =>
+            {
+                config.QueryParameters.Top = 50;
+            });
+        /*
+         * Set to non-async variable. Can then be accessed in html.
+         */
+        chats = chatPage?.Value ?? new List<Chat>();
+    }
+
+    public async Task BeginCal()
+    {
         // Get the user
-        var user = (await authenticationStateTask).User;
-        var graphTimeZone = user.GetUserGraphTimeZone();
-        dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+        //var user = (await authenticationStateTask).User;
+        //var graphTimeZone = user.GetUserGraphTimeZone();
+        //dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
 
         // Calculate the start and end of the current week in user's time zone
-        var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
-        var endOfWeek = startOfWeek.AddDays(7);
+        //var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
+        //var endOfWeek = startOfWeek.AddDays(7);
 
         graphClient = clientFactory.GetAuthenticatedClient();
 
@@ -385,83 +437,35 @@
             .CalendarView
             .GetAsync(config =>
             {
-                // Send user time zone in request so date/time in
-                // response will be in preferred time zone
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                // Specifies the start and end of the view on the calendar
-                // Translates to: ?startDateTime=""&endDateTime=""
-                config.QueryParameters.StartDateTime = startOfWeek.ToString("o");
-                config.QueryParameters.EndDateTime = endOfWeek.ToString("o");
-                // Get max 50 per request
+                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+                //config.QueryParameters.StartDateTime = startOfWeek.ToString("o");
+                //config.QueryParameters.EndDateTime = endOfWeek.ToString("o");
                 config.QueryParameters.Top = 50;
-                // Only return fields app will use
                 config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
-                // Order results chronologically
                 config.QueryParameters.Orderby = new[] { "start/dateTime" };
             });
-
-        /*
-         * GET RECENT MAIL EVENTS
-         */
-        var mailPage = await graphClient.Me
-            .MailFolders["Inbox"]
-            .Messages
-            .GetAsync(config =>
-            {
-                config.Headers.Add("Prefer", "outlook.body-content-type='text'");
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-
-                if (selectedGroupValue != "null"){
-                    config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + selectedGroupValue.Split(';')[0] + "'";
-                }
-
-                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
-                config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
-            });
-
-        /*
-         * GET RECENT TEAM CHATS
-         */
-        var chatPage = await graphClient.Me
-            .Chats
-            .GetAsync(config =>
-            {
-                config.QueryParameters.Top = 50;
-                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                //config.QueryParameters.Select = new string[] { "subject", "sender"};
-                //config.QueryParameters.Orderby = new string[] { "receivedDateTime" };
-
-            });
-
         /*
          * Set to non-async variable. Can then be accessed in html.
          */
-        chats = chatPage?.Value ?? new List<Chat>();
-        allMessages = mailPage?.Value ?? new List<Message>();
         events = eventPage?.Value ?? new List<Event>();
     }
 
-    public async Task BeginMail()
+    async void UpdateGroup(ChangeEventArgs args)
     {
-
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+            if (searchTerm == "all") { await BeginMail("All"); StateHasChanged(); }
+            else
+            {
+                string mailQuery = searchTerm.Split(';')[0] + "'";
+                string teamQuery = searchTerm.Split(';')[1] + "'";
+                string calQuery = searchTerm.Split(';')[2] + "'";
+                await BeginMail(mailQuery);
+                StateHasChanged();
+            }
+        }
     }
-
-    public async Task BeginTeams()
-    {
-
-    }
-
-    public async Task BeginCal()
-    {
-
-    }
-
-    public async Task UpdateGroup()
-    {
-        if (oldData != selectedGroupValue) { Console.WriteLine("updating"); StateHasChanged(); }
-        oldData = selectedGroupValue;
-    }
-
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
@@ -571,7 +575,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0) { mailResults = temp; }
+                if (temp.Count() > 0) { teamResults = temp; }
             }
         }
         else
@@ -590,8 +594,7 @@
             if (searchTerm.Length > 0)
             {
                 List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0)
-                    if (temp.Count() > 0) { mailResults = temp; }
+                if (temp.Count() > 0) { calResults = temp; }
             }
         }
         else
