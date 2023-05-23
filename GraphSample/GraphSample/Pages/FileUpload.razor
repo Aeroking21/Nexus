@@ -1,3 +1,6 @@
+<!-- Copyright (c) Microsoft Corporation.
+     Licensed under the MIT license. -->
+
 @page "/fileupload"
 @using System.Security.Authentication
 @using System.Text
@@ -17,7 +20,10 @@
 
 <AuthorizeView>
     <Authorized>
-        <h1>Upload File</h1>
+        <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
+        <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
+
+        <h1 class="mb-3">Upload File</h1>
 
         <p>
             <label>
@@ -48,6 +54,8 @@
 </AuthorizeView>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private List<IBrowserFile> loadedFile = new();
     private long maxFileSize = 1024 * 100000;
     private int maxAllowedFiles = 1;
@@ -156,7 +164,7 @@
             Console.Write($"Input: {prompt}\n");
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
-            Console.Write($"Completion: {completion}\n");
+            Console.Write($"Completion: {completion}");
             summaries.Add(completion);
             string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
@@ -171,7 +179,7 @@
             Console.Write($"Input: {prompt}\n");
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
-            Console.Write($"Completion: {completion}\n");
+            Console.Write($"Completion: {completion}");
             summaries.Add(completion);
             string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
