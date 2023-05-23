@@ -107,11 +107,6 @@
     bool isDropdownVisible = false;
     protected string DropDownStyle = string.Empty;
 
-    public string GetDropdownStyle()
-    {
-        return isDropdownVisible ? "display: block;" : "display: none;";
-    }
-
     protected void ToggleDropdown()
     {
         isDropdownVisible = !isDropdownVisible;
