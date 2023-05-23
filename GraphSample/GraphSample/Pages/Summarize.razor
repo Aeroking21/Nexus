@@ -9,12 +9,26 @@
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
-
+<style>
+    ::deep > fluent-dialog::part(control) {
+        --dialog-width: 300px;
+        --dialog-height: 350px;
+        padding: 2rem;
+    }
+</style>
 
 <AuthorizeView>
     <Authorized>
 
         <h3> Component </h3>
+
+        <div>
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+                <FluentButton Appearance="Appearance.Accent" Autofocus="true" @onclick="OnClose">Close dialog</FluentButton>
+            </FluentDialog>
+        </div>
+
+        <FluentButton Appearance=Appearance.Accent @onclick="OnOpen">Open dialog</FluentButton>
 
     </Authorized>
 
@@ -27,6 +41,34 @@
 
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    private FluentDialog? MyFluentDialog;
+    public bool Modal = true;
+
+    //protected override void OnAfterRender(bool firstRender)
+    //{
+    //    if (firstRender)
+    //        MyFluentDialog!.Hide();
+    //}
+
+    private void OnOpen()
+    {
+        MyFluentDialog!.Show();
+    }
+
+    private void OnClose()
+    {
+        MyFluentDialog!.Hide();
+
+    }
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
 
 
     public class Author
@@ -129,7 +171,7 @@
             Console.WriteLine($"Get Teams failed");
         }
 
-   
+
     }
 }
 

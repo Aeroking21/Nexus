@@ -46,7 +46,8 @@
 
     a:hover { 
         color: rgb(255, 255, 255);
-        text-decoration: none; 
+        text-decoration: none;
+        background-color:skyblue;
     }
 
     a:active { 
@@ -88,14 +89,19 @@
             </a>
 
             <a href="/UniversalSearch">
-                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Teams Search
+                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Search
             </a>
            
             <a href="/applicationtracker">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
             </a>
 
+            <a href="/AiSummarize">
+                <span class="oi oi-clipboard" aria-hidden="true"> </span> AI Docs
+            </a>
+
         </div>
+
         <a style="color:white;"> Welcome @context?.User?.Identity?.Name!</a>
         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">
             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
