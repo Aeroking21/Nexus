@@ -262,7 +262,6 @@
 
     public async Task<List<Event>> deleteItem(List<Event> e, Event item){
         e.Remove(item);
-        Console.WriteLine("item id is " + item.Id.ToString());
         await graphClient.Me.Events[item.Id].DeleteAsync();
         StateHasChanged();
         return e;       
