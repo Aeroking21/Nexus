@@ -95,10 +95,10 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
 
                         @if (getEventsOfSelectedDay(selectedDay).Count == 0)
                         {
-                            Console.WriteLine(selectedDay.Date);
                             <tr >
                                 <td colspan="4">No events for this day</td>
                             </tr>
@@ -113,7 +113,9 @@
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
-                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>                                    
+                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
+                                    <i class="fa fa-trash-o" style="font-size:24px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                                                        
                                 </tr>
                             }
                         }
@@ -242,8 +244,6 @@
 
     public List<Event> getEventsOfSelectedDay(CalendarDay day){
         selectedDay = day;
-        Console.WriteLine ("selected day is " + selectedDay.Date.ToString()[0..10]);
-        Console.WriteLine ("day "+ day.Date.ToString()[0..10]);
         return selectedDay.dayEvents;
         }
 
@@ -258,6 +258,14 @@
         }
         return eventsOfDay;
     } 
+    // deleteItem
+
+    public async Task<List<Event>> deleteItem(List<Event> e, Event item){
+        e.Remove(item);
+        Console.WriteLine("item id is " + item.Id.ToString());
+        await graphClient.Me.Events[item.Id].DeleteAsync();
+        return e;       
+    }
 
     // make the events all have different colours in a colour coded class 
     // make the events clickable and display the event details in a modal
