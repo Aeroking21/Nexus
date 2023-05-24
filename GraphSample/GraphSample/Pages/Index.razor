@@ -1,7 +1,7 @@
 ﻿<!-- Copyright (c) Microsoft Corporation.
      Licensed under the MIT license. -->
 @page "/"
-@inject IJSRuntime JsRuntime
+@inject IJSRuntime JSRuntime
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -12,9 +12,6 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.JSInterop
 @using Microsoft.Fast.Components.FluentUI
-
-
-@inject IJSRuntime JSRuntime
 
 <style>
     /* .item {
@@ -50,7 +47,7 @@
         color: rgba(0, 0, 0, 0.8);
         font-size: 1.1rem;
         height: 100%;
-        width: 100%; 
+        width: 100%;
         overflow-y: scroll;
         margin-bottom: 0%;
         box-sizing: border-box;
@@ -178,20 +175,20 @@
         border: 1px solid rgba(190, 190, 190, 0.8);
     }
 
-    .grid-container .grid-item a { 
+    .grid-container .grid-item a {
         color: rgb(0, 0, 0);
         text-decoration: none;
         font-size: 1.5rem;
     }
 
-    .grid-container .grid-item a:hover { 
+    .grid-container .grid-item a:hover {
         color: rgb(0, 0, 0);
-        text-decoration: none; 
+        text-decoration: none;
     }
 
-    .grid-container .grid-item a:active { 
+    .grid-container .grid-item a:active {
         color: rgb(0, 0, 0);
-        text-decoration: none; 
+        text-decoration: none;
     }
 
     .email:hover {
@@ -242,7 +239,7 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    
+
     .searchbar button input[type=submit]{
         background-color: #5680E9;
         border: 1px solid rgba(190, 190, 190, 0);
@@ -252,7 +249,7 @@
         color: white;
     }
 
-   
+
 </style>
 
 
@@ -268,12 +265,13 @@
                         <button type="submit" style="background-color: #5680E9; border-radius: 3px; padding: 5px; margin: 5px; border: 0px;"><i class="oi oi-magnifying-glass" style="color:white;"></i></button>
                     </span>
                 </div>
-                
+
                 <div class="grid-container">
                     <div class="grid-item">
                         <div class="header-bar">
                             <h4>To Do</h4>
                         </div>
+                        <mgt-todo></mgt-todo>
                         @if (TaskLists.Count != 0)
                         {
                             @foreach (var key in TaskLists.Keys)
@@ -286,7 +284,7 @@
                                         {
                                             string ListId = @key.Split("|")[1];
                                             string TaskId = @item.Id;
-                                      
+
                                             if (item.Status == Microsoft.Graph.Models.TaskStatus.Completed)
                                             {
                                                 <div class="tasks">
@@ -308,23 +306,23 @@
                                                     </span>
                                                 </div>
                                             }
-                                            
+
                                         }
                                     </div>
                                 }
-                                    
+
                             }
                         }
                         else
                         {
                             <p>No To Do's</p>
                         }
-                        
+
                     </div>
                     <div class="grid-item">
                         <h4>What have you missed?</h4>
                         @foreach (var mail in allMessages)
-                        {   
+                        {
                             @if (mail.IsRead == false)
                             {
                                 <a href="inbox">
@@ -338,7 +336,7 @@
                                         {
                                             <h3>(No Subject)</h3>
                                         }
-                                        
+
                                         <h4>
                                             From: @mail.Sender.EmailAddress.Name
                                         </h4>
@@ -352,6 +350,7 @@
                     </div>
                     <div class="grid-item">
                         <h4>Today</h4>
+                        <mgt-agenda days="1"></mgt-agenda>
                         @foreach(var calendarEvent in events)
                         {
                             <a href="calendar">
@@ -364,7 +363,7 @@
                                 </div>
                             </a>
                         }
-                    </div>  
+                    </div>
                     <div class="grid-item">
                         <h4>Teams</h4>
                         @foreach(var team in teams)
@@ -382,7 +381,7 @@
             <NotAuthorized>
                 <div class="log-in-screen" >
                     <h1>Sign in to see your dashboard</h1>
-                    <p>Sign in with your work or school account</p> 
+                    <p>Sign in with your work or school account</p>
                 <a class="btn btn-primary btn-large" href="authentication/login">Sign in</a>
                 </div>
             </NotAuthorized>
@@ -400,18 +399,18 @@
     private string? dateTimeFormat;
 
     private IList<TodoTaskList> toDos = new List<TodoTaskList>();
-    
+
     private IList<TodoTaskCollectionResponse> toDoTasks = new List<TodoTaskCollectionResponse>();
 
-    Dictionary<string, TodoTaskCollectionResponse> TaskLists = new Dictionary<string, TodoTaskCollectionResponse>();    
+    Dictionary<string, TodoTaskCollectionResponse> TaskLists = new Dictionary<string, TodoTaskCollectionResponse>();
     //private TodoTaskCollectionResponse? resultTasks;
-    
+
     private IList<CalendarCollectionResponse> cals = new List<CalendarCollectionResponse>();
-    
+
     private IList<Message> allMessages = new List<Message>();
-        
+
     private IList<Event> events = new List<Event>();
-    
+
     private IList<Team> teams = new List<Team>();
 
     private string status = string.Empty;
@@ -431,15 +430,21 @@
     public System.Security.Claims.ClaimsPrincipal user { get; set; }
 
 
+    [JSInvokable]
+    private async Task<String> GetAccessToken()
+    {
+        return this.AccessToken;
+    }
+
     protected override async Task OnInitializedAsync()
-    {   
+    {
         var tokenResult = await AccessTokenProvider.RequestAccessToken();
         if (tokenResult.TryGetToken(out var accessToken))
         {
             AccessToken = accessToken.Value;
             count += 1;
         }
-        
+
         //await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", accessToken);
 
         if (authenticationStateTask == null)
@@ -454,11 +459,11 @@
         await RerunCal();
         await RerunEmail();
         await BeginTeams();
-        
+        await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
     }
 
     public async Task BeginToDos()
-    {   
+    {
         if(count > 0) {
             //await Task.Delay(1000);
             //Console.WriteLine("Access  " + AccessToken);
@@ -482,7 +487,7 @@
                 var key = item.DisplayName + "|" + item.Id;
                 TaskLists[key] = resultTasks;
             }
-            
+
         }
     }
 
@@ -495,7 +500,7 @@
     }
 
     public async Task BeginCal()
-    {   
+    {
         if(count > 0) {
             //await Task.Delay(1000);
             //var user = (await authenticationStateTask).User;
@@ -511,7 +516,7 @@
             dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
 
            // graphClient = clientFactory.GetAuthenticatedClient();
-            
+
             DateTime currentDate = DateTime.Now.Date;
             DateTime nextDay = currentDate.AddDays(1).Date;
             DateTime endDateTime = nextDay.AddSeconds(-1);
@@ -561,7 +566,7 @@
             var mailPage = await graphClient.Me
                 .MailFolders["Inbox"]
                 .Messages
-                .GetAsync( config => 
+                .GetAsync( config =>
                     {
                         config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
                         config.QueryParameters.Select = new string[] { "subject", "sender", "bodyPreview","receivedDateTime", "isRead"};
@@ -593,7 +598,7 @@
     }
 
     public async Task CompleteTask(string ListId, string TaskId){
-        
+
         var requestBody = new TodoTask
         {
             Status = Microsoft.Graph.Models.TaskStatus.Completed
@@ -604,11 +609,11 @@
         Console.WriteLine(result.Status);
         StateHasChanged();
         //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
-        
+
     }
 
     public async Task DeleteTask(string ListId, string TaskId){
- 
+
         await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].DeleteAsync();
         await BeginToDos();
         StateHasChanged();
@@ -640,6 +645,6 @@
             //Console.WriteLine(teamsPage.Value.Count);
         }
     }
-    
+
 }
 
