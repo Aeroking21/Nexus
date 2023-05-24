@@ -255,20 +255,14 @@
    
 </style>
 
-<script>
-    import { SimpleProvider, Providers } from '@microsoft/mgt';
-    let provider = new SimpleProvider((scopes: string[]) => {
-        // return a promise with accessToken
-        return Promise.resolve("@AccessToken");
-        });
-    Providers.globalProvider = provider;
-</script>
-
 
 <div>
     <div>
         <AuthorizeView>
             <Authorized>
+                @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
+                <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
+
                 <div class="searchbar">
                     <span class="left-content"><h1>Dashboard</h1></span>
                     @* <h3 style="color: #1b6ec2">Search Bar </h3> *@
@@ -302,8 +296,8 @@
                                                     <span class="left-contentC">@item.Title</span>
                                                     <span class="right-content">
 
-                                                        <button class="default-button" @onclick="() => { UnDoTask(ListId,TaskId); }">Undo</button>
-                                                        <button class="default-button" @onclick="() => { DeleteTask(ListId,TaskId); }">Delete</button>
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { UnDoTask(ListId,TaskId); }">Undo</FluentButton>
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { DeleteTask(ListId,TaskId); }">Delete</FluentButton>
                                                     </span>
                                                 </div>
                                             }
@@ -312,8 +306,8 @@
                                                     <span class="left-content">@item.Title</span>
                                                     <span class="right-content">
 
-                                                        <button class="default-button" @onclick="() => { CompleteTask(ListId,TaskId); }">Complete</button>
-                                                        <button class="default-button" @onclick="() => { DeleteTask(ListId,TaskId); }">Delete</button>
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { CompleteTask(ListId,TaskId); }">Complete</FluentButton>
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { DeleteTask(ListId,TaskId); }">Delete</FluentButton>
                                                     </span>
                                                 </div>
                                             }
@@ -360,10 +354,10 @@
                         }
                     </div>
                     <div class="grid-item">
-                        <mgt-login></mgt-login>
-                        <mgt-todo></mgt-todo>
+                        @* <mgt-login></mgt-login>
+                        <mgt-todo></mgt-todo> *@
 
-                        @* <h4>Today</h4>
+                        <h4>Today</h4>
                         @foreach(var calendarEvent in events)
                         {
                             <a href="calendar">
@@ -375,7 +369,7 @@
                                     <span class="time">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime) - @FormatIso8601DateTime(calendarEvent?.End?.DateTime)</span>
                                 </div>
                             </a>
-                        } *@
+                        }
                     </div>  
                     <div class="grid-item">
                         <h4>Teams</h4>
