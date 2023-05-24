@@ -352,9 +352,9 @@ public class JobApplicantsController : ControllerBase
 
 
 
-    [Route("update-assessment-status/{username}")]
+    [Route("update-assessment-status/{username}/{status}")]
     [HttpPost]
-    public async Task<IActionResult> UpdateAssesmentStatus([FromRoute] string username, [FromBody] AssessmentBson assessmentBson)
+    public async Task<IActionResult> UpdateAssesmentStatus([FromRoute] string username, [FromRoute] AssessmentStatus status,[FromBody] AssessmentBson assessmentBson)
     {
         var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
 
@@ -377,10 +377,13 @@ public class JobApplicantsController : ControllerBase
 
             if (assessments.Count != 0)
             {
-                foreach (Assessment assessment in assessments.Where(a => a.date == assessmentBson.assessment.date))
+                for(int i = 0; i < assessments.Count(); i++)
                 {
-                    assessment.status = assessmentBson.assessment.status;
-                };
+                    if (assessments[i].date == assessmentBson.assessment.date)
+                    {
+                        assessments[i].status = status;
+                    }
+                }
                 var filter = Builders<JobApplicant>.Filter.And(
                 Builders<JobApplicant>.Filter.Eq("username", username),
                 Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", assessmentBson.timelineID)
