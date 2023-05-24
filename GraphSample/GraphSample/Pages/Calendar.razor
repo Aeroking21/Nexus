@@ -264,20 +264,9 @@
         e.Remove(item);
         Console.WriteLine("item id is " + item.Id.ToString());
         await graphClient.Me.Events[item.Id].DeleteAsync();
+        StateHasChanged();
         return e;       
     }
-
-    // make the events all have different colours in a colour coded class 
-    // make the events clickable and display the event details in a modal
-    public class RandomColourHelper{
-        public static string GetRandomColour(){
-            Random random = new Random();
-            string[] colours = {"#1b6ec2", "#c21b6e", "#6ec21b", "#1bc26e", "#6e1bc2", "#c26e1b"};
-            return colours[random.Next(0, colours.Length)];
-        }
-    }
-
-
     public string MonthToText(){
         
 
