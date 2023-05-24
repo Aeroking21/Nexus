@@ -255,6 +255,15 @@
    
 </style>
 
+<script>
+    import { SimpleProvider, Providers } from '@microsoft/mgt';
+    let provider = new SimpleProvider((scopes: string[]) => {
+        // return a promise with accessToken
+        return Promise.resolve("@AccessToken");
+        });
+    Providers.globalProvider = provider;
+</script>
+
 
 <div>
     <div>
@@ -351,7 +360,10 @@
                         }
                     </div>
                     <div class="grid-item">
-                        <h4>Today</h4>
+                        <mgt-login></mgt-login>
+                        <mgt-todo></mgt-todo>
+
+                        @* <h4>Today</h4>
                         @foreach(var calendarEvent in events)
                         {
                             <a href="calendar">
@@ -363,7 +375,7 @@
                                     <span class="time">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime) - @FormatIso8601DateTime(calendarEvent?.End?.DateTime)</span>
                                 </div>
                             </a>
-                        }
+                        } *@
                     </div>  
                     <div class="grid-item">
                         <h4>Teams</h4>
@@ -372,6 +384,7 @@
                             <a href="teams">
                                 <div class="team">
                                     <h3 >@team.DisplayName</h3>
+                                    <img src="@team.Photo" class="nav-profile-photo rounded-circle align-self-center me-2">
                                     @* <img src="@(team.Photo ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2"> *@
                                 </div>
                             </a>
