@@ -6,12 +6,20 @@
 @using System
 @using System.Text.Json;
 @using Microsoft.Fast.Components.FluentUI
+@using System.IO;
+@using System.Text;
+@inject IJSRuntime JsRuntime
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
     h3 {
-        color:blue;
+        color: blue;
     }
 </style>
 
@@ -22,7 +30,8 @@
 
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                <h3> hi </h3>
+                <mgt-file file-query="/me/drive/items/01DECBKURUIZ4ETBMWTZG3IGVXT26LR5SA"></mgt-file>
+
             </FluentDialog>
         </div>
 
@@ -49,9 +58,11 @@
             MyFluentDialog!.Hide();
     }
 
-    private void OnOpen()
+    private async void OnOpen()
     {
         MyFluentDialog!.Show();
+        await CallApiAsync();
+
     }
 
     private void OnDismiss(DialogEventArgs args)
@@ -83,7 +94,7 @@
     private GraphServiceClient? graphClient;
     private List<Author> data_response = new List<Author>();
 
-    protected async Task CallApiAsync(string searchTerm)
+    protected async Task CallApiAsync()
     {
         if (authenticationStateTask == null)
         {
@@ -97,66 +108,85 @@
         graphClient = clientFactory.GetAuthenticatedClient();
 
 
-        var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
+        //var driveItemRequest = graphClient.Me.Drive.Items["01DECBKURCFKOWIKDGYVEY2XGAIQUW2ATR"].Content.Request();
+        var driveItemContentRequest = await graphClient.Drives["b!RfF7rfoJs02VJ9un3I-ut-jp_QBFMOVBn3jNroSlMI_GNuGpps7GS7BmF01uUjKx"].Items["01DECBKURCFKOWIKDGYVEY2XGAIQUW2ATR"].Content.GetAsync();
+
+        //ReadContentFromMemoryStream(driveItemContentRequest)
+        //Console.WriteLine(ReadContentFromStream(driveItemContentRequest));
+
+        //string mimeType = "<file-mime-type>";
+        //string content = ConvertRawContentToText(driveItemContentRequest, mimeType);
+        //Console.WriteLine(content);
+
+
+        //try
+        //{
+
+
+        //    var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(driveId);
+        //    // check for hits is 0 or not then it is empty
+        //    if (user1?.Value?[0]?.HitsContainers?[0]?.Total == 0)
+        //    {
+        //        Console.WriteLine("Nothing found in Teams");
+        //    }
+
+        //    else
+        //    {
+        //        var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
+
+        //        JsonElement fromMessage = (JsonElement)searchItems["from"];
+        //        string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
+
+        //        data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
+        //    }
+
+
+        //}
+        //catch (ServiceException ex)
+        //{
+        //    Console.WriteLine($"Get Teams failed");
+        //}
+
+
+    }
+
+    public string ConvertRawContentToText(Stream stream, string mimeType)
+    {
+        // Determine the appropriate encoding based on the file's MIME type
+        Encoding encoding = GetEncodingFromMimeType(mimeType);
+
+        using (var reader = new StreamReader(stream, encoding))
         {
-            Requests = new List<SearchRequest>
-{
-                            new SearchRequest
-                            {
-                                EntityTypes = new List<EntityType?>
-{
-                                    EntityType.DriveItem,
-                                },
-                                Query = new SearchQuery
-                                {
-                                    QueryString = searchTerm,
-                                },
-                            },
-                        },
-        };
-
-
-
-
-
-        var batchRequestContent = new BatchRequestContent(graphClient);
-
-        var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
-
-        var driveId = await batchRequestContent.AddBatchRequestStepAsync(drive);
-
-        var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
-
-
-        try
-        {
-
-
-            var user1 = await returnedResponse.GetResponseByIdAsync<Microsoft.Graph.Search.Query.QueryResponse>(driveId);
-            // check for hits is 0 or not then it is empty
-            if (user1?.Value?[0]?.HitsContainers?[0]?.Total == 0)
-            {
-                Console.WriteLine("Nothing found in Teams");
-            }
-
-            else
-            {
-                var searchItems = user1?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
-
-                JsonElement fromMessage = (JsonElement)searchItems["from"];
-                string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-
-                data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
-            }
-
-
+            string content = reader.ReadToEnd();
+            return content;
         }
-        catch (ServiceException ex)
+    }
+
+    private Encoding GetEncodingFromMimeType(string mimeType)
+    {
+        // Map commonly used MIME types to corresponding encodings
+        switch (mimeType)
         {
-            Console.WriteLine($"Get Teams failed");
+            case "text/plain":
+                return Encoding.UTF8; // or the appropriate encoding for plain text files
+            case "application/pdf":
+                return Encoding.Default; // or the appropriate encoding for PDF files
+            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+            case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                return Encoding.UTF8; // or the appropriate encoding for Office documents
+            default:
+                return Encoding.Default; // or the default encoding for other file types
         }
+    }
 
-
+    public string ReadContentFromStream(Stream stream)
+    {
+        using (var reader = new StreamReader(stream))
+        {
+            string content = reader.ReadToEnd();
+            return content;
+        }
     }
 }
 
