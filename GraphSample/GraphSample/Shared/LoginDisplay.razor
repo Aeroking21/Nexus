@@ -100,7 +100,7 @@
             </a>
 
         </div>
-        <a style="color:white;"> Welcome @context?.User?.Identity?.Name!</a>
+        <a style="color:white; text-decoration:none;"> Welcome @context?.User?.Identity?.Name!</a>
         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">
             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
         </a>
