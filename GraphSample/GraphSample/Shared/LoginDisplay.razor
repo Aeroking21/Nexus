@@ -19,8 +19,9 @@
     
     .dropdown-menu{
         min-width: 10rem;
-        background-color: #04163C;
+        background-color: #23387c;
         color-scheme: light;
+        
     }
 
     .white-text{
@@ -33,12 +34,12 @@
 
 
     .left-content-bar {
-        color: white;
-        position: absolute;
-        top: 0;
-        padding-left: 20px;
-        font-size: 2rem;
-        left: 0;
+        color: white !important;
+        position: absolute !important;
+        top: 0 !important;
+        padding-left: 20px !important;
+        font-size: 2rem !important;
+        left: 0 !important;
         
         /*margin-right: 10px;*/
     }
@@ -71,10 +72,10 @@
 
 <AuthorizeView>
     <Authorized>
-        
-        
+
         <div class="left-content-bar">
-            <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px" height="23px"/>
+            <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px"/>
+
             <a href="" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </a>
@@ -95,10 +96,6 @@
                 <span class="oi oi-cloud" aria-hidden="true"></span> Overview
             </a>
 
-            @* <a href="/UniversalSearch">
-                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Teams Search
-            </a>
-            *@
             <a href="/applicationtracker" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
             </a>
@@ -120,7 +117,7 @@
         </div>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login">Log in</a>
+        <a href="authentication/login" style="color:white;">Log in</a>
         @* <mgt-login></mgt-login> *@
     </NotAuthorized>
 </AuthorizeView>
