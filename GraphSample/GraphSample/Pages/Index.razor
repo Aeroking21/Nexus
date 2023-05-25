@@ -396,11 +396,12 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
 
+   
+        await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
         await RerunToDo();
         await RerunCal();
         await RerunEmail();
         await BeginTeams();
-        await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
 
         
     }

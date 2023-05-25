@@ -21,11 +21,15 @@ namespace GraphSample.Graph
         {
             // Request the token from the accessor
             var result = await accessor.TokenProvider.RequestAccessToken();
-
+            try{
             if (result.TryGetToken(out var token))
             {
                 // Add the token to the Authorization header
                 request.Headers.Add("Authorization", $"Bearer {token.Value}");
+            }
+            }
+            catch(Exception ex){
+                Console.WriteLine(ex.Message);
             }
         }
     }
