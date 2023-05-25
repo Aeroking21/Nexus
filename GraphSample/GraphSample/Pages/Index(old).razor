@@ -1,6 +1,6 @@
 ﻿<!-- Copyright (c) Microsoft Corporation.
      Licensed under the MIT license. -->
-@page "/"
+@page "/oldindex"
 @inject IJSRuntime JsRuntime
 @using System.Security.Authentication
 @using Microsoft.Graph
@@ -277,7 +277,53 @@
                         <div class="header-bar">
                             <h4>To Do</h4>
                         </div>
-                        <mgt-todo></mgt-todo>                        
+                        <mgt-todo></mgt-todo>
+                        @* @if (TaskLists.Count != 0)
+                        {
+                            @foreach (var key in TaskLists.Keys)
+                            {
+                                @if (TaskLists[key].Value?.Count != 0){
+                                    <div class="lists">
+                                        <h4>@key.Split("|")[0]</h4>
+                                        <hr>
+                                        @foreach (var item in TaskLists[key].Value)
+                                        {
+                                            string ListId = @key.Split("|")[1];
+                                            string TaskId = @item.Id;
+                                      
+                                            if (item.Status == Microsoft.Graph.Models.TaskStatus.Completed)
+                                            {
+                                                <div class="tasks">
+                                                    <span class="left-contentC">@item.Title</span>
+                                                    <span class="right-content">
+
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { UnDoTask(ListId,TaskId); }">Undo</FluentButton>
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { DeleteTask(ListId,TaskId); }">Delete</FluentButton>
+                                                    </span>
+                                                </div>
+                                            }
+                                            else if (item.Status == Microsoft.Graph.Models.TaskStatus.NotStarted){
+                                                <div class="tasks">
+                                                    <span class="left-content">@item.Title</span>
+                                                    <span class="right-content">
+
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { CompleteTask(ListId,TaskId); }">Complete</FluentButton>
+                                                        <FluentButton Appearance="Appearance.Accent" @onclick="() => { DeleteTask(ListId,TaskId); }">Delete</FluentButton>
+                                                    </span>
+                                                </div>
+                                            }
+                                            
+                                        }
+                                    </div>
+                                }
+                                    
+                            }
+                        }
+                        else
+                        {
+                            <p>No To Do's</p>
+                        } *@
+                        
                     </div>
                     <div class="grid-item">
                         <h4>What have you missed?</h4>
@@ -309,14 +355,35 @@
                         }
                     </div>
                     <div class="grid-item">
+                        @* <mgt-login></mgt-login>
+                        <mgt-todo></mgt-todo> *@
+
                         <h4>Today</h4>
-                        <mgt-agenda></mgt-agenda>
+                        @foreach(var calendarEvent in events)
+                        {
+                            <a href="calendar">
+                                <div class="cal">
+                                    <span class="subject">
+                                        <h3>@calendarEvent?.Subject</h3>
+                                    </span>
+                                    <span class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</span>
+                                    <span class="time">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime) - @FormatIso8601DateTime(calendarEvent?.End?.DateTime)</span>
+                                </div>
+                            </a>
+                        }
                     </div>  
                     <div class="grid-item">
                         <h4>Teams</h4>
-                        <mgt-teams-channel-picker></mgt-teams-channel-picker>
-                        <mgt-person person-query="me" view="twoLines"></mgt-person>
-                      
+                        @foreach(var team in teams)
+                        {
+                            <a href="teams">
+                                <div class="team">
+                                    <h3 >@team.DisplayName</h3>
+                                    <img src="@team.Photo" class="nav-profile-photo rounded-circle align-self-center me-2">
+                                    @* <img src="@(team.Photo ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2"> *@
+                                </div>
+                            </a>
+                        }
                     </div>
                 </div>
             </Authorized>

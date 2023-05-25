@@ -2,8 +2,13 @@
 
 <div>
     <EditForm Model="_form" OnValidSubmit="SubmitForm">
-        <label for="email">Email</label>
-        <InputText @bind-Value="_form.Message" />
+        <FluentSearch @ref=searchTest
+                      @oninput=handleSearchInput
+                      @onchange=handleSearchInput
+                      @bind-Value="@searchValue"
+                      Placeholder="Search for email" />
+        <br />
+        <FluentListbox Items=@searchResults TOption="string" SelectedOptionChanged="@(e => searchValue = (e != defaultResultsText ? e : string.Empty) )" />
 
         <button type="submit">Submit</button>
         <button @onclick="Cancel">Cancel</button>
@@ -11,13 +16,49 @@
 </div>
 
 @code {
+
+    List<string> searchResults = defaultResults();
+
+    static string defaultResultsText = "no results";
+    FluentSearch? searchTest;
+    string? searchValue = string.Empty;
+    static List<string> defaultResults()
+    {
+        return new() { defaultResultsText };
+    }
+
+
+
+    void handleSearchInput(ChangeEventArgs args)
+    {
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value?.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+
+            if (searchTerm.Length > 0)
+            {
+                List<string> temp = allSenders.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                if (temp.Count() > 0)
+                {
+                    searchResults = temp;
+                }
+            }
+        }
+        else
+        {
+            searchResults = defaultResults();
+            searchValue = string.Empty;
+        }
+    }
+
     private readonly Form _form = new();
 
     [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+    [Parameter] public HashSet<string> allSenders { get; set; }
 
-    protected override void OnInitialized() => BlazoredModal.SetTitle("Enter an email Address");
+    protected override void OnInitialized() => BlazoredModal.SetTitle("Enter an Email Address");
 
-    private async Task SubmitForm() => await BlazoredModal.CloseAsync(ModalResult.Ok(_form.Message));
+    private async Task SubmitForm() => await BlazoredModal.CloseAsync(ModalResult.Ok(searchValue));
     private async Task Cancel() => await BlazoredModal.CancelAsync();
 
     class Form
