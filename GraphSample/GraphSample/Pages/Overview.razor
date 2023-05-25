@@ -1,7 +1,7 @@
 <!-- Copyright (c) Microsoft Corporation.
      Licensed under the MIT license. -->
 
-@page "/overview"
+@page "/overview/{ids}"
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -12,9 +12,15 @@
 
 <AuthorizeView>
     <Authorized>
-        <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
-        <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
-
+        @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" /> *@
+        @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
+        
+        @* To get the id out of the link *@
+        @* @{
+            string idss = ids;
+            string[] idArray = idss.Split('=');
+        }
+        <h1>HI: @idArray[1]</h1> *@
         <div class="groupSec">
             <div class="seeGroups">
                 <FluentSelect Id="state" name="state" TOption="GroupItem" @onchange="UpdateGroup" @bind-Value="selectedGroupValue">
@@ -375,6 +381,9 @@
 </AuthorizeView>
 
 @code{
+    [Parameter]
+    public string ids{ get; set; } 
+
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
@@ -398,6 +407,13 @@
         await BeginTeam();
         //await BeginCal();
     }
+
+    /*public void GetQueryStringValues()
+    {
+        NavManager.TryGetQueryString<int>("initialCount", out currentCount);
+        Console.WriteLine
+    }*/
+
 
     public async Task BeginMail(string addresses)
     {

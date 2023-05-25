@@ -24,21 +24,21 @@
     }
 
     .calendar-table {
-        width: 100%; 
+        width: 100%;
         text-align: center;
         }
 
     .calendar-table thead {
-        background-color: white; 
+        background-color: white;
     }
 
     .calendar-table .day {
-        min-width: 125px; 
-        margin: 2px; 
+        min-width: 125px;
+        margin: 2px;
         border-radius: 5px;
         background-color: white;
         padding: 30px;
-        cursor: pointer; 
+        cursor: pointer;
     }
 
     .calendar-table td {
@@ -65,15 +65,15 @@
 <div class="calendar-class">
 <AuthorizeView>
     <Authorized>
-       
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
         <h1 class="mb-3">Calendar</h1>
-        <div class="row"> 
+        <div class="row">
             <div class="col-3">
                 <h2> Add Event </h2>
                 <AddEvent />
             </div>
             <div class="col-9">
-        
+
                     @if (selectedDay.Date == DateTime.Now.Date){
                         <h2>Events for today</h2>
                      }
@@ -106,14 +106,16 @@
                         else{
                             @foreach (var e in getEventsOfSelectedDay(selectedDay))
                             {   // if number of events == 0
-        
+
                                 <tr class="event-row">
                                     <td>@e?.Organizer?.EmailAddress?.Name</td>
                                     <td>@e?.Subject</td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
-                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>                                    
+                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
+                                    <i class="fa fa-trash-o" style="font-size:24px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+
                                 </tr>
                             }
                         }
@@ -123,7 +125,7 @@
             <div class="row -4">
                 <div class="display-month">
                     <h2>@MonthToText() @year</h2>
-        
+
                     <table class="calendar-table">
                         <!-- display the month and year  -->
                         <thead>
@@ -138,7 +140,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            
+
                             @for (int r = 0; r < rowsCount; r++)
                             {
                                 <tr>
@@ -168,9 +170,9 @@
                             <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
                             <button class="btn btn-primary" @onclick="Today">Today</button>
                             <button class="btn btn-primary" @onclick="NextMonth">Next</button>
-                            
+
                     </div>
-                
+
                 </div>
             </div>
         </div>
@@ -182,7 +184,7 @@
 
 </div>
 @code{
-    
+
     public class CalendarDay
     {
         public int DayNumber { get; set; }
@@ -210,7 +212,7 @@
     if (day.DayNumber != 0)
     {
         builder.OpenElement(1, "div"); // Create a container div for the day
-        
+
         builder.OpenElement(2, "div"); // Create a div for the day number
         builder.AddContent(3, day.DayNumber);
         builder.CloseElement();
@@ -238,6 +240,13 @@
         builder.CloseElement(); // Close the container div
     }
 };
+
+    public async Task<List<Event>> deleteItem(List<Event> e, Event item){
+        e.Remove(item);
+        await graphClient.Me.Events[item.Id].DeleteAsync();
+        StateHasChanged();
+        return e;       
+    }
     public CalendarDay selectedDay = new CalendarDay();
 
     public List<Event> getEventsOfSelectedDay(CalendarDay day){
@@ -257,9 +266,9 @@
             }
         }
         return eventsOfDay;
-    } 
+    }
 
-    // make the events all have different colours in a colour coded class 
+    // make the events all have different colours in a colour coded class
     // make the events clickable and display the event details in a modal
     public class RandomColourHelper{
         public static string GetRandomColour(){
@@ -271,7 +280,7 @@
 
 
     public string MonthToText(){
-        
+
 
         switch (month)
         {
@@ -309,12 +318,12 @@
         days = new List<CalendarDay>();
 
 
-        // Calculate the number of empty days 
+        // Calculate the number of empty days
         var firstDayDate = new DateTime(year, month, 1);
         int weekDayNumber = (int)firstDayDate.DayOfWeek;
         int numberOfEmptyDays = 0;
-        // list of 
-        if (weekDayNumber == 7) // Sunday 
+        // list of
+        if (weekDayNumber == 7) // Sunday
         {
             numberOfEmptyDays = 0;
         }
@@ -323,7 +332,7 @@
             numberOfEmptyDays = weekDayNumber;
         }
 
-        // Add the empty days 
+        // Add the empty days
         for (int i = 0; i < numberOfEmptyDays; i++)
         {
             days.Add(new CalendarDay
@@ -333,7 +342,7 @@
             });
         }
 
-        // Add the month days 
+        // Add the month days
         int numberOfDaysInMonth = DateTime.DaysInMonth(year, month);
 
         for (int i = 0; i < numberOfDaysInMonth; i++)
@@ -343,11 +352,11 @@
                 DayNumber = i + 1,
                 IsEmpty = false,
                 Date = new DateTime(year, month, i + 1),
-                dayEvents = new List<Event>()                
+                dayEvents = new List<Event>()
             });
         }
 
-        // 2- Calcualte the number of rows 
+        // 2- Calcualte the number of rows
         int remaning = days.Count % 7;
         if (remaning == 0)
             rowsCount = days.Count / 7;
@@ -356,9 +365,9 @@
 
         foreach (var day in days){
             day.dayEvents = getEventsofToday(day);
-         
+
         }
-   
+
 
     }
 
@@ -395,7 +404,7 @@
 
     public async Task Today()
     {
-        
+
         selectedDay.Date = DateTime.Now.Date;
         selectedDay.dayEvents = getEventsofToday(selectedDay);
         month = DateTime.Now.Month;

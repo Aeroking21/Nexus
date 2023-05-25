@@ -29,6 +29,7 @@
         padding: 3%
     }*/
 
+
     .grid-container {
         display: grid;
         /*grid-template-columns: auto auto;*/
@@ -221,13 +222,16 @@
     }
 
     .log-in-screen {
-
        /* make the background screen a moving glitter mist on a blue background  */
-        display: flex;
-        flex-direction: column;
+        /*flex-direction: column;*/
         justify-content: center;
         align-items: center;
-        height: 100%;
+        align-self: center;
+        text-align: center;
+        /*height: 100%;*/
+        left: 21%;
+        position: absolute;
+        width: 60%;
     }
 
     .searchbar{
@@ -252,84 +256,102 @@
         color: white;
     }
 
+    body{
+        font-family: 'Segoe UI',SegoeUI,'Helvetica Neue',Helvetica,Arial,sans-serif;
+        background-color: #f7f7f7;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 1.5;
+    }
    
 </style>
 
 
-<div>
-    <div>
-        <AuthorizeView>
-            <Authorized>
-                @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
-                <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
 
-                <div class="searchbar">
-                    <span class="left-content"><h1>Dashboard</h1></span>
-                    @* <h3 style="color: #1b6ec2">Search Bar </h3> *@
-                    <span class="right-content">
-                        <input type="text" placeholder="Search..." name="search">
-                        <button type="submit" style="background-color: #5680E9; border-radius: 3px; padding: 5px; margin: 5px; border: 0px;"><i class="oi oi-magnifying-glass" style="color:white;"></i></button>
-                    </span>
-                </div>
-                
-                <div class="grid-container">
-                    <div class="grid-item">
-                        <div class="header-bar">
-                            <h4>To Do</h4>
-                        </div>
-                        <mgt-todo></mgt-todo>                        
+<body>
+    <AuthorizeView>
+        <Authorized>
+            @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" />
+            <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
+
+            <div class="searchbar">
+                <span class="left-content"><h1>Dashboard</h1></span>
+                @* <h3 style="color: #1b6ec2">Search Bar </h3> *@
+                <span class="right-content">
+                    <input type="text" placeholder="Search..." name="search">
+                    <button type="submit" style="background-color: #5680E9; border-radius: 3px; padding: 5px; margin: 5px; border: 0px;"><i class="oi oi-magnifying-glass" style="color:white;"></i></button>
+                </span>
+            </div>
+            
+            <div class="grid-container">
+                <div class="grid-item">
+                    <div class="header-bar">
+                        <h4>To Do</h4>
                     </div>
-                    <div class="grid-item">
-                        <h4>What have you missed?</h4>
-                        @foreach (var mail in allMessages)
-                        {   
-                            @if (mail.IsRead == false)
-                            {
-                                <a href="inbox">
-                                    @* @mail.WebLink *@
-                                    <div class="email">
-                                        @if (mail.Subject.Length != 0)
-                                        {
-                                            <h3>@mail.Subject</h3>
-                                        }
-                                        else
-                                        {
-                                            <h3>(No Subject)</h3>
-                                        }
-                                        
-                                        <h4>
-                                            From: @mail.Sender.EmailAddress.Name
-                                        </h4>
-                                        <div class="preview">
-                                            @mail.BodyPreview
-                                        </div>
+                    <mgt-todo></mgt-todo>                        
+                </div>
+                <div class="grid-item">
+                    <h4>What have you missed?</h4>
+                    @foreach (var mail in allMessages)
+                    {   
+                        @if (mail.IsRead == false)
+                        {
+                            string mailId = mail.Id;
+                            string url = "overview/mailid=" + mailId;
+                            <a href=@url>
+                                @* @mail.WebLink *@
+                                <div class="email">
+                                    @if (mail.Subject.Length != 0)
+                                    {
+                                        <h3>@mail.Subject</h3>
+                                    }
+                                    else
+                                    {
+                                        <h3>(No Subject)</h3>
+                                    }
+                                    
+                                    <h4>
+                                        From: @mail.Sender.EmailAddress.Name
+                                    </h4>
+                                    <div class="preview">
+                                        @mail.BodyPreview
                                     </div>
-                                </a>
-                            }
+                                </div>
+                            </a>
                         }
-                    </div>
-                    <div class="grid-item">
-                        <h4>Today</h4>
-                        <mgt-agenda></mgt-agenda>
-                    </div>  
-                    <div class="grid-item">
-                        <h4>Teams</h4>
-                        <mgt-teams-channel-picker></mgt-teams-channel-picker>
-                        <mgt-person person-query="me" view="twoLines"></mgt-person>
-                      
-                    </div>
+                    }
                 </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="log-in-screen" >
-                    <h1>Sign in to see your dashboard</h1>
-                    <p>Sign in with your work or school account</p> 
-                <a class="btn btn-primary btn-large" href="authentication/login">Sign in</a>
+                <div class="grid-item">
+                    <h4>Today</h4>
+                    <mgt-agenda></mgt-agenda>
+                </div>  
+                <div class="grid-item">
+                    <h4>Teams</h4>
+                    <mgt-teams-channel-picker></mgt-teams-channel-picker>
+
+                    <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
+                        <template>
+                                <div data-for="team in value">
+                                    <a href="overview/teamid={{team.id}}">
+                                        <h4>{{ team.displayName }}</h4>
+                                        @* <img src="{{team.photo}}" class="nav-profile-photo rounded-circle align-self-center me-2"> *@
+                                    </a>
+                                </div>
+                        </template>
+                    </mgt-get>
                 </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </div>
-</div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="log-in-screen" >
+                <h1>Sign in to see your dashboard</h1>
+                <p>Sign in with your work or school account</p> 
+            <a class="btn btn-primary btn-large" href="authentication/login">Log in</a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</body>
 
 
 @code{
@@ -396,11 +418,12 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
 
+   
+        await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
         await RerunToDo();
         await RerunCal();
         await RerunEmail();
         await BeginTeams();
-        await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
 
         
     }
@@ -585,9 +608,22 @@
                 .GetAsync();
 
             teams = teamsPage.Value;
+
+            //var res = await graphClient.Teams[teamsPage.Value.Id].Channels.GetAsync();
+
             //Console.WriteLine(teamsPage.Value.Count);
         }
     }
+
+    /* public async Task GetChannels(string teamId)
+    {
+        if (count > 0){
+            var res = await graphClient.Teams[teamId].Channels
+               .GetAsync();
+
+            Console.WriteLine(res.Count);
+        }
+    } */
     
 }
 

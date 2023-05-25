@@ -1,4 +1,4 @@
-﻿@page "/applicationtracker"
+@page "/applicationtracker"
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -333,6 +333,7 @@
 </style>
 
 @code {
+
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
@@ -770,4 +771,3 @@
 
 
     }
-
