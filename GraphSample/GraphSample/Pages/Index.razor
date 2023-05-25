@@ -329,11 +329,12 @@
                     <mgt-person person-query="me" view="twoLines"></mgt-person> *@
                     <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                         <template>
-                            <div data-for="team in value">
-                                {{ team.displayName }}
-                                <img src="team.Photo" class="nav-profile-photo rounded-circle align-self-center me-2">
-
-                            </div>
+                            <a href="overview">
+                                <div data-for="team in value">
+                                    <h4>{{ team.displayName }}</h4>
+                                    <img src="team.Photo" class="nav-profile-photo rounded-circle align-self-center me-2">
+                                </div>
+                            </a>
                             
 
                         </template>
