@@ -95,10 +95,10 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
 
                         @if (getEventsOfSelectedDay(selectedDay).Count == 0)
                         {
-                            Console.WriteLine(selectedDay.Date);
                             <tr >
                                 <td colspan="4">No events for this day</td>
                             </tr>
@@ -113,7 +113,9 @@
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
-                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>                                    
+                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
+                                    <i class="fa fa-trash-o" style="font-size:24px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                                                        
                                 </tr>
                             }
                         }
@@ -207,6 +209,7 @@
     public RenderFragment<CalendarDay> DayTemplate { get; set; } = DefaultDayTemplate;
     private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
 {
+    
     if (day.DayNumber != 0)
     {
         builder.OpenElement(1, "div"); // Create a container div for the day
@@ -234,18 +237,19 @@
                 }
             }
         }
+        
 
         builder.CloseElement(); // Close the container div
+        
     }
 };
     public CalendarDay selectedDay = new CalendarDay();
 
     public List<Event> getEventsOfSelectedDay(CalendarDay day){
         selectedDay = day;
-        Console.WriteLine ("selected day is " + selectedDay.Date.ToString()[0..10]);
-        Console.WriteLine ("day "+ day.Date.ToString()[0..10]);
+        StateHasChanged();
         return selectedDay.dayEvents;
-        }
+    }
 
     public List<Event> getEventsofToday(CalendarDay day)
     {
@@ -258,18 +262,14 @@
         }
         return eventsOfDay;
     } 
+    // deleteItem
 
-    // make the events all have different colours in a colour coded class 
-    // make the events clickable and display the event details in a modal
-    public class RandomColourHelper{
-        public static string GetRandomColour(){
-            Random random = new Random();
-            string[] colours = {"#1b6ec2", "#c21b6e", "#6ec21b", "#1bc26e", "#6e1bc2", "#c26e1b"};
-            return colours[random.Next(0, colours.Length)];
-        }
+    public async Task<List<Event>> deleteItem(List<Event> e, Event item){
+        e.Remove(item);
+        await graphClient.Me.Events[item.Id].DeleteAsync();
+        StateHasChanged();
+        return e;       
     }
-
-
     public string MonthToText(){
         
 

@@ -1,0 +1,33 @@
+@page "/completionexample"
+@using GraphSample.Data
+@using AzureOpenAIClient.Http
+@inject OpenAIClientService openAIClientService
+
+
+<PageTitle>Completion Example</PageTitle>
+<h3>Completion Example</h3>
+<Button Click="CallCompletion" Text="Call Completion" 
+    ButtonStyle="ButtonStyle.Primary" > </Button>
+
+@TextValue
+
+
+
+
+
+@code {
+    CompletionResponse? Completion;
+    string TextValue = "Four score and seven years ago";
+    async Task CallCompletion()
+    {
+        if (TextValue != null)
+        {
+            Completion = await openAIClientService.GetTextCompletionResponse(TextValue, 500);
+            if (Completion?.Choices.Count > 0)
+            {
+                TextValue = TextValue + Completion.Choices[0].Text;
+                StateHasChanged();
+            }
+        }
+    }
+}
