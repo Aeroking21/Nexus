@@ -44,6 +44,12 @@
         /*margin-right: 10px;*/
     }
 
+    .right-content-bar{
+        position: absolute !important; 
+        right: 0 !important;
+        padding: 14px;
+    }
+
     /*a {
         color: rgb(255, 255, 255);
         font-size: 0.1 rem;
@@ -103,21 +109,25 @@
             <a href="/fileupload" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> File Upload
             </a>
-            </div>
+        </div>
 
-        <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
-        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
-            <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
-        </a>
-        <div class="dropdown-menu dropdown-menu-end">
-            <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
-            <p class="dropdown-item-text text-muted mb-0 white-text" >@context?.User?.GetUserGraphEmail()</p>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+        <div class="right-content-bar">
+            <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
+                <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+                <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
+                <p class="dropdown-item-text text-muted mb-0 white-text" >@context?.User?.GetUserGraphEmail()</p>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login" style="color:white;">Log in</a>
+        <div class="right-content-bar">
+            <a href="authentication/login" style="color:white;">Log in</a>
+        </div>
         @* <mgt-login></mgt-login> *@
     </NotAuthorized>
 </AuthorizeView>

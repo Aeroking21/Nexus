@@ -229,7 +229,7 @@
         align-self: center;
         text-align: center;
         /*height: 100%;*/
-        left: 20%;
+        left: 21%;
         position: absolute;
         width: 60%;
     }
@@ -296,7 +296,9 @@
                     {   
                         @if (mail.IsRead == false)
                         {
-                            <a href="inbox">
+                            string mailId = mail.Id;
+                            string url = "overview/mailid=" + mailId;
+                            <a href=@url>
                                 @* @mail.WebLink *@
                                 <div class="email">
                                     @if (mail.Subject.Length != 0)
@@ -325,18 +327,16 @@
                 </div>  
                 <div class="grid-item">
                     <h4>Teams</h4>
-                    @* <mgt-teams-channel-picker></mgt-teams-channel-picker>
-                    <mgt-person person-query="me" view="twoLines"></mgt-person> *@
+                    <mgt-teams-channel-picker></mgt-teams-channel-picker>
+
                     <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                         <template>
-                            <a href="overview">
                                 <div data-for="team in value">
-                                    <h4>{{ team.displayName }}</h4>
-                                    <img src="team.Photo" class="nav-profile-photo rounded-circle align-self-center me-2">
+                                    <a href="overview/teamid={{team.id}}">
+                                        <h4>{{ team.displayName }}</h4>
+                                        @* <img src="{{team.photo}}" class="nav-profile-photo rounded-circle align-self-center me-2"> *@
+                                    </a>
                                 </div>
-                            </a>
-                            
-
                         </template>
                     </mgt-get>
                 </div>
@@ -346,7 +346,7 @@
             <div class="log-in-screen" >
                 <h1>Sign in to see your dashboard</h1>
                 <p>Sign in with your work or school account</p> 
-            <a class="btn btn-primary btn-large" href="authentication/login">Sign in</a>
+            <a class="btn btn-primary btn-large" href="authentication/login">Log in</a>
             </div>
         </NotAuthorized>
     </AuthorizeView>
@@ -608,9 +608,22 @@
                 .GetAsync();
 
             teams = teamsPage.Value;
+
+            //var res = await graphClient.Teams[teamsPage.Value.Id].Channels.GetAsync();
+
             //Console.WriteLine(teamsPage.Value.Count);
         }
     }
+
+    /* public async Task GetChannels(string teamId)
+    {
+        if (count > 0){
+            var res = await graphClient.Teams[teamId].Channels
+               .GetAsync();
+
+            Console.WriteLine(res.Count);
+        }
+    } */
     
 }
 
