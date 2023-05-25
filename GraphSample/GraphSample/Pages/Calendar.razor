@@ -65,7 +65,7 @@
 <div class="calendar-class">
 <AuthorizeView>
     <Authorized>
-
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
         <h1 class="mb-3">Calendar</h1>
         <div class="row">
             <div class="col-3">
@@ -114,6 +114,8 @@
                                     <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
                                     <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
+                                    <i class="fa fa-trash-o" style="font-size:24px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+
                                 </tr>
                             }
                         }
@@ -238,6 +240,13 @@
         builder.CloseElement(); // Close the container div
     }
 };
+
+    public async Task<List<Event>> deleteItem(List<Event> e, Event item){
+        e.Remove(item);
+        await graphClient.Me.Events[item.Id].DeleteAsync();
+        StateHasChanged();
+        return e;       
+    }
     public CalendarDay selectedDay = new CalendarDay();
 
     public List<Event> getEventsOfSelectedDay(CalendarDay day){

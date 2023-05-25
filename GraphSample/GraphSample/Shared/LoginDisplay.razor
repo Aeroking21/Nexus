@@ -33,8 +33,13 @@
 
 
     .left-content-bar {
-        float: left;
         color: white;
+        position: absolute;
+        top: 0;
+        padding-left: 20px;
+        font-size: 2rem;
+        left: 0;
+        
         /*margin-right: 10px;*/
     }
 
@@ -60,18 +65,16 @@
         border: none;
         background-color: transparent;
     }
-    .logo{
-        float: left;
-        height: 30px;
-        width: auto;
-    }
+
 
 </style>
 
 <AuthorizeView>
     <Authorized>
-        <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="70px" height="23px">
+        
+        
         <div class="left-content-bar">
+            <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px" height="23px"/>
             <a href="" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </a>
@@ -103,8 +106,8 @@
             <a href="/fileupload" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> File Upload
             </a>
+            </div>
 
-        </div>
         <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
