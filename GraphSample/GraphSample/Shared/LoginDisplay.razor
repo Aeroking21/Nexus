@@ -38,7 +38,7 @@
         /*margin-right: 10px;*/
     }
 
-    a {
+    /*a {
         color: rgb(255, 255, 255);
         font-size: 0.1 rem;
         text-decoration: none;
@@ -52,56 +52,61 @@
     a:active { 
         color: rgb(255, 255, 255);
         text-decoration: none; 
-    }
+    }*/
 
     .buttons {
         color: white;
         margin-right: 10px;
         border: none;
         background-color: transparent;
-
+    }
+    .logo{
+        float: left;
+        height: 30px;
+        width: auto;
     }
 
 </style>
 
 <AuthorizeView>
     <Authorized>
+        <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="70px" height="23px">
         <div class="left-content-bar">
-            <a href="">
+            <a href="" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </a>
 
-            <a href="/calendar">
+            <a href="/calendar" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
             </a>
 
-            <a href="/inbox">
+            <a href="/inbox" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-envelope-open" aria-hidden="true"></span> Inbox
             </a>
 
-            <a href="/teams">
+            <a href="/teams" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-people" aria-hidden="true"></span> Teams
             </a>
 
-            <a href="/overview">
+            <a href="/overview" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-cloud" aria-hidden="true"></span> Overview
             </a>
 
-            <a href="/UniversalSearch">
+            @* <a href="/UniversalSearch">
                 <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Teams Search
             </a>
-           
-            <a href="/applicationtracker">
+            *@
+            <a href="/applicationtracker" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
             </a>
 
-            <a href="/fileupload">
+            <a href="/fileupload" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> File Upload
             </a>
 
         </div>
-        <a style="color:white; text-decoration:none;"> Welcome @context?.User?.Identity?.Name!</a>
-        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">
+        <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
+        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
         </a>
         <div class="dropdown-menu dropdown-menu-end">
