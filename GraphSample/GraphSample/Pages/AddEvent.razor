@@ -70,6 +70,7 @@
         // Get the user's time zone
         var user = (await authenticationStateTask).User;
         userTimeZone = user.GetUserGraphTimeZone() ?? "UTC";
+        StateHasChanged();
     }
 
     private async Task CreateEvent()
@@ -139,5 +140,6 @@
             isError = true;
             status = exception.Message;
         }
+        StateHasChanged();
     }
 }

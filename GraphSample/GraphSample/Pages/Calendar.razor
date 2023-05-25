@@ -209,6 +209,7 @@
     public RenderFragment<CalendarDay> DayTemplate { get; set; } = DefaultDayTemplate;
     private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
 {
+    
     if (day.DayNumber != 0)
     {
         builder.OpenElement(1, "div"); // Create a container div for the day
@@ -236,16 +237,19 @@
                 }
             }
         }
+        
 
         builder.CloseElement(); // Close the container div
+        
     }
 };
     public CalendarDay selectedDay = new CalendarDay();
 
     public List<Event> getEventsOfSelectedDay(CalendarDay day){
         selectedDay = day;
+        StateHasChanged();
         return selectedDay.dayEvents;
-        }
+    }
 
     public List<Event> getEventsofToday(CalendarDay day)
     {
