@@ -245,21 +245,10 @@
         string pageTitle = $"Summary of {loadedFile[0].Name}";
 
         // Create the HTML body content
-        //string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
-        // Create the HTML body content
-        string htmlContent = $"<html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
+        string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
 
-        // Create the multipart content
-        var multipartContent = new MultipartFormDataContent();
-        var presentationPart = new ByteArrayContent(Encoding.UTF8.GetBytes(htmlContent));
-        multipartContent.Add(presentationPart, "Presentation");
-
-        // Serialize the multipart content to a byte array
-        var stream = new MemoryStream();
-        multipartContent.CopyToAsync(stream).Wait();
-        byte[] contentBytes = stream.ToArray();
         // Convert the HTML string to a byte array using UTF-8 encoding
-        //byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
+        byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
         // create a new page in the section
         var page = new OnenotePage
         {
