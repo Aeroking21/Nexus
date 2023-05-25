@@ -74,6 +74,7 @@
         <FluentTabs ActiveId="@activeid" OnTabChange="HandleOnTabChange">
             <FluentTab Text="Mail" />
             <FluentTab Text="Teams" />
+            <FluentTab Text="Chats" />
             <FluentTab Text="Calendar" />
 
             @* OUTLOOK TAB *@
@@ -81,9 +82,9 @@
                 <div class="row">
                     <div class="splitleft">
                         <div class="emailSec">
-                            @foreach (var mail in allMessages)
+                            @foreach (var mail in myMessages)
                             {
-                                <FluentCard @onclick="() => Toggle(mail)">
+                                <FluentCard @onclick="() => ToggleMail(mail)">
                                     <div class="emailEntryBox">
                                         <div class="emailEntryData">
                                             <p class="subject">@mail?.Subject</p>
@@ -120,17 +121,78 @@
 
             </FluentTabPanel>
 
-
+            @* TEAMS TAB *@
             <FluentTabPanel>
                 <div class="row">
                     <div class="splitleft">
                         <div class="teamSec">
-                            @foreach (var teamsChat in teams)
+                            @foreach (var team in myTeams)
                             {
-                                <FluentCard>
+                                <FluentCard @onclick="() => ToggleTeam(team)">
                                     <div class="teamEntryBox">
                                         <div class="teamEntryData">
-                                            <p class="subject">@teamsChat?.DisplayName</p>
+                                            <p class="subject">@team?.DisplayName</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="splitright">
+                        <div class="teamSec">
+                            @foreach (var channel in myChannels)
+                            {
+                                <FluentCard @onclick="() => ToggleChannel(channel)">
+                                    <div class="teamEntryBox">
+                                        <div class="teamEntryData">
+                                            <p class="subject">@channel?.DisplayName</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+
+                            @foreach (var convo in myConvos)
+                            {
+                                <FluentCard @onclick="() => ToggleConvo(convo)">
+                                    <div class="teamEntryBox">
+                                        <div class="teamEntryData">
+                                            <p class="subject">@convo?.From?.User?.DisplayName</p>
+                                            <p class="subject">@convo?.Body?.Content</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+
+                            @foreach (var reply in myReplies)
+                            {
+                                <FluentCard @onclick="() => ToggleReply(reply)">
+                                    <div class="teamEntryBox">
+                                        <div class="teamEntryData">
+                                            <p class="subject">@reply?.From?.User?.DisplayName</p>
+                                            <p class="subject">@reply?.Body?.Content</p>
+                                        </div>
+                                    </div>
+                                </FluentCard>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+            </FluentTabPanel>
+
+            @* CHATS TAB *@
+            <FluentTabPanel>
+                <div class="row">
+                    <div class="splitleft">
+                        <div class="teamSec">
+                            @foreach (var chat in myChats)
+                            {
+                                <FluentCard @onclick="() => ToggleChat(chat)">
+                                    <div class="teamEntryBox">
+                                        <div class="teamEntryData">
+                                            <p class="subject">@chat?.Id</p>
+                                            <p class="subject">@chat?.ChatType</p>
                                         </div>
                                     </div>
                                 </FluentCard>
@@ -145,11 +207,12 @@
 
             </FluentTabPanel>
 
+            @* CALENDAR TAB *@
             <FluentTabPanel>
                 <div class="row">
                     <div class="splitleft">
                         <div class="calSec">
-                            @foreach (var calendarEvent in events)
+                            @foreach (var calendarEvent in myEvents)
                             {
                                 <FluentCard>
                                     <div class="calEntryBox">
@@ -170,7 +233,7 @@
                     </div>
 
                     <div class="splitright">
-                        hi
+                        
                     </div>
                 </div>
             </FluentTabPanel>
@@ -379,9 +442,6 @@
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     private GraphServiceClient? graphClient;
-    private IList<Event> events = new List<Event>();
-    private IList<Message> allMessages = new List<Message>();
-    private IList<Team> teams = new List<Team>();
 
     private string? dateTimeFormat;
     private string? oldData;
@@ -394,18 +454,24 @@
                 "Unable to access authentication state");
         }
 
-        await BeginMail("All");
-        await BeginTeam();
-        //await BeginCal();
+        await getMail("All");
+        await getTeams("All");
+        await getChats("All");
+        //await getCal();
     }
 
-    public async Task BeginMail(string addresses)
+/*
+ * GET MAIL EVENTS
+ */
+
+    /* MAIL LIST */
+    private IList<Message> myMessages = new List<Message>();
+
+    /* ASYNCHRONOUSLY GET MAIL */
+    public async Task getMail(string addresses)
     {
-        Console.WriteLine("GOT IN HERE??");
         graphClient = clientFactory.GetAuthenticatedClient();
-        /*
-         * GET RECENT MAIL EVENTS
-         */
+
         var mailPage = await graphClient.Me
             .MailFolders["Inbox"]
             .Messages
@@ -422,21 +488,98 @@
         /*
          * Set to non-async variable. Can then be accessed in html.
          */
-        allMessages = mailPage?.Value ?? new List<Message>();
+        myMessages = mailPage?.Value ?? new List<Message>();
     }
 
-    public async Task BeginTeam()
+/*
+ * GET TEAM EVENTS
+ */
+
+    /* TEAMS LIST */
+    private IList<Team> myTeams = new List<Team>();
+
+    /* ASYNCHRONOUSLY GET TEAMS */
+    public async Task getTeams(string addresses)
     {
         graphClient = clientFactory.GetAuthenticatedClient();
-        /*
-         * GET RECENT TEAM CHATS
-         */
-
         var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
-        teams = teamPage?.Value ?? new List<Team>();
+        myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-    public async Task BeginCal()
+/*
+ * GET CHANNEL EVENTS
+ */
+
+    /* CHANNEL LIST */
+    private IList<Channel> myChannels = new List<Channel>();
+
+    /* ASYNCHRONOUSLY GET CHANNELS */
+    public async Task getChannels()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var channelPage = await graphClient.Teams[currentTeam.Id].Channels.GetAsync();
+        myChannels = channelPage?.Value ?? new List<Channel>();
+    }
+   
+/*
+ * GET CHANNEL CHAT-MESSAGES
+ */
+
+    /* CHAT-MESSAGE LIST */
+    private IList<ChatMessage> myConvos = new List<ChatMessage>();
+
+    /* ASYNCHRONOUSLY GET MESSAGES */
+    public async Task getConvos()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var convoPage = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
+        myConvos = convoPage?.Value ?? new List<ChatMessage>();
+    }
+
+/*
+ * GET CHANNEL CHAT-MESSAGE REPLIES
+ */
+
+    /* CHAT-MESSAGE LIST */
+    private IList<ChatMessage> myReplies = new List<ChatMessage>();
+
+    /* ASYNCHRONOUSLY GET REPLIES */
+    public async Task getTeamReplies()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var replyPage = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[currentConvo.Id].Replies.GetAsync();
+        myReplies = replyPage?.Value ?? new List<ChatMessage>();
+    }
+
+/*
+ * GET PERSONAL CHATS
+ */
+
+    /* CHAT LIST */
+    private IList<Chat> myChats = new List<Chat>();
+
+    /* ASYNCHRONOUSLY GET CHATS */
+    public async Task getChats(string addresses)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var chatPage = await graphClient.Me.Chats.GetAsync();
+        myChats = chatPage?.Value ?? new List<Chat>();
+    }
+
+/*
+ * GET PERSONAL CHAT REPLIES
+ */
+
+
+/*
+ * GET CALENDAR EVENTS
+ */
+
+    /* EVENTS LIST */
+    private IList<Event> myEvents = new List<Event>();
+
+    /* ASYNCHRONOUSLY GET EVENTs */
+    public async Task getCal()
     {
         // Get the user
         //var user = (await authenticationStateTask).User;
@@ -466,21 +609,25 @@
         /*
          * Set to non-async variable. Can then be accessed in html.
          */
-        events = eventPage?.Value ?? new List<Event>();
+        myEvents = eventPage?.Value ?? new List<Event>();
     }
+
+/*
+ * NEW GROUP ADDED - UPDATE ASYNC
+ */
 
     async void UpdateGroup(ChangeEventArgs args)
     {
         if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
         {
             string searchTerm = args.Value.ToString()!.ToLower();
-            if (searchTerm == "all") { await BeginMail("All"); StateHasChanged(); }
+            if (searchTerm == "all") { await getMail("All"); StateHasChanged(); }
             else
             {
                 string mailQuery = searchTerm.Split(';')[0] + "'";
                 string teamQuery = searchTerm.Split(';')[1] + "'";
                 string calQuery = searchTerm.Split(';')[2] + "'";
-                await BeginMail(mailQuery);
+                await getMail(mailQuery);
                 StateHasChanged();
             }
         }
@@ -522,23 +669,33 @@
         return iso8601DateTime;
     }
 
-    /*
-     * HANDLE WHICH TAB IS BEING PRESENTED
-    */
+/*
+ * HANDLE WHICH TAB IS BEING PRESENTED
+ */
     string? activeid = "Mail";
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    /*
-     * SHOW THE DETAILS OF THE CURRENT EMAIL
-    */
+/*
+ * SHOW THE DETAILS OF THE CURRENT ITEM
+ */
     private Message currentEmail { get; set; } = null;
-    private void Toggle(Message email) { currentEmail = email; }
+    private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
+    private Team currentTeam { get; set; } = null;
+    private async void ToggleTeam(Team teamsChat) { currentTeam = teamsChat; await getChannels(); StateHasChanged();}
+    private Channel currentChannel { get; set; } = null;
+    private async void ToggleChannel(Channel channelChat) { currentChannel = channelChat; await getConvos(); StateHasChanged(); }
+    private ChatMessage currentConvo { get; set; } = null;
+    private async void ToggleConvo(ChatMessage convo) { currentConvo = convo; await getTeamReplies(); StateHasChanged();}
+    private ChatMessage currentReply { get; set; } = null;
+    private void ToggleReply(ChatMessage reply) { currentReply = reply; }
+    private Chat currentChat { get; set; } = null;
+    private void ToggleChat(Chat chat) { currentChat = chat; }
 
-    /*
-     * ALL INPUT BOXES TO CREATE GROUPS
-     * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-     */
+/*
+ * ALL INPUT BOXES TO CREATE GROUPS
+ * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+ */
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -623,10 +780,10 @@
         }
     }
 
-    /*
-     * CREATE LOCAL CLASS TO STORE GROUPS.
-     * ALSO SEND TO API MONGO DB
-     */
+/*
+ * CREATE LOCAL CLASS TO STORE GROUPS.
+ * ALSO SEND TO API MONGO DB
+ */
     public class GroupItem
     {
         public string? Name { get; set; }
