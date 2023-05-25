@@ -314,9 +314,17 @@
                     </div>  
                     <div class="grid-item">
                         <h4>Teams</h4>
-                        <mgt-teams-channel-picker></mgt-teams-channel-picker>
-                        <mgt-person person-query="me" view="twoLines"></mgt-person>
-                      
+                        @* <mgt-teams-channel-picker></mgt-teams-channel-picker>
+                        <mgt-person person-query="me" view="twoLines"></mgt-person> *@
+                        <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
+                            <template>
+                                <div data-for="team in value">
+                                    Here: {{ team.displayName }}
+                                </div>
+                                
+
+                            </template>
+                        </mgt-get>
                     </div>
                 </div>
             </Authorized>
