@@ -6,6 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PublishFluentIconAssets>true</PublishFluentIconAssets>
+    <FluentIconSizes>10,12,16,20,24,28,32,48</FluentIconSizes>
+    <FluentIconVariants>Filled,Regular</FluentIconVariants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="1.0.0-beta.5" />
     <PackageReference Include="Azure.AI.TextAnalytics" Version="5.2.0" />
