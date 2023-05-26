@@ -19,8 +19,9 @@
     
     .dropdown-menu{
         min-width: 10rem;
-        background-color: #04163C;
+        background-color: #23387c;
         color-scheme: light;
+        
     }
 
     .white-text{
@@ -33,14 +34,20 @@
 
 
     .left-content-bar {
-        color: white;
-        position: absolute;
-        top: 0;
-        padding-left: 20px;
-        font-size: 2rem;
-        left: 0;
+        color: white !important;
+        position: absolute !important;
+        top: 0 !important;
+        padding-left: 20px !important;
+        font-size: 2rem !important;
+        left: 0 !important;
         
         /*margin-right: 10px;*/
+    }
+
+    .right-content-bar{
+        position: absolute !important; 
+        right: 0 !important;
+        padding: 14px;
     }
 
     /*a {
@@ -71,10 +78,10 @@
 
 <AuthorizeView>
     <Authorized>
-        
-        
+
         <div class="left-content-bar">
-            <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px" height="23px"/>
+            <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px"/>
+
             <a href="" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </a>
@@ -95,10 +102,6 @@
                 <span class="oi oi-cloud" aria-hidden="true"></span> Overview
             </a>
 
-            @* <a href="/UniversalSearch">
-                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Teams Search
-            </a>
-            *@
             <a href="/applicationtracker" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
             </a>
@@ -106,21 +109,25 @@
             <a href="/fileupload" style="color:white; text-decoration:none;font-size:1rem;">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> File Upload
             </a>
-            </div>
+        </div>
 
-        <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
-        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
-            <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
-        </a>
-        <div class="dropdown-menu dropdown-menu-end">
-            <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
-            <p class="dropdown-item-text text-muted mb-0 white-text" >@context?.User?.GetUserGraphEmail()</p>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+        <div class="right-content-bar">
+            <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
+                <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+                <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
+                <p class="dropdown-item-text text-muted mb-0 white-text" >@context?.User?.GetUserGraphEmail()</p>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login">Log in</a>
+        <div class="right-content-bar">
+            <a href="authentication/login" style="color:white;">Log in</a>
+        </div>
         @* <mgt-login></mgt-login> *@
     </NotAuthorized>
 </AuthorizeView>
