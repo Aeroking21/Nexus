@@ -232,8 +232,6 @@
 
     .searchbar{
         width: 100%;
-
-
     }
 
     h1 {
@@ -526,19 +524,6 @@
         await BeginEmail();
         StateHasChanged();
 
-    }
-
-    private string FormatIso8601DateTime(string? iso8601DateTime)
-    {
-        if (string.IsNullOrEmpty(iso8601DateTime))
-        {
-            return string.Empty;
-        }
-
-        // Load into a DateTime
-        var dateTime = DateTime.Parse(iso8601DateTime);
-
-        return dateTime.ToString("hh:mm tt");
     }
 
     public async Task CompleteTask(string ListId, string TaskId){
