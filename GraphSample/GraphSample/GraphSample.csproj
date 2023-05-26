@@ -6,6 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PublishFluentIconAssets>true</PublishFluentIconAssets>
+    <FluentIconSizes>10,12,16,20,24,28,32,48</FluentIconSizes>
+    <FluentIconVariants>Filled,Regular</FluentIconVariants>
+  </PropertyGroup>
+
   <ItemGroup>
 
     <PackageReference Include="AzureOpenAIClient" Version="1.0.2" />
@@ -22,6 +28,7 @@
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
     <PackageReference Include="Blazored.Modal" Version="7.1.0" />
 
+    <PackageReference Include="Microsoft.Graph.Beta" Version="5.32.0-preview" />
   </ItemGroup>
 
   <ItemGroup>

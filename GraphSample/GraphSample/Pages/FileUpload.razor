@@ -6,8 +6,8 @@
 @using TimeZoneConverter
 @using Microsoft.Extensions.Logging
 @using GrapeCity.Documents.Pdf
-@using Azure;
-@using Azure.AI.OpenAI;
+@using Azure
+@using Azure.AI.OpenAI
 @using static System.Environment
 
 
@@ -44,6 +44,21 @@
         }
 
         <button @onclick="SummarizeFile">Summarize</button>
+
+        <p></p>
+
+        @if (noSummary)
+        {
+            <p>No summary to write to OneNote yet...</p>
+        }
+
+        <button @onclick="WriteToOneNote">Write To OneNote</button>
+
+        @if (isWriting)
+        {
+            <p>Writing to OneNote...</p>
+        }
+
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -53,11 +68,14 @@
 @code {
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    private GraphServiceClient? graphClient;
     private List<IBrowserFile> loadedFile = new();
     private long maxFileSize = 1024 * 100000;
     private int maxAllowedFiles = 1;
     private bool isLoading;
     private bool isSummarizing;
+    private bool isWriting;
+    private bool noSummary;
     private string summary;
 
     // Event handler for file upload
@@ -128,7 +146,7 @@
         var summaries = new List<string>();
         var overallSummary = "";
 
-        
+
         // Split the content into smaller chunks
         var chunkSize = 750; // Adjust this value as per your model's character limit
         var chunks = SplitContentIntoChunks(content, chunkSize);
@@ -136,7 +154,7 @@
         // Perform summarization for each chunk
         foreach (var chunk in chunks)
         {
-            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (aim for 1000 characters minimum):\n\n{chunk}\n";
+            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
             Console.Write($"Input: {prompt}\n");
 
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
@@ -185,9 +203,60 @@
             summaries.Add(completionFinish);
         }
 
-        
+
+
         summary = overallSummary;
 
         isSummarizing = false; // Set the flag to indicate that summarization is complete
+    }
+
+    private async Task WriteToOneNote()
+    {
+        summary = "Hello World";
+        if (summary == null)
+        {
+            noSummary = true;
+            return;
+        }
+        isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
+        var user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new Notebook
+            {
+                //set the displayName to the name of the uploaded file witha unique ID
+                DisplayName = $"{loadedFile[0].Name} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
+            };
+        var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
+
+        // Get the ID of the newly created notebook
+        var notebookId = result.Id;
+        // create a new section in the notebook
+        var section = new OnenoteSection
+        {
+            DisplayName = "Summarized Notes"
+
+        };
+        var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
+        // Get the ID of the newly created section
+        var sectionId = sectionResult.Id;
+
+        // Create the title of the page
+        string pageTitle = $"Summary of {loadedFile[0].Name}";
+
+        // Create the HTML body content
+        string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
+
+        // Convert the HTML string to a byte array using UTF-8 encoding
+        byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
+        // create a new page in the section
+        var page = new OnenotePage
+        {
+            Title = "Summary",
+            Content = contentBytes
+        };
+        var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
+
+
+        isWriting = false; // Set the flag to indicate that writing to OneNote is complete
     }
 }

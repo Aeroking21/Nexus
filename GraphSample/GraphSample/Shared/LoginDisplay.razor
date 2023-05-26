@@ -16,18 +16,18 @@
     .dropdown-item{
         color: white;
     }
-    
+
     .dropdown-menu{
         min-width: 10rem;
         background-color: #23387c;
         color-scheme: light;
-        
+
     }
 
     .white-text{
         color: white !important;
     }
-    
+
     .dropdown-divider{
         border-color: white;
     }
@@ -40,31 +40,15 @@
         padding-left: 20px !important;
         font-size: 2rem !important;
         left: 0 !important;
-        
+
         /*margin-right: 10px;*/
     }
 
     .right-content-bar{
-        position: absolute !important; 
+        position: absolute !important;
         right: 0 !important;
         padding: 14px;
     }
-
-    /*a {
-        color: rgb(255, 255, 255);
-        font-size: 0.1 rem;
-        text-decoration: none;
-    }
-
-    a:hover { 
-        color: rgb(255, 255, 255);
-        text-decoration: none; 
-    }
-
-    a:active { 
-        color: rgb(255, 255, 255);
-        text-decoration: none; 
-    }*/
 
     .buttons {
         color: white;
@@ -73,6 +57,24 @@
         background-color: transparent;
     }
 
+    .navbarLink {
+        box-shadow: inset 0 0 0 0 #81de1d;
+        padding: 0 .25rem;
+        margin: 0 -.25rem;
+        transition: color .3s ease-in-out, box-shadow .3s ease-in-out;
+        text-decoration: none !important;
+        color: white;
+        font-size: 1rem;
+        border-radius: 0.25rem;
+    }
+
+    .navbarLink:hover {
+        color: #fff;
+        box-shadow: inset 200px 0 0 0 #54b3d6;
+        text-decoration: none !important;
+    }
+
+
 
 </style>
 
@@ -80,35 +82,43 @@
     <Authorized>
 
         <div class="left-content-bar">
-            <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px"/>
 
-            <a href="" style="color:white; text-decoration:none;font-size:1rem;">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+            <a href="" style="color:white; text-decoration:none;">
+                <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px" />
             </a>
 
-            <a href="/calendar" style="color:white; text-decoration:none;font-size:1rem;">
+            <a href="/calendar" class="navbarLink">
                 <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
             </a>
 
-            <a href="/inbox" style="color:white; text-decoration:none;font-size:1rem;">
+            <a href="/inbox" class="navbarLink">
                 <span class="oi oi-envelope-open" aria-hidden="true"></span> Inbox
             </a>
 
-            <a href="/teams" style="color:white; text-decoration:none;font-size:1rem;">
+            <a href="/teams" class="navbarLink">
                 <span class="oi oi-people" aria-hidden="true"></span> Teams
             </a>
 
-            <a href="/overview" style="color:white; text-decoration:none;font-size:1rem;">
+            <a href="/overview" class="navbarLink">
                 <span class="oi oi-cloud" aria-hidden="true"></span> Overview
             </a>
 
-            <a href="/applicationtracker" style="color:white; text-decoration:none;font-size:1rem;">
+            <a href="/applicationtracker" class="navbarLink">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
             </a>
 
-            <a href="/fileupload" style="color:white; text-decoration:none;font-size:1rem;">
+            <a href="/fileupload" class="navbarLink">
                 <span class="oi oi-clipboard" aria-hidden="true"></span> File Upload
             </a>
+
+            <a href="/UniversalSearch" class="navbarLink">
+                Search
+            </a>
+
+            <a href="/AiSummarize" class="navbarLink">
+                AI
+            </a>
+
         </div>
 
         <div class="right-content-bar">
