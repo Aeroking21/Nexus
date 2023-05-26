@@ -43,5 +43,7 @@ builder.Services.AddScoped<InputPopup>();
 builder.Services.AddBlazoredModal();
 builder.Services.AddFluentUIComponents();
 
+LibraryConfiguration config = new(ConfigurationGenerator.GetIconConfiguration(), ConfigurationGenerator.GetEmojiConfiguration());
+builder.Services.AddFluentUIComponents(config);
 
 await builder.Build().RunAsync();

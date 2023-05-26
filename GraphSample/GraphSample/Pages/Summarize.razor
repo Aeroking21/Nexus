@@ -1,0 +1,121 @@
+﻿@page "/AiSummarize"
+@using System.Security.Authentication
+
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+
+<style>
+    h3 {
+        color: blue;
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+
+        <h2> Component </h2>
+
+        <div>
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+                <mgt-file file-query="/me/drive/items/01DECBKURCFKOWIKDGYVEY2XGAIQUW2ATR"></mgt-file>
+                @*01DECBKURUIZ4ETBMWTZG3IGVXT26LR5SA*@
+            </FluentDialog>
+        </div>
+
+        <FluentButton Appearance=Appearance.Accent @onclick="OnOpen">Open dialog</FluentButton>
+
+    </Authorized>
+
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+
+    [CascadingParameter]
+    protected Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    private FluentDialog? MyFluentDialog;
+    public bool Modal = true;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
+
+    private async void OnOpen()
+    {
+        MyFluentDialog!.Show();
+        await CallApiAsync();
+
+    }
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
+
+
+    public class Author
+    {
+        public string Sender { get; }
+        public string Title { get; }
+        public string Url { get; }
+        public string App { get; }
+
+        public Author(string sender, string title, string webLink, string app)
+        {
+            Sender = sender;
+            Title = title;
+            Url = webLink;
+            App = app;
+        }
+    }
+
+
+    private GraphServiceClient? graphClient;
+    private List<Author> data_response = new List<Author>();
+
+    protected async Task CallApiAsync()
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user
+        var user = (await authenticationStateTask).User;
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        var fileId = "01DECBKURUIZ4ETBMWTZG3IGVXT26LR5SA";
+        var driveId = "b!RfF7rfoJs02VJ9un3I-ut-jp_QBFMOVBn3jNroSlMI_GNuGpps7GS7BmF01uUjKx";
+
+        var stream = await graphClient.Drives[driveId].Items[fileId].Content.GetAsync();
+        
+
+        if (stream != null)
+        {
+            // Copy the photo stream to a memory stream
+            // to get the bytes out of it
+            var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            var photoBytes = memoryStream.ToArray();
+
+            // Generate a date URI for the photo
+            var photoUri = $"data:image/png;base64,{Convert.ToBase64String(photoBytes)}";
+
+        }
+
+
+    }
+
+}
+
+
