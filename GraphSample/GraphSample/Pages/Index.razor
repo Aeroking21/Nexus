@@ -15,7 +15,16 @@
 @inject IJSRuntime JSRuntime
 
 <style>
+    .container{
+
+        height: 100% !important;
+        width: 100% !important;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 1rem;
+        padding: 1px;
+    }
     .grid-container {
+    
         display: grid;
         grid-template-columns: 50% 50%;
         grid-template-rows: 300px 300px;
@@ -25,7 +34,8 @@
     }
 
     .grid-item {
-        background-color: #ffffff;
+        @* transparent white *@
+        background-color: rgba(255, 255, 255, 0.5);
         border: 5px solid #0078d4;
         padding: 15px;
         font-size: 30px;
@@ -151,7 +161,7 @@
         margin: 8px 4px;
         text-align: left;
         border-radius: 1rem;
-        background: linear-gradient(#67C5FF, #0078d4);
+        background: white;
         border: 1px solid rgba(190, 190, 190, 0.8);
     }
 
@@ -193,7 +203,6 @@
 
     body{
         font-family: 'Segoe UI',SegoeUI,'Helvetica Neue',Helvetica,Arial,sans-serif;
-        background-color: #f7f7f7;
         font-weight: 400;
         font-size: 16px;
         line-height: 1.5;
@@ -219,6 +228,8 @@
     }
    
 </style>
+
+<div class="container">
     <AuthorizeView>
         <Authorized>
             <Dashbar />
@@ -287,8 +298,7 @@
             <SignIn />
         </NotAuthorized>
     </AuthorizeView>
-
-
+</div>
 
 @code{
     [CascadingParameter]
