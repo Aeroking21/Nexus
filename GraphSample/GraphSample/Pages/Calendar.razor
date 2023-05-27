@@ -7,12 +7,8 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-    .calendar-class {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
 
-    }
+
 
 
     .calendar-class {
@@ -20,6 +16,9 @@
         flex-direction: column;
         height: 100%;
         width: 100%;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 1rem;
+        padding: 5px;
 
     }
 
@@ -68,11 +67,11 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
         <h1 class="mb-3">Calendar</h1>
         <div class="row">
-            <div class="col-3">
+            <div class="col-3" style="background:white; border-radius:1rem;">
                 <h2> Add Event </h2>
                 <AddEvent />
             </div>
-            <div class="col-9">
+            <div class="col-9" style="background:white; border-radius:1rem;">
 
                     @if (selectedDay.Date == DateTime.Now.Date){
                         <h2>Events for today</h2>

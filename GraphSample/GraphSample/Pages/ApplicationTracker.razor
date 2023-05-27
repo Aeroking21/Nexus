@@ -10,6 +10,7 @@
 @inject GraphSample.Services.IBackendApiService backendApiService
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
+<div class="container">
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Application Dashboard</h1>
@@ -193,9 +194,18 @@
     </NotAuthorized>
 </AuthorizeView>
 
+</div>
+
 <style>
 
+    .container{
 
+        height: 100% !important;
+        width: 100% !important;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 1rem;
+        padding: 1px;
+    }
     .assessments-container {
         border: 1px solid transparent;
         border-right: none;
