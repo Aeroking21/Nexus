@@ -207,6 +207,83 @@
         font-size: 16px;
         line-height: 1.5;
     }
+
+    .teams-thread {
+  box-shadow: var(--box-shadow);
+  border-radius: 4px;
+  margin: 8px 8px;
+  flex: 1;
+  font-size: 14px;
+  font-family: Segoe UI, Frutiger, Frutiger Linotype, Dejavu Sans,
+    Helvetica Neue, Arial, sans-serif;
+}
+
+.teams-message {
+  padding: 10px;
+  flex: 1;
+  color: var(--color);
+}
+
+.teams-message-reply {
+  margin: 8px 8px;
+  flex: 1;
+  font-size: 14px;
+  font-family: Segoe UI, Frutiger, Frutiger Linotype, Dejavu Sans,
+    Helvetica Neue, Arial, sans-serif;
+}
+
+mgt-person.mgt-person-medium {
+  margin: 8px 8px;
+  --avatar-size: 36px;
+}
+
+.teams-message img {
+  margin-top: 8px;
+  display: block;
+}
+
+.teams-reply img {
+  margin-top: 8px;
+  display: block;
+}
+
+.teams-reply {
+  background-color: var(--background-color-sub1);
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  color: var(--color);
+}
+
+.teams-replies {
+  margin-top: 8px;
+}
+
+.teams-message > div > img {
+  margin-top: 0px;
+}
+
+.teams-content {
+  display: flex;
+}
+
+.teams-message-author-avatar {
+  margin: 8px 8px;
+}
+
+.teams-message-author-title {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.teams-message-date {
+  font-size: 12px;
+  color: var(--color-sub2);
+}
+
+#mgt-channel-messages {
+  overflow: auto;
+  display: block;
+}
    
 </style>
 
@@ -248,6 +325,8 @@
                                     }
                                     
                                     <h4>
+                                        @* <mgt-person person-query="@mail.Sender.EmailAddress.Name" view="oneline" person-card="hover">
+                                        </mgt-person> *@
                                         From: @mail.Sender.EmailAddress.Name
                                     </h4>
                                     <div class="preview">
@@ -266,12 +345,12 @@
                     <h4>Teams</h4>
                     <mgt-teams-channel-picker></mgt-teams-channel-picker>
 
-                    <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
+                     <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                         <template>
                                 <div data-for="team in value">
                                     <a href="overview/teamid={{team.id}}">
                                         <h4>{{ team.displayName }}</h4>
-                                        @* <img src="{{team.photo}}" class="nav-profile-photo rounded-circle align-self-center me-2"> *@
+                                        <img src="{{team.photo}}" class="nav-profile-photo rounded-circle align-self-center me-2">
                                     </a>
                                 </div>
                         </template>
