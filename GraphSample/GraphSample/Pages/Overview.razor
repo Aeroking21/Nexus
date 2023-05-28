@@ -124,7 +124,10 @@
                                 <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
                                 <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
                             </div>
-                            <button @onclick="@sendEmail">SEND</button>
+                            <div class="emailResponseContent">
+                                    <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                            </div>
+                            <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
                         </div>
                     </div>
                     <div class="mailInteract">
@@ -601,9 +604,9 @@
         //await getCal();
     }
 
-/*
- * GET MAIL EVENTS
- */
+    /*
+    * GET MAIL EVENTS
+    */
 
     /* MAIL LIST */
     private IList<Message> myMessages = new List<Message>();
@@ -632,9 +635,9 @@
         myMessages = mailPage?.Value ?? new List<Message>();
     }
 
-/*
- * GET TEAM EVENTS
- */
+    /*
+    * GET TEAM EVENTS
+    */
 
     /* TEAMS LIST */
     private IList<Team> myTeams = new List<Team>();
@@ -647,9 +650,9 @@
         myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-/*
- * GET CHANNEL EVENTS
- */
+    /*
+    * GET CHANNEL EVENTS
+    */
 
     /* CHANNEL LIST */
     private IList<Channel> myChannels = new List<Channel>();
@@ -662,9 +665,9 @@
         myChannels = channelPage?.Value ?? new List<Channel>();
     }
 
-/*
- * GET CHANNEL CHAT-MESSAGES
- */
+    /*
+    * GET CHANNEL CHAT-MESSAGES
+    */
 
     /* CHAT-MESSAGE LIST */
     private IList<ChatMessage> myConvos = new List<ChatMessage>();
@@ -677,9 +680,9 @@
         myConvos = convoPage?.Value ?? new List<ChatMessage>();
     }
 
-/*
- * GET CHANNEL CHAT-MESSAGE REPLIES
- */
+    /*
+    * GET CHANNEL CHAT-MESSAGE REPLIES
+    */
 
     /* CHAT-MESSAGE LIST */
     private IList<ChatMessage> myReplies = new List<ChatMessage>();
@@ -692,9 +695,9 @@
         myReplies = replyPage?.Value ?? new List<ChatMessage>();
     }
 
-/*
- * GET PERSONAL CHATS
- */
+    /*
+    * GET PERSONAL CHATS
+    */
 
     /* CHAT LIST */
     private IList<Chat> myChats = new List<Chat>();
@@ -707,14 +710,14 @@
         myChats = chatPage?.Value ?? new List<Chat>();
     }
 
-/*
- * GET PERSONAL CHAT REPLIES
- */
+    /*
+    * GET PERSONAL CHAT REPLIES
+    */
 
 
-/*
- * GET CALENDAR EVENTS
- */
+    /*
+    * GET CALENDAR EVENTS
+    */
 
     /* EVENTS LIST */
     private IList<Event> myEvents = new List<Event>();
@@ -753,8 +756,8 @@
         myEvents = eventPage?.Value ?? new List<Event>();
     }
 
-/*
- * NEW GROUP ADDED - UPDATE ASYNC
+    /*
+    * NEW GROUP ADDED - UPDATE ASYNC
  */
 
     async void UpdateGroup(ChangeEventArgs args)
@@ -810,16 +813,16 @@
         return iso8601DateTime;
     }
 
-/*
- * HANDLE WHICH TAB IS BEING PRESENTED
- */
+    /*
+    * HANDLE WHICH TAB IS BEING PRESENTED
+    */
     string? activeid = "Mail";
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-/*
- * SHOW THE DETAILS OF THE CURRENT ITEM
- */
+    /*
+    * SHOW THE DETAILS OF THE CURRENT ITEM
+    */
     private Message currentEmail { get; set; } = null;
     private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
     private Team currentTeam { get; set; } = null;
@@ -833,10 +836,10 @@
     private Chat currentChat { get; set; } = null;
     private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
 
-/*
- * ALL INPUT BOXES TO CREATE GROUPS
- * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
- */
+    /*
+    * ALL INPUT BOXES TO CREATE GROUPS
+    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+    */
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -921,10 +924,10 @@
         }
     }
 
-/*
- * CREATE LOCAL CLASS TO STORE GROUPS.
- * ALSO SEND TO API MONGO DB
- */
+    /*
+    * CREATE LOCAL CLASS TO STORE GROUPS.
+    * ALSO SEND TO API MONGO DB
+    */
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -945,10 +948,61 @@
         }
     }
 
-/*
- * REPLY TO EMAILS
- */
+    /*
+    * REPLY TO EMAILS
+    */
+    string? emailContent;
     private bool emailReply { get; set; } = false;
     private void replyToEmail(bool change) { emailReply = change; }
-    private void sendEmail() { }
+
+    public async void sendEmail(string mainAddress, List<Recipient> recipients, string subject, string content)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        if (recipients == null)
+        {
+            recipients = new List<Recipient>
+            {
+                new Recipient
+                {
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = mainAddress,
+                    },
+                },
+            };
+        }
+        else
+        {
+            var mainAddressSend = new Recipient
+                {
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = mainAddress,
+                    },
+                };
+
+            recipients.Add(mainAddressSend);
+        }
+
+        var requestBody = new Microsoft.Graph.Me.SendMail.SendMailPostRequestBody
+        {
+            Message = new Message
+            {
+                Subject = subject,
+                Body = new ItemBody
+                {
+                    ContentType = BodyType.Text,
+                    Content = content,
+                },
+                ToRecipients = recipients,
+            },
+        };
+        await graphClient.Me.SendMail.PostAsync(requestBody);
+        Console.WriteLine("IS THIS NOT HAPPENING???");
+        StateHasChanged();
+
+        emailContent = String.Empty;
+        emailReply = false;
+    }
 }
