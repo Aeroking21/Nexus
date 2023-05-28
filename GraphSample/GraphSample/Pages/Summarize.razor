@@ -16,7 +16,12 @@
 
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                <mgt-file file-query="/me/drive/items/01DECBKURCFKOWIKDGYVEY2XGAIQUW2ATR"></mgt-file>
+                @foreach(var file in data_response)
+                {
+                    string npath = path + file.Id;
+                    <mgt-file file-query="@npath" @onclick="() => test(npath)"></mgt-file>
+                }
+                                    
             </FluentDialog>
         </div>
 
@@ -38,6 +43,8 @@
     public bool Modal = true;
     private GraphServiceClient? graphClient;
     private List<DriveItem> data_response = new List<DriveItem>();
+    protected const string path = "/me/drive/items/";
+
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -60,6 +67,11 @@
         }
     }
 
+    protected async void test(string args)
+    {
+        Console.WriteLine("Clicked on: " + args);
+        var stream2 = await graphClient.Drives[userDriveId].Items[pdfId].Content.GetAsync();
+    }
 
 
     protected async Task CallApiAsync()
@@ -82,43 +94,40 @@
         // List children in the drive
         var files = await graphClient.Drives[userDriveId].Items["root"].Children.GetAsync();
 
+        data_response = files.Value;
+
         // The type of files is Microsoft.Graph.Models.DriveItem
-        foreach (var file in files.Value)
-        {
-            Console.WriteLine(file.Id);
-        }
-
-       
-
-        // put this in for loop onClick() =>{}
-        var stream2 = await graphClient.Drives[userDriveId].Items[pdfId].Content.GetAsync();
-
-
-
-        //using (var stream = stream2) // Replace with your own method to obtain the Stream
-        //{
-        //    using (var document = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(stream, false))
-        //    {
-        //        var body = document.MainDocumentPart.Document.Body;
-        //        var text = body.InnerText;
-        //        Console.WriteLine(text);
-
-        //        //var paragraphs = body.Elements<DocumentFormat.OpenXml.Wordprocessing.Paragraph>();
-
-        //        //foreach (var paragraph in paragraphs)
-        //        //{
-        //        //    Console.WriteLine(paragraph.InnerText);
-        //        //}
-        //    }
-        //}
-
-
-
-
-
-        Console.WriteLine("hi");
-
     }
+
+    // put this in for loop onClick() =>{}
+    //var stream2 = await graphClient.Drives[userDriveId].Items[pdfId].Content.GetAsync();
+
+
+
+    //using (var stream = stream2) // Replace with your own method to obtain the Stream
+    //{
+    //    using (var document = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(stream, false))
+    //    {
+    //        var body = document.MainDocumentPart.Document.Body;
+    //        var text = body.InnerText;
+    //        Console.WriteLine(text);
+
+    //        //var paragraphs = body.Elements<DocumentFormat.OpenXml.Wordprocessing.Paragraph>();
+
+    //        //foreach (var paragraph in paragraphs)
+    //        //{
+    //        //    Console.WriteLine(paragraph.InnerText);
+    //        //}
+    //    }
+    //}
+
+
+
+
+
+    //Console.WriteLine("hi");
+
+
 
 }
 
