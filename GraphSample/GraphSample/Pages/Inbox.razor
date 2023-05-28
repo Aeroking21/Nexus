@@ -9,6 +9,17 @@
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
+<style>
+    .container{
+
+        height: 100% !important;
+        width: 100% !important;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 1rem;
+        padding: 1px;
+    }
+</style>
+<div class="container">
 <AuthorizeView>
     <Authorized>
         <h1 class="mb-3">Inbox</h1>
@@ -36,7 +47,7 @@
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
-
+</div>
 @code{
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
