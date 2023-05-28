@@ -15,10 +15,11 @@
 
     .searchbar{
         width: 100%;
+        background-image: transparent;
     }
 
     .searchbar button input[type=submit]{
-        background-color:#005C97;
+        background-color:#0078d4;
         border: 1px solid rgba(190, 190, 190, 0);
         border-radius: 3px;
         padding: 5px;
@@ -30,6 +31,8 @@
     width: fit-content;
     height: fit-content;
     position: relative;
+    background-image: transparent;
+
   }
   .input-search{
     height: 50px;
@@ -41,7 +44,7 @@
     outline: none;
     border-radius: 25px;
     transition: all .5s ease-in-out;
-    background-color: #005C97;
+    background-color: #0078d4;
     padding-right: 40px;
     color:#black;
   }
@@ -63,21 +66,21 @@
     position: absolute;
     right: 0px;
     color:black ;
-    background-color:#005C97;
+    background-color:#0078d4;
     pointer-events: painted;  
   }
   .btn-search:focus ~ .input-search{
     width: 300px;
     border-radius: 0px;
     background-color: transparent;
-    border-bottom:1px solid #005C97
+    border-bottom:1px solid #0078d4
     transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
   }
   .input-search:focus{
     width: 300px;
     border-radius: 0px;
     background-color: transparent;
-    border-bottom:1px solid #005C97
+    border-bottom:1px solid #0078d4
     transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
   }
 </style>
@@ -85,7 +88,7 @@
 <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light">
 <div class="searchbar">
             <span class="left-content"><h1>Dashboard</h1></span>
             <span class="right-content">

@@ -4,9 +4,7 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     width: fit-content;
     height: fit-content;
-    background-color: #f7f7f7 !important;
-    
-
+    background-color: #1861ac !important;
 }
 
 
@@ -14,8 +12,6 @@ html, body {
     html, body {
         width: 100%;
         height: 100%;
-        background-color: #f7f7f7;
-
     }
 }
     
