@@ -207,6 +207,7 @@
         font-size: 16px;
         line-height: 1.5;
     }
+
     @* ------------------------------------------------Teams -------------------------------------------------- *@
     .team-circle {
         width: 100px;
@@ -226,6 +227,7 @@
         grid-gap: 10px;
         padding: 10px;
     }
+
    
 </style>
 
@@ -261,6 +263,8 @@
                                     }
                                     
                                     <h4>
+                                        @* <mgt-person person-query="@mail.Sender.EmailAddress.Name" view="oneline" person-card="hover">
+                                        </mgt-person> *@
                                         From: @mail.Sender.EmailAddress.Name
                                     </h4>
                                     <div class="preview">
@@ -278,6 +282,7 @@
                 <div class="grid-item">
                     <h4 style="color:#0078d4;">Teams</h4>
                     <mgt-teams-channel-picker></mgt-teams-channel-picker>
+
                     <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                         <template>
                             <div class="grid-container-v2">
