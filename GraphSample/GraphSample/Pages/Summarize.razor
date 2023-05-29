@@ -1,11 +1,19 @@
 ﻿@page "/AiSummarize"
 @using System.Security.Authentication
-
+@using System.IO;
+@using GrapeCity.Documents.Pdf;
+@using DocumentFormat.OpenXml.Packaging;
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
     h3 {
         color: blue;
+    }
+
+    .dropdown-content {
+        max-height: 100%;
+        overflow: scroll;
+        max-width: 99%;
     }
 </style>
 
@@ -15,13 +23,17 @@
         <h2> Component </h2>
 
         <div>
-            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                @foreach(var file in data_response)
-                {
-                    string npath = path + file.Id;
-                    <mgt-file file-query="@npath" @onclick="() => test(npath)"></mgt-file>
-                }
-                                    
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Class="dropdown-content" Modal=true @ondialogdismiss=OnDismiss>
+                <div class="dropdown-content">
+
+                    @foreach (var file in data_response)
+                    {
+                        string npath = path + file.Id;
+                        <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id)"></mgt-file>
+                    }
+
+                </div>
+         
             </FluentDialog>
         </div>
 
@@ -44,6 +56,7 @@
     private GraphServiceClient? graphClient;
     private List<DriveItem> data_response = new List<DriveItem>();
     protected const string path = "/me/drive/items/";
+    protected string driveId = string.Empty;
 
 
     protected override void OnAfterRender(bool firstRender)
@@ -52,10 +65,15 @@
             MyFluentDialog!.Hide();
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await listFiles();
+    }
+
     private async void OnOpen()
     {
         MyFluentDialog!.Show();
-        await CallApiAsync();
+        await listFiles();
 
     }
 
@@ -67,14 +85,144 @@
         }
     }
 
-    protected async void test(string args)
+    // apply error handling 
+    protected async void GetContent(string args)
     {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user
+        var user = (await authenticationStateTask).User;
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
         Console.WriteLine("Clicked on: " + args);
-        var stream2 = await graphClient.Drives[userDriveId].Items[pdfId].Content.GetAsync();
+
+        var contentStream = await graphClient.Drives[driveId].Items[args].Content.GetAsync();
+
+        var textResponse = ExtractTextFromStream(contentStream);
+
+
+    }
+
+    // Maybe return tuple instead
+    protected string ExtractTextFromStream(Stream input)
+    {
+        string text = "";
+
+        if (IsPDF(input))
+        {
+            text = ExtractTextFromPDF(input);
+        }
+        else if (IsWordDocument(input))
+        {
+            text = ExtractTextFromWord(input);
+        }
+        else if (IsPowerPointDocument(input))
+        {
+            text = ExtractTextFromPowerPoint(input);
+        }
+
+        return text;
+    }
+
+    private bool IsPDF(Stream stream)
+    {
+        try
+        {
+            var document = new GcPdfDocument();
+            document.Load(stream);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public string ExtractTextFromPDF(Stream stream)
+    {
+
+        var document = new GcPdfDocument();
+        document.Load(stream);
+        var text = document.GetText();
+
+        return text;
+    }
+
+    private bool IsWordDocument(Stream stream)
+    {
+        try
+        {
+            using (var document = WordprocessingDocument.Open(stream, false))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string ExtractTextFromWord(Stream stream)
+    {
+        var text = "";
+
+        using (var document = WordprocessingDocument.Open(stream, false))
+        {
+            var body = document.MainDocumentPart.Document.Body;
+            text = body.InnerText;
+        }
+
+        return text;
+    }
+
+    private bool IsPowerPointDocument(Stream stream)
+    {
+        try
+        {
+            using (var presentation = PresentationDocument.Open(stream, false))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string ExtractTextFromPowerPoint(Stream stream)
+    {
+        var text = "";
+
+        using (var presentation = PresentationDocument.Open(stream, false))
+        {
+            var slideText = "";
+
+            foreach (var slidePart in presentation.PresentationPart.SlideParts)
+            {
+                var slide = slidePart.Slide;
+                var paragraphs = slide.Descendants<DocumentFormat.OpenXml.Drawing.Paragraph>();
+
+                foreach (var paragraph in paragraphs)
+                {
+                    slideText += paragraph.InnerText + " ";
+                }
+            }
+
+            text = slideText.Trim();
+        }
+
+        return text;
     }
 
 
-    protected async Task CallApiAsync()
+    protected async Task listFiles()
     {
         if (authenticationStateTask == null)
         {
@@ -89,40 +237,15 @@
 
 
         var driveItem = await graphClient.Me.Drive.GetAsync();
-        var userDriveId = driveItem.Id;
+        driveId = driveItem.Id;
 
         // List children in the drive
-        var files = await graphClient.Drives[userDriveId].Items["root"].Children.GetAsync();
-
+        var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
+        Console.WriteLine("Getting files...");
         data_response = files.Value;
 
         // The type of files is Microsoft.Graph.Models.DriveItem
     }
-
-    // put this in for loop onClick() =>{}
-    //var stream2 = await graphClient.Drives[userDriveId].Items[pdfId].Content.GetAsync();
-
-
-
-    //using (var stream = stream2) // Replace with your own method to obtain the Stream
-    //{
-    //    using (var document = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(stream, false))
-    //    {
-    //        var body = document.MainDocumentPart.Document.Body;
-    //        var text = body.InnerText;
-    //        Console.WriteLine(text);
-
-    //        //var paragraphs = body.Elements<DocumentFormat.OpenXml.Wordprocessing.Paragraph>();
-
-    //        //foreach (var paragraph in paragraphs)
-    //        //{
-    //        //    Console.WriteLine(paragraph.InnerText);
-    //        //}
-    //    }
-    //}
-
-
-
 
 
     //Console.WriteLine("hi");
