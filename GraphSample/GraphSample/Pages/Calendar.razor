@@ -9,17 +9,19 @@
 <style>
 
 
-
-
     .calendar-class {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 1rem;
-        padding: 5px;
+        border-radius: 0.7rem;
+        position: absolute;
+        left: 10vh;
+        right: 10vh;
+        top: 10vh;
+        bottom; 10vh;
+        padding-bottom: 15px;
+    }
 
+    .row{
+        margin: 20px;
     }
 
     .calendar-table {
@@ -28,14 +30,15 @@
         }
 
     .calendar-table thead {
-        background-color: white;
+        @* background-color: white; *@
+         background-color: rgba(255, 255, 255, 0.5);
     }
 
     .calendar-table .day {
         min-width: 125px;
         margin: 2px;
         border-radius: 5px;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.5);
         padding: 30px;
         cursor: pointer;
     }
@@ -67,11 +70,11 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
         <h1 class="mb-3">Calendar</h1>
         <div class="row">
-            <div class="col-3" style="background:white; border-radius:1rem;">
+            <div class="col-3" style=" background-color: rgba(255, 255, 255, 0.5); border-radius:1rem;">
                 <h2> Add Event </h2>
                 <AddEvent />
             </div>
-            <div class="col-9" style="background:white; border-radius:1rem;">
+            <div class="col-9" style=" background-color: rgba(255, 255, 255, 0.5);  padding: 10px; border-radius:1rem;">
 
                     @if (selectedDay.Date == DateTime.Now.Date){
                         <h2>Events for today</h2>

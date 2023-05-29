@@ -1,3 +1,4 @@
+
 @page "/applicationtracker"
 @using System.Security.Authentication
 @using Microsoft.Graph
@@ -171,9 +172,11 @@
                                                                 <div>
                                                                     <select class="status-select" @bind="assessment.status" @oninput="(e) => HandleStatusChange(timeline, assessment,  Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
                                                                         @*<option value="@assessment.status">@assessment.status</option>*@
+
                                                                         @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
                                                                             {
                                                                                     <option value="@option">@option</option>
+
                                                                             }
                                                                     </select>
                                                                 </div>
