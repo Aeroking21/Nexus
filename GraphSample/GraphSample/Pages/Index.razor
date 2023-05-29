@@ -16,37 +16,66 @@
 
 <style>
     .container{
-
-        height: 100% !important;
-        width: 100% !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 1rem;
-        padding: 1px;
+        border-radius: 0.7rem;
+        position: absolute;
+        left: 0;
+        right: 0;
     }
     .grid-container {
-    
         display: grid;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: 48% 48%;
         grid-template-rows: 300px 300px;
-        height: 100%;
-        width: 100%;
-        gap: 20px;
+        gap: 20px;  
     }
 
     .grid-item {
-        @* transparent white *@
         background-color: rgba(255, 255, 255, 0.5);
-        border: 5px solid #0078d4;
         padding: 15px;
         font-size: 30px;
         text-align: center;
-        border-radius: 1.5rem;
+        border-radius: 0.7rem;
         color: rgba(0, 0, 0, 0.8);
         font-size: 1.1rem;
         height: 100%;
         width: 100%; 
-        overflow-y: scroll;
+        overflow-y: auto;
         margin-bottom: 0%;
+        padding-right: 5px; 
+        position: relative;
+    }
+
+    .grid-item::-webkit-scrollbar {
+        width: 17px;
+        height: 70%;
+        background-color: transparent;
+        height: calc(100% - 34px);
+ 
+        
+    }
+
+    .grid-item::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 1.5rem;
+    }
+   
+    .grid-item::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+    .grid-container .grid-item a { 
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+        font-size: 1.5rem;
+    }
+
+    .grid-container .grid-item a:hover { 
+        color: rgb(0, 0, 0);
+        text-decoration: none; 
+    }
+
+    .grid-container .grid-item a:active { 
+        color: rgb(0, 0, 0);
+        text-decoration: none; 
     }
 
     .lists {
@@ -120,39 +149,13 @@
 
     }
 
-    .body{
-        font-size: 0.9rem;
-        float: left;
-        display: block;
-        border: 1px solid rgba(190, 190, 190, 0.8);
-        margin-bottom: 2%;
-        border-radius: 1rem;
-        padding: 5px;
-        width: 100%;
-    }
-
-
     .group{
         display: block;
         width: 100%;
     }
 
 
-    .grid-container .grid-item a { 
-        color: rgb(0, 0, 0);
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
 
-    .grid-container .grid-item a:hover { 
-        color: rgb(0, 0, 0);
-        text-decoration: none; 
-    }
-
-    .grid-container .grid-item a:active { 
-        color: rgb(0, 0, 0);
-        text-decoration: none; 
-    }
 
     @* -----------------------Email -------------------------------------- *@
     
