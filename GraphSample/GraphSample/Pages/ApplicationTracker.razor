@@ -13,50 +13,78 @@
 <div class="container">
 <AuthorizeView>
     <Authorized>
-        <h1 class="mb-3">Application Dashboard</h1>
         @if (fetchingTimelines || creatingApplicant)
         {
+            <h1 class="mb-3">Application Dashboard</h1>
             <FluentProgressRing></FluentProgressRing>
         }
         else if (!isRegistered)
         {
+            <h1 class="mb-3">Application Dashboard</h1>
             <button class="btn btn-primary" @onclick="() => CreateApplicant()">Start Your Application Journey Now!</button>
         }
         else
         {
-    <div class="container">
-        <div class="left-div">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var timeline in timelines)
-                    {
-                        <tr height="2.5em">
-                            @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
+        <div class="inner-container">
+            <h1 class="mb-3">Application Dashboard</h1>
+            <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Application</button>
+            <select @onchange="(args) => { sortingCriterion = Enum.Parse<SortingCriteria>(args.Value.ToString()); HandleSortCriterionChange(); }">
+                @foreach (SortingCriteria criterion in Enum.GetValues(typeof(SortingCriteria)))
+                {
+                    <option value="@criterion">@criterion.ToString().Replace("_", " ")</option>
+                }
+            </select>
+            <h4>@sortingCriterion</h4>
+        </div>
+            <div class="inner-container">
+                <div class="left-div">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var timeline in timelines)
                             {
-                                <td width="60%">
-                                    <div calss="flex-container">
-                                        <button class="fixed-height-row-button" @onclick="() => emailsShowing = false">Hide emails</button>
-                                        <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
-                                    </div>
-                                </td>
-                            }
-                            else
-                            {
-                                <td width="55%">
-                                    <div calss="flex-container">
-                                        <button class="fixed-height-row-button" @onclick="() => ShowEmails(timeline)">Show emails</button>
-                                        <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
-                                    </div>
-                                </td>
-                            }
-                                <td width="15%">
+                                <tr height="2.5em">
+                                    @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
+                                    {
+                                        <td width="60%">
+                                            <div calss="flex-container">
+                                                <button class="fixed-height-row-button" @onclick="() => emailsShowing = false">Hide emails</button>
+                                                <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
+                                                @if (timeline.alertLevel == 0)
+                                                {
+                                                    <span class="remove-button" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Neutral"></FluentIcon></span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="remove-button" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Custom" Variant="@IconVariant.Filled" CustomColor="#ffff00"></FluentIcon></span>
+                                                }
+                                            </div>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td width="55%">
+                                            <div calss="flex-container">
+                                                <button class="fixed-height-row-button" @onclick="() => ShowEmails(timeline)">Show emails</button>
+                                                <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
+                                                @if (timeline.alertLevel == 0)
+                                                {
+                                                    <span class="remove-button" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Neutral"></FluentIcon></span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="remove-button" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Custom" Variant="@IconVariant.Filled" CustomColor="#ffff00"></FluentIcon></span>
+                                                }
+                                            </div>
+                                        </td>
+                                    }
+                                    <td width="15%">
                                         <div class="company-content">
                                             <p>@timeline.company</p>
                                             @if (timeline.hasUnreadEmails)
@@ -68,150 +96,149 @@
                                     <td width="30%"><div class="role-content">@timeline.role</div></td>
                                 </tr>
                             }
-                            <button class="btn btn-primary" @onclick="() => ShowAddTimelineModal()">Add Timeline</button>
                         </tbody>
                     </table>
                 </div>
-        <div class="right-div">
-            @if (!emailsShowing)
-            {
-                <div class="container">
-                    <div class="right-left-div">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>
-                                    </th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var timeline in timelines)
-                                {
-                                    <tr height="5em">
-                                        <td width="90%">
-                                            <div class="associated-emails-content">
-                                                <button class="show-emails-button" @onclick="() => {expandAssociatedEmails = !expandAssociatedEmails; expandedEmailsTimeline = timeline.timelineID;}">
-                                                    <span style="display: inline-block; vertical-align: middle;">show addresses</span>
-                                                    @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
-                                                    {
-                                                        <FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>
-                                                    }
-                                                    else
-                                                    {
-                                                        <FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>
-                                                    }
-                                                </button>
-                                                @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
-                                                {
-                                                    <div class="email-list-container">
-                                                        <button class="add-email-button" @onclick="() => {expandAssociatedEmails = false; StateHasChanged(); ShowAddEmailModal(timeline.timelineID); expandAssociatedEmails = true; StateHasChanged();}">
-                                                            Add email Address
+                <div class="right-div">
+                    @if (!emailsShowing)
+                    {
+                        <div class="inner-container">
+                            <div class="right-left-div">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                            </th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var timeline in timelines)
+                                        {
+                                            <tr height="5em">
+                                                <td width="65%">
+                                                    <div class="associated-emails-content">
+                                                        <button class="show-emails-button" @onclick="() => {expandAssociatedEmails = !expandAssociatedEmails; expandedEmailsTimeline = timeline.timelineID;}">
+                                                            <span style="display: inline-block; vertical-align: middle;">show addresses</span>
+                                                            @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
+                                                            {
+                                                                <FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>
+                                                            }
+                                                            else
+                                                            {
+                                                                <FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>
+                                                            }
                                                         </button>
-
-                                                        @foreach (var email in timeline.associatedEmailAddresses)
+                                                        @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
                                                         {
-                                                            <div class="email-item">
-                                                                <span>@email</span>
-                                                                <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">
-                                                                    <FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon>
-                                                                </span>
+                                                            <div class="email-list-container">
+                                                                <button class="add-email-button" @onclick="() => {expandAssociatedEmails = false; StateHasChanged(); ShowAddEmailModal(timeline.timelineID); expandAssociatedEmails = true; StateHasChanged();}">
+                                                                    Add email Address
+                                                                </button>
+
+                                                                @foreach (var email in timeline.associatedEmailAddresses)
+                                                                {
+                                                                    <div class="email-item">
+                                                                        <span>@email</span>
+                                                                        <span class="remove-button" @onclick="() => RemoveEmail(email, timeline.timelineID)">
+                                                                            <FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon>
+                                                                        </span>
+                                                                    </div>
+                                                                }
                                                             </div>
                                                         }
                                                     </div>
-                                                }
-                                            </div>
-                                        </td>
-                                        <td width="10%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="right-right-div">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var timeline in timelines)
-                                {
-                                    <tr height="2.5em">
-                                        <td width="100%">
-                                            <div class="assessments-container">
-                                                @foreach (var assessment in timeline.assessments)
-                                                {
-                                                    <div class="pane @("status" + assessment.status)">
-                                                        <div style="display: flex">
-                                                            <div>
-                                                                @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
-                                                            </div>
-                                                            <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)"><FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon></span>
-                                                        </div>
-                                                        <div>
-                                                            <select class="status-select" @onchange="(e) => HandleStatusChange(timeline, assessment,  Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
-                                                                <option value="@assessment.status">@assessment.status</option>
-                                                                @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
-                                                                {
-                                                                    <option value="@option">@option</option>
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                        <div>@assessment.date</div>
-                                                    </div>
-                                                }
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
-            else
-            {
-                @if (fetchingEmails)
-                {
-                        <div class="right-div">
-                            <FluentProgressRing></FluentProgressRing>
-                        </div>
-                }
-                else
-                {
-                        <div class="right-div">
-                            <table class="my-table">
-                                <thead>
-                                    <tr>
-                                        <th>Sender</th>
-                                        <th>Sent Time</th>
-                                        <th>Subject</th>
-                                        <th>Body</th>
-                                        <th>Unread</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var email in selectedAssociatedEmails)
-                                    {
-                                        <tr>
-                                            <td>@email.Sender.EmailAddress.Address</td>
-                                            <td>@email.ReceivedDateTime</td>
-                                            <td>@email.Subject</td>
-                                            <td>@(new MarkupString(email.Body.Content))</td>
-                                            <td>@email.IsRead</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                                                </td>
+                                                <td width="35%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
-                                }
-                            }
+                            <div class="right-right-div">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var timeline in timelines)
+                                        {
+                                            <tr height="2.5em">
+                                                <td width="100%">
+                                                    <div class="assessments-container">
+                                                        @foreach (var assessment in timeline.assessments)
+                                                        {
+                                                            <div class="pane @("status" + assessment.status)">
+                                                                <div style="display: flex">
+                                                                    <div>
+                                                                        @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
+                                                                    </div>
+                                                                    <span class="remove-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)"><FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon></span>
+                                                                </div>
+                                                                <div>
+                                                                    <select class="status-select" @onchange="(e) => HandleStatusChange(timeline, assessment,  Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
+                                                                        <option value="@assessment.status">@assessment.status</option>
+                                                                        @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
+                                                                            {
+                                                                                    <option value="@option">@option</option>
+                                                                            }
+                                                                    </select>
+                                                                </div>
+                                                                <div>@assessment.date</div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                }
-</Authorized>
+                    }
+                    else
+                    {
+                        @if (fetchingEmails)
+                        {
+                            <div class="right-div">
+                                <FluentProgressRing></FluentProgressRing>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="right-div">
+                                <table class="my-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sender</th>
+                                            <th>Sent Time</th>
+                                            <th>Subject</th>
+                                            <th>Body</th>
+                                            <th>Unread</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var email in selectedAssociatedEmails)
+                                        {
+                                            <tr>
+                                                <td>@email.Sender.EmailAddress.Address</td>
+                                                <td>@email.ReceivedDateTime</td>
+                                                <td>@email.Subject</td>
+                                                <td>@(new MarkupString(email.Body.Content))</td>
+                                                <td>@email.IsRead</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
@@ -221,9 +248,7 @@
 
 <style>
 
-    .container{
-
-        height: 100% !important;
+    .container {
         width: 100% !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
         border-radius: 1rem;
@@ -301,7 +326,7 @@
         font-size: 12px;
         width: 120px;
     }
-    .container {
+    .inner-container {
         display: flex;
         width: 100%;
     }
@@ -315,15 +340,15 @@
     }
 
     .right-div {
-        width: 1100px;
+        width: 1050px;
     }
 
     .right-left-div {
-        width: 15%;
+        width: 20%;
     }
 
     .right-right-div {
-        width: 85%;
+        width: 80%;
         overflow-x: scroll;
     }
 
@@ -386,14 +411,17 @@
     }
 
     .add-email-button {
-        padding: 5px 10px;
+        padding: 2px 6px;
         color: white;
-        background-color: #0d6efd;
         border-radius: 5px;
+        border: 1px none;
+        background-color: #1b6ec2;
+        border-color: #1861ac;
     }
 
         .add-email-button:hover {
-            background-color: #0b5ed7
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
         }
 
 
@@ -405,6 +433,10 @@
          border: 1px solid black;
          padding: 8px;
         }
+
+    tr {
+        border-bottom: 1px solid grey;
+    }
 
     .status-select {
         background-color: transparent;
@@ -445,6 +477,13 @@
 
     private IList<Message> allMessages = new List<Message>();
     public HashSet<string> allSenders;
+
+    private SortingCriteria sortingCriterion = SortingCriteria.Date_Added;
+    private enum SortingCriteria
+    {
+        Date_Added,
+        Starred,
+    }
 
     bool IsHovered { get; set; }
 
@@ -676,6 +715,37 @@
 
     }
 
+    public async void UpdateAlertLevel(ApplicationTimeline timeline)
+    {
+        int index = timelines.FindIndex(tl => tl.timelineID == timeline.timelineID);
+        int newLevel;
+        int oldLevel = timelines[index].alertLevel;
+
+        if (index != -1)
+        {
+
+            newLevel = (timelines[index].alertLevel + 1) % 2;
+            timelines[index].alertLevel = newLevel;
+            StateHasChanged();
+
+            var response = await backendApiService.updateAlertLevel(timeline.timelineID, Username, newLevel);
+            var newTimeline = await backendApiService.getUserTimelineAsync(Username, timeline.timelineID);
+
+            if (newTimeline != null)
+            {
+                newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
+                timelines[index] = newTimeline;
+                HandleSortCriterionChange();
+                StateHasChanged();
+            }
+            else if (!response)
+            {
+                timelines[index].alertLevel = oldLevel;
+                StateHasChanged();
+            }
+        }
+    }
+
     private async Task HandleStatusChange(ApplicationTimeline timeline, Assessment assessment, AssessmentStatus newStatus)
     {
         var response = await backendApiService.updateAssessmentStatus(assessment, Username, timeline.timelineID, newStatus);
@@ -691,6 +761,31 @@
             }
         }
 
+    }
+
+    private void HandleSortCriterionChange()
+    {
+        switch (sortingCriterion)
+        {
+            case SortingCriteria.Date_Added:
+                timelines.Sort((t1, t2) =>
+                {
+                    return t1.timelineID.CompareTo(t2.timelineID);
+                }
+                );
+                break;
+
+            case SortingCriteria.Starred:
+                timelines.Sort((t1, t2) =>
+                {
+                    int heightComparison = t2.alertLevel.CompareTo(t1.alertLevel);
+                    if (heightComparison != 0)
+                        return heightComparison;
+                    else
+                        return t2.timelineID.CompareTo(t2.timelineID); 
+                });
+                break;
+        }
     }
 
 
@@ -804,6 +899,7 @@
             if (response)
             {
                 timelines = await backendApiService.getUserTimelinesAsync(Username);
+                HandleSortCriterionChange();
                 StateHasChanged();
             }
         }

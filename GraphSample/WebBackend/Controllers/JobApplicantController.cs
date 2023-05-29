@@ -120,7 +120,7 @@ public class JobApplicantsController : ControllerBase
             associatedEmailAddresses = new List<string>(),
             timelineID = newTimelineID,
             hasUnreadEmails = false,
-            readEmails = new()
+            alertLevel = 0
         };
 
         var timelineUpdate = Builders<JobApplicant>.Update.Push("applicationTimelines", newTimeline);
@@ -473,6 +473,29 @@ public class JobApplicantsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [Route("update-alert-level/{username}/{timelineID}/{newLevel}")]
+    [HttpGet]
+    public async Task<IActionResult> updateAlertLevel(string username, int timelineID, int newLevel)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", timelineID)
+        );
+
+        var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.alertLevel", newLevel);
+
+        try
+        {
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 }
 
 
