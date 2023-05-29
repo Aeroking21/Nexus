@@ -9,10 +9,7 @@
 <style>
 
 
-
-
     .calendar-class {
-       
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
         border-radius: 0.7rem;
         position: absolute;
@@ -21,9 +18,10 @@
         top: 10vh;
         bottom; 10vh;
         padding-bottom: 15px;
-        
-    
+    }
 
+    .row{
+        margin: 20px;
     }
 
     .calendar-table {
@@ -76,7 +74,7 @@
                 <h2> Add Event </h2>
                 <AddEvent />
             </div>
-            <div class="col-9" style=" background-color: rgba(255, 255, 255, 0.5);  border-radius:1rem;">
+            <div class="col-9" style=" background-color: rgba(255, 255, 255, 0.5);  padding: 10px; border-radius:1rem;">
 
                     @if (selectedDay.Date == DateTime.Now.Date){
                         <h2>Events for today</h2>
