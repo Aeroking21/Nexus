@@ -125,6 +125,16 @@ namespace GraphSample.Services
             return response.IsSuccessStatusCode;
         }
 
+
+        public async Task<bool> updateAssessmentTodo(Assessment assessment, string username, int timelineID, bool newTodoStatus)
+        {
+            var newAssessment = new AssessmentBson { assessment = assessment, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessment-todo/{username}/{newTodoStatus}", newAssessment);
+
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<bool> updateAlertLevel(int timelineID, string username, int newLevel)
         {
             var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/update-alert-level/{username}/{timelineID}/{newLevel}");
