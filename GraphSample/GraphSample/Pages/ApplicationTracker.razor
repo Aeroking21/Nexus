@@ -41,19 +41,12 @@
     </div>
             <div class="inner-container">
                 <div class="left-div">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </thead>
+                    <table class="left-table">
                         <tbody>
                             @foreach (var timeline in timelines)
                             {
                                 <tr height="2.5em">
-                                        <td width="65%">
+                                        <td width="35%">
                                             <div calss="flex-container">
                                                 @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
                                                 {
@@ -80,12 +73,12 @@
                                                 }
                                             </div>
                                         </td>
-                                    <td width="15%">
+                                    <td width="30%">
                                         <div class="company-content">
                                             <p>@timeline.company</p>
                                         </div>
                                     </td>
-                                    <td width="20%"><div class="role-content">@timeline.role</div></td>
+                                    <td width="35%"><div class="role-content">@timeline.role</div></td>
                                 </tr>
                             }
                         </tbody>
@@ -96,19 +89,12 @@
                     {
                         <div class="inner-container">
                             <div class="right-left-div">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>
-                                            </th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
+                                <table class="left-table">
                                     <tbody>
                                         @foreach (var timeline in timelines)
                                         {
                                             <tr height="5em">
-                                                <td width="65%">
+                                                <td width="75%">
                                                     <div class="associated-emails-content">
                                                         <button class="show-emails-button" @onclick="() => {expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
                                                             <span style="display: inline-block; vertical-align: middle;">show addresses</span>
@@ -141,19 +127,14 @@
                                                         }
                                                     </div>
                                                 </td>
-                                                <td width="35%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
+                                                <td width="25%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
                                             </tr>
                                         }
                                     </tbody>
                                 </table>
                             </div>
                             <div class="right-right-div">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
+                                <table class="bordered-table">
                                     <tbody>
                                         @foreach (var timeline in timelines)
                                         {
@@ -245,7 +226,7 @@
     .container {
         width: 100% !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 3px;
+        border-radius: 5px;
         padding: 1px;
     }
     .assessments-container {
@@ -266,6 +247,7 @@
         border-radius: 10px;
         display: -moz-inline-box;
         display: inline-block;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         overflow: auto;
     }
 
@@ -341,11 +323,11 @@
     }
 
     .left-div {
-        width: 400px;
+        width: 20%;
     }
 
     .right-div {
-        width: 1050px;
+        width: 80%;
     }
 
     .right-left-div {
@@ -450,14 +432,38 @@
         color: black;
     }
 
-    .my-table {
+    .left-table {
         border-collapse: collapse;
+        width: 100%;
     }
 
-    .my-table th, .my-table td {
-         border: 1px solid black;
-         padding: 8px;
+        .left-table tr:first-child td {
+            border-top: 1px solid black;
         }
+
+        .left-table tr:last-child td {
+            border-bottom: 1px solid black;
+        }
+
+    .bordered-table {
+        border-collapse: collapse;
+        background-color: white;
+        opacity: 1;
+    }
+
+        .bordered-table td {
+            border-right: 1px solid black;
+            border-left: 1px solid black;
+        }
+
+        .bordered-table tr:first-child td {
+            border-top: 1px solid black;
+        }
+
+        .bordered-table tr:last-child td {
+            border-bottom: 1px solid black;
+        }
+
 
     tr {
         border-bottom: 1px solid grey;
@@ -896,6 +902,10 @@
     {
         var assessmentModal = ModalInputPopup.Show<AssessmentInputPopup>();
         var result = await assessmentModal.Result;
+
+        Console.WriteLine($"cancelled: {result.Cancelled}");
+        Console.WriteLine($"confirmed: {result.Confirmed}");
+        Console.WriteLine($"result: {result.Data}");
 
         if (result.Confirmed)
         {
