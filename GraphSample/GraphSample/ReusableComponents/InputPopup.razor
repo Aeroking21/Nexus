@@ -6,11 +6,12 @@
                       @oninput=handleSearchInput
                       @onchange=handleSearchInput
                       @bind-Value="@searchValue"
-                      Placeholder="Search for email" />
+                      Placeholder="Search for email"
+                      autocomplete="off" />
         <br />
         <FluentListbox Items=@searchResults TOption="string" SelectedOptionChanged="@(e => searchValue = (e != defaultResultsText ? e : string.Empty) )" />
 
-        <button type="submit">Submit</button>
+        <button class="btn btn-primary" type="submit">Add</button>
         <button @onclick="Cancel">Cancel</button>
     </EditForm>
 </div>
