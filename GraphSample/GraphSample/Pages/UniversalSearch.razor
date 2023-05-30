@@ -98,6 +98,7 @@
     protected string userPhoto = string.Empty;
     bool isDropdownVisible = false;
     protected string DropDownStyle = string.Empty;
+    protected bool isSearching = false;
 
     protected void ToggleDropdown()
     {
@@ -150,15 +151,16 @@
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.Key == "Enter" && (isSearching==false))
         {
             // call the async function from here
             string searchTerm = searchValue;
             searchTerm += "*";
-
+            isSearching = true;
             await CallApiAsync(searchTerm);
             ToggleDropdown();
             Console.WriteLine("Search value: " + searchTerm);
+            isSearching = false;
 
         }
     }
@@ -180,16 +182,16 @@
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-{
+    {
         new SearchRequest
         {
             EntityTypes = new List<EntityType?>
-        {
+            {
                 EntityType.Message,
             },
             Query = new SearchQuery
             {
-                QueryTemplate = searchTerm,
+                QueryString = searchTerm,
             },
         },
     },
@@ -242,8 +244,6 @@
         var team = graphClient.Search.Query.ToPostRequestInformation(requestBodyTeams);
         var mail = graphClient.Search.Query.ToPostRequestInformation(requestBodyMail);
         var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
-
-
 
         var teamId = await batchRequestContent.AddBatchRequestStepAsync(team);
         var mailId = await batchRequestContent.AddBatchRequestStepAsync(mail);
@@ -306,6 +306,7 @@
         catch (ServiceException ex)
         {
             Console.WriteLine($"Get Mail Failed");
+            Console.WriteLine(ex);
         }
 
         // drive code
