@@ -2,9 +2,11 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    width: fit-content;
-    height: fit-content;
-    background-color: #1861ac !important;
+    width: 100%;
+    height: 100%;
+    /* set background colour to this 0071c1 but transparent  */
+
+    background: linear-gradient(to bottom, #3560C1, #27CACC, white)   !important;
 }
 
 
