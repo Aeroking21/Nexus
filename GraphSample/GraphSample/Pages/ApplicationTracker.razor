@@ -11,7 +11,7 @@
 @inject GraphSample.Services.IBackendApiService backendApiService
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
-<div class="container">
+<div class="dashboard-class">
 <AuthorizeView>
     <Authorized>
         @if (fetchingTimelines || creatingApplicant)
@@ -223,12 +223,32 @@
 
 <style>
 
-    .container {
+/*    .container {
         width: 100% !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
         border-radius: 5px;
         padding: 1px;
+    }*/
+
+    .container {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 0.7rem;
+        position: absolute;
+        left: 0;
+        right: 0;
+        padding-bottom: 10px;
     }
+
+    .dashboard-class {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 0.7rem;
+        position: absolute;
+        left: 5vh;
+        right: 5vh;
+        top: 15vh;
+        padding-bottom: 15px;
+    }
+
     .assessments-container {
         border: 1px solid transparent;
         border-right: none;
