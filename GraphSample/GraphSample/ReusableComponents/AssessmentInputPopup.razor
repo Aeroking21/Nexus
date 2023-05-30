@@ -32,7 +32,7 @@
             </select>
         </div>
 
-        <button class="btn btn-primary" @onclick="() => SubmitForm()">Add</button>
+        <button type="submit">Submit</button>
         <button @onclick="Cancel">Cancel</button>
     </EditForm>
 </div>
@@ -40,16 +40,20 @@
 @code {
     public Assessment _form = new();
 
-    [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
+        [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
 
-    protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter the assessment details");
+        protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter the assessment details");
 
-    private async Task SubmitForm()
-    {
-        _form.date = _form.date.AddHours(1);
-        await BlazoredAssessmentModal.CloseAsync(ModalResult.Ok(_form));
-    }
+        private async Task SubmitForm()
+        {
+            Console.WriteLine("Confrimed");
+            _form.date = _form.date.AddHours(1);
+            await BlazoredAssessmentModal.CloseAsync(ModalResult.Ok(_form));
+        }
 
-    private async Task Cancel() => await BlazoredAssessmentModal.CancelAsync();
+        private async Task Cancel() {
+            Console.WriteLine("Cancelled");
+            await BlazoredAssessmentModal.CancelAsync();
+            }
     }
 
