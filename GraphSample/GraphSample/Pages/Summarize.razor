@@ -3,7 +3,11 @@
 @using System.IO;
 @using GrapeCity.Documents.Pdf;
 @using DocumentFormat.OpenXml.Packaging;
+@using Azure
+@using Azure.AI.OpenAI
+@using System.Text
 @inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
 
 <style>
     h3 {
@@ -33,7 +37,7 @@
                     }
 
                 </div>
-         
+
             </FluentDialog>
         </div>
 
@@ -48,16 +52,19 @@
 
 @code{
 
+    //ToDo:
+    //    1.  Return tuple instead for PDF/DOC/ppt to refactor
+    //    2. Apply error handling to GetContent so folders not clicked
+
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
-
     private FluentDialog? MyFluentDialog;
     public bool Modal = true;
     private GraphServiceClient? graphClient;
     private List<DriveItem> data_response = new List<DriveItem>();
     protected const string path = "/me/drive/items/";
     protected string driveId = string.Empty;
-
+    private string summary = string.Empty;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -85,7 +92,7 @@
         }
     }
 
-    // apply error handling 
+    // apply error handling
     protected async void GetContent(string args)
     {
         if (authenticationStateTask == null)
@@ -104,8 +111,107 @@
         var contentStream = await graphClient.Drives[driveId].Items[args].Content.GetAsync();
 
         var textResponse = ExtractTextFromStream(contentStream);
+        Console.WriteLine("Got text response");
+        var content2 = await SummarizeText(textResponse);
+    }
 
 
+    // Event handler for the "Summarize" button click
+    protected async Task<string> SummarizeText(string content)
+    {
+
+        // Perform summarization until the overall summary is less than 3000 characters
+        var summaries = new List<string>();
+        var overallSummary = "";
+
+
+        // Split the content into smaller chunks
+        var chunkSize = 750; // Adjust this value as per your model's character limit
+        var chunks = SplitContentIntoChunks(content, chunkSize);
+
+        // Perform summarization for each chunk
+        foreach (var chunk in chunks)
+        {
+            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
+            Console.Write($"Input: {prompt}\n");
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}\n");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+        // Combine the individual summaries into an overall summary
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        if (overallSummary.Length >= 2500)
+        {
+            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        else if (overallSummary.Length <= 500)
+        {
+            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+        summary = overallSummary;
+        return summary;
+
+    }
+
+    // Helper method to split the content into smaller chunks
+    private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
+    {
+        var sentences = content.Split('.', '!', '?');
+        var currentChunk = new StringBuilder();
+
+        foreach (var sentence in sentences)
+        {
+            if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
+            {
+                currentChunk.Append(sentence).Append('.');
+            }
+            else
+            {
+                yield return currentChunk.ToString();
+                currentChunk.Clear().Append(sentence).Append('.');
+            }
+        }
+
+        if (currentChunk.Length > 0)
+        {
+            yield return currentChunk.ToString();
+        }
     }
 
     // Maybe return tuple instead
@@ -246,10 +352,6 @@
 
         // The type of files is Microsoft.Graph.Models.DriveItem
     }
-
-
-    //Console.WriteLine("hi");
-
 
 
 }
