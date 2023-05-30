@@ -1,0 +1,191 @@
+@page "/meeting"
+
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using Azure
+@using Azure.AI.OpenAI
+@using System.Text
+@* @using Newtonsoft.Json; *@
+@using System.Security.Authentication
+@using TimeZoneConverter
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+
+<style>
+        .container{
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 0.7rem;
+        position: absolute;
+        left: 0;
+        right: 0;
+        padding-bottom: 15px;
+        padding-top: 15px;
+        
+    }
+</style>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-1">
+            <h1>Meeting</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-2">
+            <p>Here you can schedule a meeting with your team</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-3">
+            <p>@message</p>
+        </div>
+    </div>
+    <button class="btn btn-primary" @onclick="GetCalenders">Get Calendars</button>
+    <button class="btn btn-primary" @onclick="GetFreeSchedule">Get Free Schedule</button>
+    <button class="btn btn-primary" @onclick="FindMeetingTimes">Find Meeting Times</button>
+
+    
+</div>
+
+@code{
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    private GraphServiceClient? graphClient;
+    
+    [Inject]
+    protected IAccessTokenProvider? AccessTokenProvider { get; set; }
+    protected string? AccessToken { get; private set; }
+    string message;
+    public List<string> messages = new List<string>();
+    private static HttpClient Http = new HttpClient();
+    List<string> options = new List<string>() { "Create a Timetable", "Add In a Todo", "Schedule A Meeting" };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+           var tokenResult = await AccessTokenProvider.RequestAccessToken();
+        if (tokenResult.TryGetToken(out var accessToken))
+        {
+            AccessToken = accessToken.Value;
+        }
+
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        //user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();          
+
+    }
+
+    public async Task FindMeetingTimes(){
+        var requestBody = new Microsoft.Graph.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
+        {
+        Attendees = new List<AttendeeBase>
+        {
+            new AttendeeBase
+            {
+                Type = AttendeeType.Required,
+                EmailAddress = new EmailAddress
+                {
+                    Name = "Alex Wilbur",
+                    Address = "alexw@contoso.onmicrosoft.com",
+                },
+            },
+        },
+        LocationConstraint = new LocationConstraint
+        {
+            IsRequired = false,
+            SuggestLocation = false,
+            Locations = new List<LocationConstraintItem>
+            {
+                new LocationConstraintItem
+                {
+                    ResolveAvailability = false,
+                    DisplayName = "Conf room Hood",
+                },
+            },
+        },
+        TimeConstraint = new TimeConstraint
+        {
+            ActivityDomain = ActivityDomain.Work,
+            TimeSlots = new List<TimeSlot>
+            {
+                new TimeSlot
+                {
+                    Start = new DateTimeTimeZone
+                    {
+                        DateTime = "2019-04-16T09:00:00",
+                        TimeZone = "Pacific Standard Time",
+                    },
+                    End = new DateTimeTimeZone
+                    {
+                        DateTime = "2019-04-18T17:00:00",
+                        TimeZone = "Pacific Standard Time",
+                    },
+                },
+            },
+        },
+        IsOrganizerOptional = false,
+        MeetingDuration = TimeSpan.FromHours(1),
+        ReturnSuggestionReasons = true,
+        MinimumAttendeePercentage = 100,
+    };
+    var result = await graphClient.Me.FindMeetingTimes.PostAsync(requestBody, (requestConfiguration) =>
+    {
+        requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+    });
+    }
+    
+
+    public async Task GetFreeSchedule(){
+        // Code snippets are only available for the latest version. Current version is 5.x
+
+
+        var requestBody = new Microsoft.Graph.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
+        {
+            Schedules = new List<string>
+            {
+                "adelev@contoso.onmicrosoft.com",
+                "meganb@contoso.onmicrosoft.com",
+            },
+            StartTime = new DateTimeTimeZone
+            {
+                DateTime = "2019-03-15T09:00:00",
+                TimeZone = "Pacific Standard Time",
+            },
+            EndTime = new DateTimeTimeZone
+            {
+                DateTime = "2019-03-15T18:00:00",
+                TimeZone = "Pacific Standard Time",
+            },
+            AvailabilityViewInterval = 60,
+        };
+        var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
+        {
+            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+        });
+    }
+
+    public async Task GetCalenders(){
+        Console.WriteLine("Get Calendars");
+        var result = await graphClient.Me.Calendars.GetAsync();
+        // if the result is okay, then write the result into the console
+        // convert the result into a string
+        var resultString = result.ToString();
+        // write the result into the console
+        // if result is null, then write that it is null
+        if (result == null)
+        {
+            Console.WriteLine("The result is null");
+        }
+        Console.WriteLine(resultString);
+    }
+}

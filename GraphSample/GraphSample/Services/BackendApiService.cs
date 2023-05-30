@@ -124,6 +124,13 @@ namespace GraphSample.Services
 
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<bool> updateAlertLevel(int timelineID, string username, int newLevel)
+        {
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/update-alert-level/{username}/{timelineID}/{newLevel}");
+
+            return response.IsSuccessStatusCode;
+        }
     }
 }
 
