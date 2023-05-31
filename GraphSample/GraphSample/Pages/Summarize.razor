@@ -24,10 +24,8 @@
 <AuthorizeView>
     <Authorized>
 
-        <h2> Component </h2>
-
         <div>
-            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Class="dropdown-content" Modal=true @ondialogdismiss=OnDismiss>
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
                 <div class="dropdown-content">
 
                     @foreach (var file in data_response)
