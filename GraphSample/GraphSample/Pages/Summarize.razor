@@ -1,24 +1,43 @@
 ﻿@page "/AiSummarize"
 @using System.Security.Authentication
-
-
+@using System.IO;
+@using GrapeCity.Documents.Pdf;
+@using DocumentFormat.OpenXml.Packaging;
+@using Azure
+@using Azure.AI.OpenAI
+@using System.Text
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
 @inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
 
 <style>
     h3 {
         color: blue;
+    }
+
+    .dropdown-content {
+        max-height: 100%;
+        overflow: scroll;
+        max-width: 99%;
     }
 </style>
 
 <AuthorizeView>
     <Authorized>
 
-        <h2> Component </h2>
-
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                <mgt-file file-query="/me/drive/items/01DECBKURCFKOWIKDGYVEY2XGAIQUW2ATR"></mgt-file>
-                @*01DECBKURUIZ4ETBMWTZG3IGVXT26LR5SA*@
+                <div class="dropdown-content">
+
+                    @foreach (var file in data_response)
+                    {
+                        string npath = path + file.Id;
+                        <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id)"></mgt-file>
+                    }
+
+                </div>
+
             </FluentDialog>
         </div>
 
@@ -33,11 +52,19 @@
 
 @code{
 
+    //ToDo:
+    //    1.  Return tuple instead for PDF/DOC/ppt to refactor
+    //    2. Apply error handling to GetContent so folders not clicked
+
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
-
     private FluentDialog? MyFluentDialog;
     public bool Modal = true;
+    private GraphServiceClient? graphClient;
+    private List<DriveItem> data_response = new List<DriveItem>();
+    protected const string path = "/me/drive/items/";
+    protected string driveId = string.Empty;
+    private string summary = string.Empty;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -45,10 +72,15 @@
             MyFluentDialog!.Hide();
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await listFiles();
+    }
+
     private async void OnOpen()
     {
         MyFluentDialog!.Show();
-        await CallApiAsync();
+        await listFiles();
 
     }
 
@@ -60,28 +92,8 @@
         }
     }
 
-
-    public class Author
-    {
-        public string Sender { get; }
-        public string Title { get; }
-        public string Url { get; }
-        public string App { get; }
-
-        public Author(string sender, string title, string webLink, string app)
-        {
-            Sender = sender;
-            Title = title;
-            Url = webLink;
-            App = app;
-        }
-    }
-
-
-    private GraphServiceClient? graphClient;
-    private List<Author> data_response = new List<Author>();
-
-    protected async Task CallApiAsync()
+    // apply error handling
+    protected async void GetContent(string args)
     {
         if (authenticationStateTask == null)
         {
@@ -94,27 +106,253 @@
 
         graphClient = clientFactory.GetAuthenticatedClient();
 
-        var fileId = "01DECBKURUIZ4ETBMWTZG3IGVXT26LR5SA";
-        var driveId = "b!RfF7rfoJs02VJ9un3I-ut-jp_QBFMOVBn3jNroSlMI_GNuGpps7GS7BmF01uUjKx";
+        Console.WriteLine("Clicked on: " + args);
 
-        var stream = await graphClient.Drives[driveId].Items[fileId].Content.GetAsync();
-        
+        var contentStream = await graphClient.Drives[driveId].Items[args].Content.GetAsync();
 
-        if (stream != null)
+        var textResponse = ExtractTextFromStream(contentStream);
+        Console.WriteLine("Got text response");
+        var content2 = await SummarizeText(textResponse);
+    }
+
+
+    // Event handler for the "Summarize" button click
+    protected async Task<string> SummarizeText(string content)
+    {
+
+        // Perform summarization until the overall summary is less than 3000 characters
+        var summaries = new List<string>();
+        var overallSummary = "";
+
+
+        // Split the content into smaller chunks
+        var chunkSize = 750; // Adjust this value as per your model's character limit
+        var chunks = SplitContentIntoChunks(content, chunkSize);
+
+        // Perform summarization for each chunk
+        foreach (var chunk in chunks)
         {
-            // Copy the photo stream to a memory stream
-            // to get the bytes out of it
-            var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
-            var photoBytes = memoryStream.ToArray();
+            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
+            Console.Write($"Input: {prompt}\n");
 
-            // Generate a date URI for the photo
-            var photoUri = $"data:image/png;base64,{Convert.ToBase64String(photoBytes)}";
-
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}\n");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
         }
 
+        // Combine the individual summaries into an overall summary
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        if (overallSummary.Length >= 2500)
+        {
+            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        else if (overallSummary.Length <= 500)
+        {
+            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+        summary = overallSummary;
+        return summary;
 
     }
+
+    // Helper method to split the content into smaller chunks
+    private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
+    {
+        var sentences = content.Split('.', '!', '?');
+        var currentChunk = new StringBuilder();
+
+        foreach (var sentence in sentences)
+        {
+            if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
+            {
+                currentChunk.Append(sentence).Append('.');
+            }
+            else
+            {
+                yield return currentChunk.ToString();
+                currentChunk.Clear().Append(sentence).Append('.');
+            }
+        }
+
+        if (currentChunk.Length > 0)
+        {
+            yield return currentChunk.ToString();
+        }
+    }
+
+    // Maybe return tuple instead
+    protected string ExtractTextFromStream(Stream input)
+    {
+        string text = "";
+
+        if (IsPDF(input))
+        {
+            text = ExtractTextFromPDF(input);
+        }
+        else if (IsWordDocument(input))
+        {
+            text = ExtractTextFromWord(input);
+        }
+        else if (IsPowerPointDocument(input))
+        {
+            text = ExtractTextFromPowerPoint(input);
+        }
+
+        return text;
+    }
+
+    private bool IsPDF(Stream stream)
+    {
+        try
+        {
+            var document = new GcPdfDocument();
+            document.Load(stream);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public string ExtractTextFromPDF(Stream stream)
+    {
+
+        var document = new GcPdfDocument();
+        document.Load(stream);
+        var text = document.GetText();
+
+        return text;
+    }
+
+    private bool IsWordDocument(Stream stream)
+    {
+        try
+        {
+            using (var document = WordprocessingDocument.Open(stream, false))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string ExtractTextFromWord(Stream stream)
+    {
+        var text = "";
+
+        using (var document = WordprocessingDocument.Open(stream, false))
+        {
+            var body = document.MainDocumentPart.Document.Body;
+            text = body.InnerText;
+        }
+
+        return text;
+    }
+
+    private bool IsPowerPointDocument(Stream stream)
+    {
+        try
+        {
+            using (var presentation = PresentationDocument.Open(stream, false))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string ExtractTextFromPowerPoint(Stream stream)
+    {
+        var text = "";
+
+        using (var presentation = PresentationDocument.Open(stream, false))
+        {
+            var slideText = "";
+
+            foreach (var slidePart in presentation.PresentationPart.SlideParts)
+            {
+                var slide = slidePart.Slide;
+                var paragraphs = slide.Descendants<DocumentFormat.OpenXml.Drawing.Paragraph>();
+
+                foreach (var paragraph in paragraphs)
+                {
+                    slideText += paragraph.InnerText + " ";
+                }
+            }
+
+            text = slideText.Trim();
+        }
+
+        return text;
+    }
+
+
+    protected async Task listFiles()
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        // Get the user
+        var user = (await authenticationStateTask).User;
+
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+
+        var driveItem = await graphClient.Me.Drive.GetAsync();
+        driveId = driveItem.Id;
+
+        // List children in the drive
+        var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
+        Console.WriteLine("Getting files...");
+        data_response = files.Value;
+
+        // The type of files is Microsoft.Graph.Models.DriveItem
+    }
+
 
 }
 

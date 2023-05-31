@@ -1,86 +1,119 @@
-﻿<!-- Copyright (c) Microsoft Corporation.
-     Licensed under the MIT license. -->
-
-@page "/UniversalSearch"
-
+﻿@page "/UniversalSearch"
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-    .dropdown {
+    .search {
         position: relative;
-
+        width: 100%;
     }
 
     .dropdown-content {
         display: none;
-        position: absolute;
-        background-color: #f6f6f6;
-        max-height: 300px;
+        max-height: 80%;
         overflow: scroll;
-        border: 1px solid #ddd;
         z-index: 10;
-        max-width: 28%;
+        width: 100%;
+        padding-bottom: 1%;
     }
 
-    .dropdown-content FluentOption {
-        background-color: #ddd;
-        width:98%;
+    .dropdown-content div {
+        width: 98%;
+        margin-top: 1%;
+        margin-top: 1%;
+        margin-left: 1%;
+        box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+        border-radius: 0.25rem;
+        height: 80px;
     }
 
+    .dropdown-content div:hover {
+        box-shadow: rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
+    }
 
+    .dropdown-content2 {
+        max-height: 100%;
+        overflow: scroll;
+        max-width: 100%;
+    }
+
+    .dropdown-content2 FluentProgressRing {
+        display: none;
+        width: 20%;
+        height: 20%;
+        margin-left: 25%;
+    }
+
+    a, a:hover {
+        text-decoration: none;
+        color: inherit;
+    }
 </style>
 
 <AuthorizeView>
     <Authorized>
 
-        <div class="search-container">
+        <div>
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+                <div class="dropdown-content2">
 
-            <FluentSearch @bind-Value="searchValue" class="dropdown" @oninput="HandleInput" @onkeypress="HandleKeyPress">
+                    <FluentSearch @bind-Value="searchValue" class="search" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
-            </FluentSearch>
+                    </FluentSearch>
 
-            <FluentListbox Size=7 TOption="string" class="dropdown-content" style="@DropDownStyle" Height="200px">
+                    <FluentProgressRing style="@ProgressStyle"></FluentProgressRing>
 
+                    <div class="dropdown-content" style="@DropDownStyle">
 
-                @foreach (var data in data_response)
-                {
-                    <FluentOption Style="height:100px" Value="AL">
-                        @if (data.App == "Outlook")
+                        @foreach (var data in data_response)
                         {
-                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
-                                 width="32"
-                                 height="32"
-                                 alt="Outlook" />
+                            <a href="@data.Url">
+                                <div>
+                                    @if (data.App == "Outlook")
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Outlook" />
+                                    }
+                                    else if (data.App == "Teams")
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Teams" />
+                                    }
+                                    else
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="OneDrive" />
+                                    }
+
+                                    @data.Sender
+                                    @data.Title
+
+                                </div>
+
+
+                            </a>
+
                         }
-                        else if (data.App == "Teams")
-                        {
-                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
-                                 width="32"
-                                 height="32"
-                                 alt="Teams" />
-                        }
-                        else
-                        {
-                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
-                                 width="32"
-                                 height="32"
-                                 alt="OneDrive" />
-                        }
-
-                        @data.Sender
-                        @data.Title
-
-                    </FluentOption>
-                }
 
 
-            </FluentListbox>
+                    </div>
+
+                </div>
+
+            </FluentDialog>
+
+
+            <FluentButton Appearance=Appearance.Stealth @onclick="OnOpen"> Search </FluentButton>
 
 
         </div>
-
-        <br />
-        <br />
 
     </Authorized>
 
@@ -95,14 +128,41 @@
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     protected string searchValue = string.Empty;
-    protected string userPhoto = string.Empty;
-    bool isDropdownVisible = false;
     protected string DropDownStyle = string.Empty;
+    protected string ProgressStyle = "display: none;";
+    protected bool isSearching = false;
+    private FluentDialog? MyFluentDialog;
+    public bool Modal = true;
+    private GraphServiceClient? graphClient;
+    private List<Author> data_response = new List<Author>();
 
-    protected void ToggleDropdown()
+
+    protected override void OnAfterRender(bool firstRender)
     {
-        isDropdownVisible = !isDropdownVisible;
-        if (isDropdownVisible)
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
+
+
+    private void OnOpen()
+    {
+        MyFluentDialog!.Show();
+
+    }
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
+
+
+
+    protected void ToggleDropdown(bool visibility)
+    {
+        if (visibility)
         {
             DropDownStyle = "display: block;";
         }
@@ -110,7 +170,6 @@
         else
         {
             DropDownStyle = "display: none;";
-
         }
     }
 
@@ -131,35 +190,32 @@
     }
 
 
-    private GraphServiceClient? graphClient;
-    private List<Author> data_response = new List<Author>();
-
-    // Use style no for handle input
-    // use style yes for entering
-    // only use no when string is empty or null
-
     private void HandleInput(ChangeEventArgs e)
     {
         searchValue = e.Value.ToString();
         data_response.Clear();
+        isSearching = false;
         if (String.IsNullOrEmpty(searchValue))
         {
-            ToggleDropdown();
+            ToggleDropdown(false);
         }
+        Console.WriteLine("hi enter");
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.Key == "Enter" && (isSearching == false))
         {
             // call the async function from here
+            ProgressStyle = "display: block;";
             string searchTerm = searchValue;
             searchTerm += "*";
-
+            isSearching = true;
+            data_response.Clear();
             await CallApiAsync(searchTerm);
-            ToggleDropdown();
+            ToggleDropdown(true);
             Console.WriteLine("Search value: " + searchTerm);
-
+            ProgressStyle = "display: none;";
         }
     }
 
@@ -180,60 +236,68 @@
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-{
-        new SearchRequest
-        {
-            EntityTypes = new List<EntityType?>
-        {
-                EntityType.Message,
-            },
-            Query = new SearchQuery
             {
-                QueryTemplate = searchTerm,
+                new SearchRequest
+                {
+                    EntityTypes = new List<EntityType?>
+                    {
+                        EntityType.Message,
+                    },
+                    Query = new SearchQuery
+                    {
+                        QueryString = searchTerm,
+                    },
+                    QueryAlterationOptions = new SearchAlterationOptions
+                    {
+                        EnableModification = true,
+                    }
+                },
             },
-        },
-    },
         };
-
 
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-    {
-                            new SearchRequest
-                            {
-                                EntityTypes = new List<EntityType?>
-        {
-                                    EntityType.ChatMessage,
-                                },
-                                Query = new SearchQuery
-                                {
-                                    QueryString = searchTerm,
-                                },
-                            },
-                        },
+            {
+                new SearchRequest
+                {
+                    EntityTypes = new List<EntityType?>
+                    {
+                        EntityType.ChatMessage,
+                    },
+                    Query = new SearchQuery
+                    {
+                        QueryString = searchTerm,
+                    },
+                    QueryAlterationOptions = new SearchAlterationOptions
+                    {
+                        EnableModification = true,
+                    }
+                },
+            },
         };
 
         var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-    {
-                            new SearchRequest
-                            {
-                                EntityTypes = new List<EntityType?>
-        {
-                                    EntityType.DriveItem,
-                                },
-                                Query = new SearchQuery
-                                {
-                                    QueryString = searchTerm,
-                                },
-                            },
-                        },
+            {
+                new SearchRequest
+                {
+                    EntityTypes = new List<EntityType?>
+                    {
+                        EntityType.DriveItem,
+                    },
+                    Query = new SearchQuery
+                    {
+                        QueryString = searchTerm,
+                    },
+                    QueryAlterationOptions = new SearchAlterationOptions
+                    {
+                        EnableModification = true,
+                    }
+                },
+            },
         };
-
-
-
 
 
         var batchRequestContent = new BatchRequestContent(graphClient);
@@ -243,14 +307,11 @@
         var mail = graphClient.Search.Query.ToPostRequestInformation(requestBodyMail);
         var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
 
-
-
         var teamId = await batchRequestContent.AddBatchRequestStepAsync(team);
         var mailId = await batchRequestContent.AddBatchRequestStepAsync(mail);
         var driveId = await batchRequestContent.AddBatchRequestStepAsync(drive);
 
         var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
-
 
         // teams code
         try
@@ -272,6 +333,7 @@
                 string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                 data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
+                Console.WriteLine(" found in outlook");
             }
 
 
@@ -299,6 +361,7 @@
                 string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                 data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
+                Console.WriteLine(" found in Teams");
             }
 
 
@@ -306,6 +369,7 @@
         catch (ServiceException ex)
         {
             Console.WriteLine($"Get Mail Failed");
+            Console.WriteLine(ex);
         }
 
         // drive code
@@ -326,6 +390,7 @@
                 string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
 
                 data_response.Add(new Author(oneDriveCreator, searchItems?["name"].ToString(), searchItems["webUrl"].ToString(), "OneDrive"));
+                Console.WriteLine("found in drive");
             }
 
         }
@@ -339,20 +404,6 @@
         // Check if size of list is empty, then add Null Author
         // Then in Razor page check for Null and render "Not find"
 
-        //var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
-
-        //var searchItems = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
-
-
-        //JsonElement fromMessage = (JsonElement)searchItems["from"];
-        //string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-        //var teamsTitle = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Summary;
-
-        //JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
-        //string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
-
-
-        //data_response.Add(new Author(searchItems?["subject"].ToString(), messageName, searchItems["webLink"].ToString()));
     }
 }
 
