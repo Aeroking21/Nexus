@@ -83,6 +83,8 @@
         }
     </div>
 
+    @* <FluentTextArea @bind-Value="tasknew" style="width: 100%; height: 100%;" @onchange="Print"></FluentTextArea> *@
+
     @* <div class=grid-item>
         <table>
             <tr>
@@ -140,6 +142,7 @@
 </body>
 @code{
     
+    string? tasknew;
 
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
@@ -151,7 +154,7 @@
     private string todoTasks;
     private IList<TodoTaskList> toDos = new List<TodoTaskList>();
     private string selectedList = "Tasks";
-    private string tasknew = "Task";
+    
     private string timenew = "09:00";
     private TimeOnly startTime;
     Dictionary<string,string> TaskDict = new Dictionary<string, string>();
@@ -164,15 +167,16 @@
 
     public bool creating = false;
 
+    public List<string> tas = new List<string>();
+
     [Inject]
     protected IAccessTokenProvider? AccessTokenProvider { get; set; }
     protected string? AccessToken { get; private set; }
 
     public void Print(){
-        Console.WriteLine(timenew);
-        foreach (KeyValuePair<string, string> pair in TaskDict)
-        {
-            Console.WriteLine("Key: {0}, Value: {1}", pair.Key, pair.Value);
+        tas.Add(tasknew);
+        foreach (var item in tas){
+            Console.WriteLine(item);
         }
     }
 
