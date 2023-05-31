@@ -1,15 +1,12 @@
-﻿<!-- Copyright (c) Microsoft Corporation.
-     Licensed under the MIT license. -->
-
-@page "/UniversalSearch"
-
+﻿@page "/UniversalSearch"
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
     .search {
         position: relative;
         width: 100%;
-
     }
 
     .dropdown-content {
@@ -18,7 +15,7 @@
         overflow: scroll;
         z-index: 10;
         width: 100%;
-        padding-bottom:1%;
+        padding-bottom: 1%;
     }
 
     .dropdown-content div {
@@ -41,12 +38,17 @@
         max-width: 100%;
     }
 
-    a, a:hover {
-        text-decoration:none;
-        color:inherit;
+    .dropdown-content2 FluentProgressRing {
+        display: none;
+        width: 20%;
+        height: 20%;
+        margin-left: 25%;
     }
 
-    
+    a, a:hover {
+        text-decoration: none;
+        color: inherit;
+    }
 </style>
 
 <AuthorizeView>
@@ -59,6 +61,8 @@
                     <FluentSearch @bind-Value="searchValue" class="search" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
                     </FluentSearch>
+
+                    <FluentProgressRing style="@ProgressStyle"></FluentProgressRing>
 
                     <div class="dropdown-content" style="@DropDownStyle">
 
@@ -95,7 +99,7 @@
 
 
                             </a>
-                       
+
                         }
 
 
@@ -104,9 +108,9 @@
                 </div>
 
             </FluentDialog>
-     
 
-            <FluentButton Appearance=Appearance.Stealth @onclick="OnOpen" > Search </FluentButton>
+
+            <FluentButton Appearance=Appearance.Stealth @onclick="OnOpen"> Search </FluentButton>
 
 
         </div>
@@ -125,9 +129,12 @@
 
     protected string searchValue = string.Empty;
     protected string DropDownStyle = string.Empty;
+    protected string ProgressStyle = "display: none;";
     protected bool isSearching = false;
     private FluentDialog? MyFluentDialog;
     public bool Modal = true;
+    private GraphServiceClient? graphClient;
+    private List<Author> data_response = new List<Author>();
 
 
     protected override void OnAfterRender(bool firstRender)
@@ -158,13 +165,11 @@
         if (visibility)
         {
             DropDownStyle = "display: block;";
-            Console.WriteLine("Dropdown ON" + DateTime.Now.ToString("HH:mm:ss"));
         }
 
         else
         {
             DropDownStyle = "display: none;";
-            Console.WriteLine("Dropdown OFF" + DateTime.Now.ToString("HH:mm:ss"));
         }
     }
 
@@ -185,13 +190,6 @@
     }
 
 
-    private GraphServiceClient? graphClient;
-    private List<Author> data_response = new List<Author>();
-
-    // Use style no for handle input
-    // use style yes for entering
-    // only use no when string is empty or null
-
     private void HandleInput(ChangeEventArgs e)
     {
         searchValue = e.Value.ToString();
@@ -206,9 +204,10 @@
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && (isSearching==false))
+        if (e.Key == "Enter" && (isSearching == false))
         {
             // call the async function from here
+            ProgressStyle = "display: block;";
             string searchTerm = searchValue;
             searchTerm += "*";
             isSearching = true;
@@ -216,6 +215,7 @@
             await CallApiAsync(searchTerm);
             ToggleDropdown(true);
             Console.WriteLine("Search value: " + searchTerm);
+            ProgressStyle = "display: none;";
         }
     }
 

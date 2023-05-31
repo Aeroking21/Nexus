@@ -1,0 +1,41 @@
+﻿@page "/AiTranscript"
+@using System.Security.Authentication
+@using System.IO;
+@using GrapeCity.Documents.Pdf;
+@using DocumentFormat.OpenXml.Packaging;
+@using Azure
+@using Azure.AI.OpenAI
+@using System.Text
+@using Microsoft.Graph.Beta
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
+
+<style>
+    h3 {
+        color: blue;
+    }
+
+</style>
+
+<AuthorizeView>
+    <Authorized>
+
+        <div>
+            <h3> Transcript Ai </h3>
+        </div>
+
+
+    </Authorized>
+
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+
+    [CascadingParameter]
+    protected Task<AuthenticationState>? authenticationStateTask { get; set; }
+    private GraphServiceClient? graphClient;
+
+}
