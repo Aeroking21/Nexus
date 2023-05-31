@@ -57,12 +57,13 @@
         </label>
         </p>
         @if (isLoading) {
-        <p>Uploading...</p>
+            <p>Uploading...</p>
         } else if (isSummarizing) {
-        <p>Summarizing...</p>
+            <p>Summarizing...</p>
+            <FluentProgressRing></FluentProgressRing>
         } else if (!string.IsNullOrEmpty(summary)) {
-        <h3>Summary:</h3>
-        <p>@summary</p>
+            <h3>Summary:</h3>
+            <p>@summary</p>
         }
         <button @onclick="SummarizeFile">Summarize</button>
     </div>
@@ -70,11 +71,11 @@
     <div class="tile">
         <p></p>
         @if (noSummary) {
-        <p>No summary to write to OneNote yet...</p>
+            <p>No summary to write to OneNote yet...</p>
         }
         <button @onclick="WriteToOneNote">Write To OneNote</button>
         @if (isWriting) {
-        <p>Writing to OneNote...</p>
+            <p>Writing to OneNote...</p>
         }
     </div>
     </div>

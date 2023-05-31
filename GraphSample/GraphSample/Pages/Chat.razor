@@ -1,0 +1,95 @@
+@page "/chat"
+
+@using Microsoft.Fast.Components.FluentUI
+
+<style>
+    .chatbox {
+        width: 300px;
+        height: 400px;
+        background-color: #f1f1f1;
+        padding: 5px;
+        justify-content: flex-end;
+        /* display by rows  */
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+    }
+    .message-bar {
+        background-color: #fff;
+        padding: 10px;
+        height: fit-content;
+        width: 100%;
+        overflow: auto;
+
+    }
+
+    .right-bubble{
+        background-color: #fff;
+        padding: 10px;
+        height: fit-content;
+        width: fit-content;
+        max-width: 80%;
+        float: right;
+        right: 0;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        overflow: auto;
+
+    }
+
+    .send-message-bar{
+        background-color: #fff;
+        padding: 10px;
+        height: auto;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+</style>
+
+<h1>Test</h1>
+
+<div class=chatbox>
+    @* <div class=message>
+        <div class=bubble>
+            <p>Hi</p>
+        </div>
+    </div>
+    <div class=message>
+        <div class=bubble>
+            <p>Hi</p>
+        </div>
+    </div> *@
+
+    @foreach (var item in messages){
+        <div class=message>
+            <div class=right-bubble>
+                <p>@item</p>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="send-message-bar">
+    <FluentTextField @bind-Value=value3 ></FluentTextField>
+    <FluentButton @onclick="AddMessage">Add</FluentButton>
+</div>
+
+@code {
+    string? value3;
+    public List<string> messages = new List<string>();
+
+    public void AddMessage()
+    {
+        Console.WriteLine(value3);
+        messages.Add(value3);
+        
+        foreach (var item in messages)
+        {
+            Console.WriteLine(item);
+        }
+        value3 = "";
+        StateHasChanged();
+    }
+}
