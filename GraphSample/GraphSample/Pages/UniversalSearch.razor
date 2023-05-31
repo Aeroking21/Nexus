@@ -18,23 +18,32 @@
         overflow: scroll;
         z-index: 10;
         width: 100%;
+        padding-bottom:1%;
     }
 
     .dropdown-content div {
-        width: 99%;
-        margin-top: 2%;
+        width: 98%;
+        margin-top: 1%;
+        margin-top: 1%;
+        margin-left: 1%;
         box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
         border-radius: 0.25rem;
+        height: 80px;
     }
 
     .dropdown-content div:hover {
-        box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+        box-shadow: rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
     }
 
     .dropdown-content2 {
         max-height: 100%;
         overflow: scroll;
         max-width: 100%;
+    }
+
+    a, a:hover {
+        text-decoration:none;
+        color:inherit;
     }
 
     
@@ -55,33 +64,38 @@
 
                         @foreach (var data in data_response)
                         {
-                            <div style="height:80px">
-                                @if (data.App == "Outlook")
-                                {
-                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
-                                            width="32"
-                                            height="32"
-                                            alt="Outlook" />
-                                }
-                                else if (data.App == "Teams")
-                                {
-                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
-                                            width="32"
-                                            height="32"
-                                            alt="Teams" />
-                                }
-                                else
-                                {
-                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
-                                            width="32"
-                                            height="32"
-                                            alt="OneDrive" />
-                                }
+                            <a href="@data.Url">
+                                <div>
+                                    @if (data.App == "Outlook")
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Outlook" />
+                                    }
+                                    else if (data.App == "Teams")
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Teams" />
+                                    }
+                                    else
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="OneDrive" />
+                                    }
 
-                                @data.Sender
-                                @data.Title
+                                    @data.Sender
+                                    @data.Title
 
-                            </div>
+                                </div>
+
+
+                            </a>
+                       
                         }
 
 
@@ -110,8 +124,6 @@
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     protected string searchValue = string.Empty;
-    protected string userPhoto = string.Empty;
-    bool isDropdownVisible = false;
     protected string DropDownStyle = string.Empty;
     protected bool isSearching = false;
     private FluentDialog? MyFluentDialog;
@@ -125,7 +137,7 @@
     }
 
 
-    private async void OnOpen()
+    private void OnOpen()
     {
         MyFluentDialog!.Show();
 
@@ -141,19 +153,18 @@
 
 
 
-    protected void ToggleDropdown()
+    protected void ToggleDropdown(bool visibility)
     {
-        Console.WriteLine("Dropdown toggle" + DateTime.Now.ToString("HH:mm:ss"));
-        isDropdownVisible = !isDropdownVisible;
-        if (isDropdownVisible)
+        if (visibility)
         {
             DropDownStyle = "display: block;";
+            Console.WriteLine("Dropdown ON" + DateTime.Now.ToString("HH:mm:ss"));
         }
 
         else
         {
             DropDownStyle = "display: none;";
-
+            Console.WriteLine("Dropdown OFF" + DateTime.Now.ToString("HH:mm:ss"));
         }
     }
 
@@ -185,9 +196,10 @@
     {
         searchValue = e.Value.ToString();
         data_response.Clear();
+        isSearching = false;
         if (String.IsNullOrEmpty(searchValue))
         {
-            ToggleDropdown();
+            ToggleDropdown(false);
         }
         Console.WriteLine("hi enter");
     }
@@ -202,16 +214,8 @@
             isSearching = true;
             data_response.Clear();
             await CallApiAsync(searchTerm);
-            ToggleDropdown();
+            ToggleDropdown(true);
             Console.WriteLine("Search value: " + searchTerm);
-            //bug maybe here trigger false
-            isSearching = false;
-
-        }
-
-        else
-        {
-            // make sure dropdown doesn't toggle 
         }
     }
 
@@ -309,8 +313,6 @@
 
         var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
 
-        Console.WriteLine("helooooo");
-
         // teams code
         try
         {
@@ -402,20 +404,6 @@
         // Check if size of list is empty, then add Null Author
         // Then in Razor page check for Null and render "Not find"
 
-        //var returnedResponse = await graphClient.Batch.PostAsync(batchRequestContent);
-
-        //var searchItems = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Resource?.AdditionalData;
-
-
-        //JsonElement fromMessage = (JsonElement)searchItems["from"];
-        //string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
-        //var teamsTitle = result?.Value?[0]?.HitsContainers?[0]?.Hits?[0]?.Summary;
-
-        //JsonElement lastModifiedBy = (JsonElement)searchItems["lastModifiedBy"];
-        //string oneDriveCreator = lastModifiedBy.GetProperty("user").GetProperty("displayName").GetString();
-
-
-        //data_response.Add(new Author(searchItems?["subject"].ToString(), messageName, searchItems["webLink"].ToString()));
     }
 }
 
