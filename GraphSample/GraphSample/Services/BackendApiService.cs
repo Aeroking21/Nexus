@@ -96,6 +96,16 @@ namespace GraphSample.Services
 
         }
 
+        public async Task<bool> addEmails(List<string> emails, string username, int timelineID)
+        {
+            var updatedEmails = new EmailsBson { emailAddresses = emails, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-emails/{username}", updatedEmails);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
         public async Task<bool> removeAssessment(Assessment assessment, string username, int timelineID)
         {
             var selectedAssessment = new AssessmentBson { assessment =  assessment, timelineID = timelineID};
