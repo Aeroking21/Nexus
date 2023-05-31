@@ -7,6 +7,9 @@ html, body {
     /* set background colour to this 0071c1 but transparent  */
 
     background: linear-gradient(to bottom, #3560C1, #27CACC, white)   !important;
+    /* the background sshould strech no repeat */
+    background-repeat: no-repeat !important;
+
 }
 
 

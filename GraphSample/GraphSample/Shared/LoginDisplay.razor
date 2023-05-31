@@ -92,6 +92,7 @@
                 <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
             </a>
 
+
             <a href="/overview/menu" class="navbarLink">
                 <span class="oi oi-cloud" aria-hidden="true"></span> Overview
             </a>
@@ -112,11 +113,15 @@
                 AI
             </a>
 
+            <a href="/chat" class="navbarLink">
+                <span class="oi oi-comment-square" aria-hidden="true"></span> Chat
+            </a>
+
         </div>
 
         <div class="right-content-bar">
             <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
-            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
                 <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
             </a>
             <div class="dropdown-menu dropdown-menu-end">
