@@ -16,34 +16,35 @@
 
 <style>
     .container{
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 0.7rem;
+        @* background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)); *@
+        @* border-radius: 0.7rem; *@
         position: absolute;
         left: 0;
         right: 0;
         padding-bottom: 15px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+
     }
     .grid-container {
         display: grid;
         grid-template-columns: 48% 48%;
         grid-template-rows: 300px 300px;
         gap: 20px;  
+        padding-left: 20px;
     }
 
     .grid-item {
-          background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-
-
-        @* background-color: rgba(255, 255, 255, 0.5); *@
-        @* padding: 15px; *@
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         font-size: 30px;
         text-align: center;
-        @* border-radius: 0.7rem; *@
-        @* color: rgba(0, 0, 0, 0.8); *@
         font-size: 1.1rem;
         height: 100%;
         width: 100%; 
@@ -95,6 +96,10 @@
         font-size: small;
     }
 
+    .glass-container{
+        background: none !important;
+    }
+   
     .tasks{
         display: flex;
         justify-content: space-between;
@@ -206,8 +211,9 @@
     @* -------------------------------------------------------------------- *@
 
     h1 {
-        font-size: 65px;
-        background: -webkit-linear-gradient(#005C97,#363795);
+        font-size: 55px !important;
+        background: white;
+        padding-left: 30px;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
@@ -251,7 +257,9 @@
                 
                 <div class="grid-item">
                     <h4 style="color: #0078d4">To Do</h4>
-                        <mgt-todo></mgt-todo>     
+                    <div class="glass-container">
+                        <mgt-todo></mgt-todo>
+                    </div>     
                 </div>
                 <div class="grid-item">
                     <h4 style="color: #0078d4;">What have you missed?</h4>
