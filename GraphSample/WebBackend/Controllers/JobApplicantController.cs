@@ -283,6 +283,35 @@ public class JobApplicantsController : ControllerBase
         }
     }
 
+    [Route("add-emails/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> AddEmails([FromRoute] string username, [FromBody] EmailsBson emailsBson)
+    {
+        var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
+
+        var timelineFilter = Builders<ApplicationTimeline>.Filter.Eq(at => at.timelineID, emailsBson.timelineID);
+
+        //var update = Builders<JobApplicant>.Update.PullFilter("ApplicationTimelines.$.AssociatedEmailAddresses", Builders<string>.Filter.Where(e => e == email.EmailAddress));
+        List<string> associatedEmails = new();
+        var applicant = _collection.Find(userFilter).ToList();
+        var timelines = applicant[0].applicationTimelines;
+
+        try { 
+                var filter = Builders<JobApplicant>.Filter.And(
+                Builders<JobApplicant>.Filter.Eq("username", username),
+                Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", emailsBson.timelineID)
+            );
+
+                var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.associatedEmailAddresses", emailsBson.emailAddresses);
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+                return Ok();
+            }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
 
 
