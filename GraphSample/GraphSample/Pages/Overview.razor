@@ -150,18 +150,6 @@
                                         <div class="teamName">@team?.DisplayName</div>
                                     </div>
                                 </FluentCard>
-
-                                @if (team == currentTeam)
-                                {
-                                    @foreach (var channel in myChannels)
-                                    {
-                                        <FluentCard @onclick="() => ToggleChannel(channel)">
-                                            <div class="channelSelectBox">
-                                                <div class="channelName">@channel?.DisplayName</div>
-                                            </div>
-                                        </FluentCard>
-                                    }
-                                }
                             }
                         </div>
                     </div>
@@ -169,7 +157,7 @@
                         <div class="channelSelect">
                             @foreach (var channel in myChannels)
                             {
-                                <FluentCard @onclick="() => ToggleChannel(channel)">
+                                <FluentCard @onclick="() => {ToggleChannel(channel); displayChannelData(channel); }">
                                     <div class="channelSelectBox">
                                         <div class="channelName">@channel?.DisplayName</div>
                                     </div>
@@ -179,12 +167,13 @@
                     </div>
                     <div class="teamChatBar">
                         <div class="teamChatSelect">
-                            @foreach (var convo in myConvos)
+                            
+                            @foreach (var full in fullPage)
                             {
-                                <FluentCard @onclick="() => ToggleConvo(convo)">
+                                <FluentCard>
                                     <div class="teamChatSelectBox">
-                                        <div class="teamChatName">@convo?.From?.User?.DisplayName</div>
-                                        <div class="teamChatContent">@convo?.Body?.Content</div>
+                                        <div class="teamChatName">@full?.From?.User?.DisplayName</div>
+                                        <div class="teamChatContent">@full?.Body?.Content</div>
                                     </div>
                                 </FluentCard>
                             }
@@ -758,7 +747,7 @@
 
     /*
     * NEW GROUP ADDED - UPDATE ASYNC
- */
+*/
 
     async void UpdateGroup(ChangeEventArgs args)
     {
@@ -825,14 +814,19 @@
     */
     private Message currentEmail { get; set; } = null;
     private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
+
     private Team currentTeam { get; set; } = null;
     private async void ToggleTeam(Team teamsChat) { currentTeam = (currentTeam == teamsChat) ? null: teamsChat; await getChannels(); StateHasChanged();}
+
     private Channel currentChannel { get; set; } = null;
     private async void ToggleChannel(Channel channelChat) { currentChannel = (currentChannel == channelChat) ? null : channelChat; await getConvos(); StateHasChanged(); }
+
     private ChatMessage currentConvo { get; set; } = null;
     private async void ToggleConvo(ChatMessage convo) { currentConvo = (currentConvo == convo) ? null : convo; await getTeamReplies(); StateHasChanged(); }
+
     private ChatMessage currentReply { get; set; } = null;
     private void ToggleReply(ChatMessage reply) { currentReply = (currentReply == reply) ? null : reply; }
+
     private Chat currentChat { get; set; } = null;
     private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
 
@@ -959,29 +953,10 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
 
-        if (recipients == null)
-        {
-            recipients = new List<Recipient>
-            {
-                new Recipient
-                {
-                    EmailAddress = new EmailAddress
-                    {
-                        Address = mainAddress,
-                    },
-                },
-            };
-        }
+        if (recipients == null) { recipients = new List<Recipient> { new Recipient { EmailAddress = new EmailAddress { Address = mainAddress, }, }, }; }
         else
         {
-            var mainAddressSend = new Recipient
-                {
-                    EmailAddress = new EmailAddress
-                    {
-                        Address = mainAddress,
-                    },
-                };
-
+            var mainAddressSend = new Recipient { EmailAddress = new EmailAddress {  Address = mainAddress, }, };
             recipients.Add(mainAddressSend);
         }
 
@@ -998,11 +973,41 @@
                 ToRecipients = recipients,
             },
         };
+
         await graphClient.Me.SendMail.PostAsync(requestBody);
-        Console.WriteLine("IS THIS NOT HAPPENING???");
         StateHasChanged();
 
         emailContent = String.Empty;
         emailReply = false;
     }
+
+    private IList<ChatMessage> myConvosTest = new List<ChatMessage>();
+    private IList<ChatMessage> myRepliesTest = new List<ChatMessage>();
+    private IList<ChatMessage> fullPage = new List<ChatMessage>();
+
+    public async void displayChannelData(Channel thisChannel){
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var fullPageLocal = new List<ChatMessage>();
+
+
+        var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
+        myConvosTest = convoPageTest?.Value ?? new List<ChatMessage>();
+
+
+        foreach (var conversation in myConvosTest)
+        {
+            fullPageLocal.Add(conversation);
+            var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
+            myRepliesTest = replyPageTest?.Value ?? new List<ChatMessage>();
+
+            foreach (var reply in myRepliesTest)
+            {
+                fullPageLocal.Add(reply);
+            }
+        }
+
+        fullPage = fullPageLocal;
+        StateHasChanged();
+    }
 }
+
