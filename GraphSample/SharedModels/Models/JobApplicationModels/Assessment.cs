@@ -17,5 +17,9 @@ public class Assessment
 
     //[BsonElement("CustomDescription")]
     public string? customDescription { get; set; }
+
+    public bool todoScheduled { get; set; } = false;
+
+    public string? taskId { get; set; }
 }
 
