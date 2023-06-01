@@ -1,4 +1,3 @@
-    @page "/fileupload"
     @using System.Security.Authentication
     @using System.Text
     @using Microsoft.Graph
@@ -15,41 +14,13 @@
     @inject ILogger<FileUpload> Logger
     @inject GraphSample.AI.OpenAIService OpenAIService
 
-    <style>
-        .container{
-            background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-            border-radius: 0.7rem;
-            position: absolute;
-            left: 0;
-            right: 0;
-            
-            padding-bottom: 30px;
-            padding-top: 30px;
-            padding-left: 30px;
-            padding-right: 30px;
-        }
-        .tiles-container {
-    display: flex;
-    gap: 20px;
-    }
 
-    .tile {
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
-
-    </style>
-    <div class="container">
     <AuthorizeView>
         <Authorized>
             @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" /> *@
             @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
-            <div class="tiles-container">
-    <div class="tile">
-        <h1 class="mb-3">Upload File</h1>
+
+       
         <p>
         <label>
             Upload a file of up to 500kB:
@@ -65,20 +36,17 @@
             <h3>Summary:</h3>
             <p>@summary</p>
         }
-        <button @onclick="SummarizeFile">Summarize</button>
-    </div>
-
-    <div class="tile">
+        <button class="button-custom" @onclick="SummarizeFile">Summarise</button>
+   
         <p></p>
         @if (noSummary) {
             <p>No summary to write to OneNote yet...</p>
         }
-        <button @onclick="WriteToOneNote">Write To OneNote</button>
+        <button class="button-custom" @onclick="WriteToOneNote">Write To OneNote</button>
         @if (isWriting) {
             <p>Writing to OneNote...</p>
         }
-    </div>
-    </div>
+
 
     @* 
             <h1 class="mb-3">Upload File</h1>
@@ -322,5 +290,3 @@
         }
         
     }
-
-    </div>
