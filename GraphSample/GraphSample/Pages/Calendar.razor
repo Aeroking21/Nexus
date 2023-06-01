@@ -14,10 +14,10 @@
         left: 10vh;
         right: 10vh;
         top: 10vh;
-        bottom;
-        10vh;
+        bottom 10vh;
         padding-bottom: 15px;
     }
+
 
     .row {
         margin: 20px;
@@ -71,14 +71,14 @@
         <Authorized>
             <link rel="stylesheet"
                 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-            <h1 class="mb-3">Calendar</h1>
+            <h1 style="color: white !important; font-size: 55px !important;">Calendar</h1> 
             <div class="row">
                 <div class="col-3" 
                     style="background-color: rgba(255, 255, 255, 0.3); border-radius: 10px;
                             padding: 20px;
                             backdrop-filter: blur(10px);
                             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);">
-                    <h2> Add Event </h2>
+                    <h2 style= "color: #0078d4 !important;"> Add Event </h2>
                     <AddEvent />
                 </div>
                 <div class="col-9"
@@ -90,20 +90,20 @@
 
                     @if (selectedDay.Date == DateTime.Now.Date)
                     {
-                        <h2>Events for today</h2>
+                        <h2 style="color: #0078d4 !important;">Events for today</h2>
                     }
                     else if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
                     {
-                        <h2> Events </h2>
+                        <h2 style="color: #0078d4 !important;"> Events </h2>
                     }
                     else
                     {
-                        <h2>Events for @selectedDay.Date.ToString()[0..10]</h2>
+                        <h2 style="color: #0078d4 !important;">Events for @selectedDay.Date.ToString()[0..10]</h2>
                     }
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Organizer</th>
+                                <th>Organiser</th>
                                 <th>Subject</th>
                                 <th>Start Day</th>
                                 <th>End Day </th>
@@ -143,7 +143,13 @@
                 </div>
                 <div class="row -4">
                     <div class="display-month">
-                        <h2>@MonthToText() @year</h2>
+                        <h2 style="color: #0078d4;">@MonthToText() @year</h2>
+                          <div class="d-flex justify-content-between">
+                            <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+                            <button class="btn btn-primary" @onclick="Today">Today</button>
+                            <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+
+                        </div>
 
                         <table class="calendar-table">
                             <!-- display the month and year  -->
@@ -192,12 +198,6 @@
                                 }
                             </tbody>
                         </table>
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
-                            <button class="btn btn-primary" @onclick="Today">Today</button>
-                            <button class="btn btn-primary" @onclick="NextMonth">Next</button>
-
-                        </div>
 
                     </div>
                 </div>

@@ -12,61 +12,15 @@
 @using static System.Environment
 @using Microsoft.Fast.Components.FluentUI
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-    .chatbox {
-        align-self: center;
-        width: 300px;
-        height: 400px;
-        background-color: #f1f1f16e;
-        padding: 5px;
-        justify-content: flex-end;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-        border-radius: 5px;
-    }
-
-    .message-bar {
-        background-color: #ffffff00;
-        padding: 10px;
-        width: 100%;
-        display: block;
-    }
-
-    .right-bubble{
-        background-color: #fff;
-        padding: 10px;
-        height: fit-content;
-        width: fit-content;
-        max-width: 80%;
-        float: right;
-        right: 0;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        overflow: auto;
-
-    }
-
-    .left-bubble{
-        background-color: #fff;
-        padding: 10px;
-        height: fit-content;
-        width: fit-content;
-        max-width: 80%;
-        float: left;
-        left: 0;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        overflow: auto;
-
-    }
-
-    .send-message-bar{
+   
+    .send-message-bar {
         background-color: #fff;
         padding: 10px;
         height: auto;
@@ -75,77 +29,164 @@
         flex-direction: row;
         justify-content: space-between;
     }
+
+
+    .outer {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: stretch;
+        max-width:99%;
+        max-height: 100%;
+        min-height:99%;
+        min-width:100%;
+    }
+
+    .chatbox {
+        display: flex;
+        flex-direction: column;
+        max-height: 80%;
+        min-width:99%;
+        overflow-y: scroll;
+    }
+
+    .right-bubble {
+        background-color: #DCF8C6;
+        color: black;
+        align-self: flex-end;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 10px;
+    }
+
+    .left-bubble {
+        background-color: #F2F2F2;
+        color: black;
+        align-self: flex-start;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 10px;
+    }
+
+    .typing {
+        font-style: italic;
+        color: gray;
+    }
+
+    .enter {
+        border: 2px solid #5B8899;
+        border-radius: 0.25rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .enter:hover {
+        background-color: #57D657;
+
+    }
 </style>
 
-<h1>Test</h1>
 
-    <div class=chatbox>
-        @* <div class=message>
-            <div class=bubble>
-                <p>Hi</p>
-            </div>
+<AuthorizeView>
+    <Authorized>
+
+        <div>
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+
+                <div class="outer">
+                    <div class="chatbox">
+
+                        @foreach (var key in mesReply.Keys)
+                        {
+
+                            <div class="right-bubble">
+                                @key
+                            </div>
+
+                            @if (mesReply[key].Length < 1)
+                            {
+
+                                <div class="left-bubble typing">
+                                    Typing....
+                                </div>
+
+                            }
+                            else
+                            {
+
+                                <div class="left-bubble">
+                                    @mesReply[key]
+                                </div>
+
+                            }
+
+                        }
+                    </div>
+
+
+                    <div class="send-message-bar">
+                        <FluentTextField @bind-Value=value3 @oninput="HandleInput" @onkeypress="HandleKeyPress" style="width:80%;"></FluentTextField>
+                        <span class="enter" aria-hidden="true" @onclick="AddMessage" style="width:20%;"> Enter </span>
+                   
+                    </div>
+
+                </div>
+
+            </FluentDialog>
+
+
+           <img src="img/openai-white-logomark.png" width="40" height="40" @onclick="OnOpen"/>  
+
+
         </div>
-        <div class=message>
-            <div class=bubble>
-                <p>Hi</p>
-            </div>
-        </div> *@
 
-        @foreach (var key in messages){
-            <div class=message-bar>
-                <div class=right-bubble>
-                    <p>@key</p>
-                </div>
-            </div>
-            @if (mesReply[key].Length < 1){
-                <div class=message-bar>
-                    <div class=left-bubble>
-                        <p style="color:rgb(122, 122, 122);">Typing...</p>
-                    </div>
-                </div>
-            }
-            else{
-                <div class=message>
-                    <div class=left-bubble>
-                        <p>@mesReply[key]</p>
-                    </div>
-                </div>
-            }
-            
-        }
-    </div>
+    </Authorized>
 
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
 
-<div class="send-message-bar">
-    <FluentTextField @bind-Value=value3 style="width:70%;"></FluentTextField>
-    <FluentButton @onclick="AddMessage" style="width:30%;">Add</FluentButton>
-</div>
 
 @code {
-    string? value3;
-    public List<string> messages = new List<string>();
-
-    Dictionary<string,string> mesReply = new Dictionary<string, string>();
-
-    string? reply;
-
-    private OpenAIService? openAIService;
-
-    [Inject]
-    protected IAccessTokenProvider? AccessTokenProvider { get; set; }
-    protected string? AccessToken { get; private set; }
-
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
+
     private GraphServiceClient? graphClient;
+    protected string value3 = string.Empty;
+    public List<string> messages = new List<string>();
+    private FluentDialog? MyFluentDialog;
+    public bool Modal = true;
+    Dictionary<string, string> mesReply = new Dictionary<string, string>();
+    protected string reply = string.Empty;
+    private OpenAIService? openAIService;
+
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
+
+
+    private void OnOpen()
+    {
+        MyFluentDialog!.Show();
+
+    }
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
-    {   
-        var tokenResult = await AccessTokenProvider.RequestAccessToken();
-        if (tokenResult.TryGetToken(out var accessToken))
-        {
-            AccessToken = accessToken.Value;
-        }
+    {
 
         if (authenticationStateTask == null)
         {
@@ -153,15 +194,31 @@
                 "Unable to access authentication state");
         }
 
-        //user = (await authenticationStateTask).User;
+        var user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
 
         openAIService = new OpenAIService(); // Create an instance of the 'OpenAIService'
     }
 
+    private void HandleInput(ChangeEventArgs e)
+    {
+        value3 = e.Value.ToString();
+        Console.WriteLine("hi enter");
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            // call the async function from here;
+            await AddMessage();
+            Console.WriteLine("Entered: " + value3);
+        }
+    }
+
+
     public async Task AddMessage()
     {
-        Console.WriteLine(value3);
         messages.Add(value3);
         if (!mesReply.ContainsKey(value3))
         {
