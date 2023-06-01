@@ -170,27 +170,22 @@
                             
                             @foreach (var full in fullPage)
                             {
-                                <FluentCard>
-                                    <div class="teamChatSelectBox">
+                                @if (full.ReplyToId == null)
+                                {
+                                    <FluentCard>
+                                        <div class="teamChatSelectBox">
+                                            <div class="teamChatName">@full?.From?.User?.DisplayName</div>
+                                            <div class="teamChatContent">@full?.Body?.Content</div>
+                                        </div>
+                                    </FluentCard>
+                                }
+                                else
+                                {
+                                    <div class="replySection">
                                         <div class="teamChatName">@full?.From?.User?.DisplayName</div>
                                         <div class="teamChatContent">@full?.Body?.Content</div>
                                     </div>
-                                </FluentCard>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="teamReplyBar">
-                        <div class="teamReplySelect">
-
-                            @foreach (var reply in myReplies)
-                            {
-                                <FluentCard @onclick="() => ToggleReply(reply)">
-                                    <div class="teamReplySelectBox">
-                                        <div class="teamReplyName">@reply?.From?.User?.DisplayName</div>
-                                        <div class="teamReplyContent">@reply?.Body?.Content</div>
-                                    </div>
-                                </FluentCard>
+                                }
                             }
                         </div>
                     </div>
@@ -411,7 +406,7 @@
                             }
 
                 .teamChatBar {
-                    width: 30%;
+                    width: 60%;
                     overflow-y: scroll;
                 }
                     .teamChatSelect {
@@ -439,33 +434,10 @@
                                 max-width: 90%;
                             }
 
-                .teamReplyBar {
-                    width: 30%;
-                    overflow-y: scroll;
-                }
-                    .teamReplySelect {
-                        width: 100%;
-                    }
-
-                        .teamReplySelectBox {
-                            padding: 5px;
+                        .replySection {
+                            width: 70%;
+                            align-items
                         }
-
-                            .teamReplyName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
-
-                            .teamReplyContent {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                max-width: 90%;
-                            }s
 
             /* Split page into 2 */
             /* Control the left side */
@@ -593,9 +565,9 @@
         //await getCal();
     }
 
-    /*
-    * GET MAIL EVENTS
-    */
+/*
+* GET MAIL EVENTS
+*/
 
     /* MAIL LIST */
     private IList<Message> myMessages = new List<Message>();
@@ -624,9 +596,9 @@
         myMessages = mailPage?.Value ?? new List<Message>();
     }
 
-    /*
-    * GET TEAM EVENTS
-    */
+/*
+* GET TEAM EVENTS
+*/
 
     /* TEAMS LIST */
     private IList<Team> myTeams = new List<Team>();
@@ -639,9 +611,9 @@
         myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-    /*
-    * GET CHANNEL EVENTS
-    */
+/*
+* GET CHANNEL EVENTS
+*/
 
     /* CHANNEL LIST */
     private IList<Channel> myChannels = new List<Channel>();
@@ -654,39 +626,43 @@
         myChannels = channelPage?.Value ?? new List<Channel>();
     }
 
-    /*
-    * GET CHANNEL CHAT-MESSAGES
-    */
-
-    /* CHAT-MESSAGE LIST */
+/*
+* GET ALL CHANNEL CHATS
+*/
     private IList<ChatMessage> myConvos = new List<ChatMessage>();
-
-    /* ASYNCHRONOUSLY GET MESSAGES */
-    public async Task getConvos()
-    {
-        graphClient = clientFactory.GetAuthenticatedClient();
-        var convoPage = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
-        myConvos = convoPage?.Value ?? new List<ChatMessage>();
-    }
-
-    /*
-    * GET CHANNEL CHAT-MESSAGE REPLIES
-    */
-
-    /* CHAT-MESSAGE LIST */
     private IList<ChatMessage> myReplies = new List<ChatMessage>();
+    private IList<ChatMessage> fullPage = new List<ChatMessage>();
 
-    /* ASYNCHRONOUSLY GET REPLIES */
-    public async Task getTeamReplies()
-    {
+    public async void displayChannelData(Channel thisChannel){
         graphClient = clientFactory.GetAuthenticatedClient();
-        var replyPage = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[currentConvo.Id].Replies.GetAsync();
-        myReplies = replyPage?.Value ?? new List<ChatMessage>();
+        var fullPageLocal = new List<ChatMessage>();
+
+        if (currentChannel != null)
+        {
+
+            var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
+            myConvos = convoPageTest?.Value ?? new List<ChatMessage>();
+
+            foreach (var conversation in myConvos)
+            {
+                fullPageLocal.Add(conversation);
+                var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
+                myReplies = replyPageTest?.Value ?? new List<ChatMessage>();
+
+                foreach (var reply in myReplies)
+                {
+                    fullPageLocal.Add(reply);
+                }
+            }
+        }
+
+        fullPage = fullPageLocal;
+        StateHasChanged();
     }
 
-    /*
-    * GET PERSONAL CHATS
-    */
+/*
+* GET PERSONAL CHATS
+*/
 
     /* CHAT LIST */
     private IList<Chat> myChats = new List<Chat>();
@@ -699,14 +675,14 @@
         myChats = chatPage?.Value ?? new List<Chat>();
     }
 
-    /*
-    * GET PERSONAL CHAT REPLIES
-    */
+/*
+* GET PERSONAL CHAT REPLIES
+*/
 
 
-    /*
-    * GET CALENDAR EVENTS
-    */
+/*
+* GET CALENDAR EVENTS
+*/
 
     /* EVENTS LIST */
     private IList<Event> myEvents = new List<Event>();
@@ -745,8 +721,8 @@
         myEvents = eventPage?.Value ?? new List<Event>();
     }
 
-    /*
-    * NEW GROUP ADDED - UPDATE ASYNC
+/*
+* NEW GROUP ADDED - UPDATE ASYNC
 */
 
     async void UpdateGroup(ChangeEventArgs args)
@@ -802,16 +778,16 @@
         return iso8601DateTime;
     }
 
-    /*
-    * HANDLE WHICH TAB IS BEING PRESENTED
-    */
+/*
+* HANDLE WHICH TAB IS BEING PRESENTED
+*/
     string? activeid = "Mail";
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    /*
-    * SHOW THE DETAILS OF THE CURRENT ITEM
-    */
+/*
+* SHOW THE DETAILS OF THE CURRENT ITEM
+*/
     private Message currentEmail { get; set; } = null;
     private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
 
@@ -819,21 +795,15 @@
     private async void ToggleTeam(Team teamsChat) { currentTeam = (currentTeam == teamsChat) ? null: teamsChat; await getChannels(); StateHasChanged();}
 
     private Channel currentChannel { get; set; } = null;
-    private async void ToggleChannel(Channel channelChat) { currentChannel = (currentChannel == channelChat) ? null : channelChat; await getConvos(); StateHasChanged(); }
-
-    private ChatMessage currentConvo { get; set; } = null;
-    private async void ToggleConvo(ChatMessage convo) { currentConvo = (currentConvo == convo) ? null : convo; await getTeamReplies(); StateHasChanged(); }
-
-    private ChatMessage currentReply { get; set; } = null;
-    private void ToggleReply(ChatMessage reply) { currentReply = (currentReply == reply) ? null : reply; }
+    private async void ToggleChannel(Channel channelChat) { currentChannel = (currentChannel == channelChat) ? null : channelChat; StateHasChanged(); }
 
     private Chat currentChat { get; set; } = null;
     private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
 
-    /*
-    * ALL INPUT BOXES TO CREATE GROUPS
-    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-    */
+/*
+* ALL INPUT BOXES TO CREATE GROUPS
+* GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+*/
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -918,10 +888,10 @@
         }
     }
 
-    /*
-    * CREATE LOCAL CLASS TO STORE GROUPS.
-    * ALSO SEND TO API MONGO DB
-    */
+/*
+* CREATE LOCAL CLASS TO STORE GROUPS.
+* ALSO SEND TO API MONGO DB
+*/
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -942,9 +912,9 @@
         }
     }
 
-    /*
-    * REPLY TO EMAILS
-    */
+/*
+* REPLY TO EMAILS
+*/
     string? emailContent;
     private bool emailReply { get; set; } = false;
     private void replyToEmail(bool change) { emailReply = change; }
@@ -981,35 +951,7 @@
         emailReply = false;
     }
 
-    private IList<ChatMessage> myConvosTest = new List<ChatMessage>();
-    private IList<ChatMessage> myRepliesTest = new List<ChatMessage>();
-    private IList<ChatMessage> fullPage = new List<ChatMessage>();
-
-    public async void displayChannelData(Channel thisChannel){
-        graphClient = clientFactory.GetAuthenticatedClient();
-        var fullPageLocal = new List<ChatMessage>();
-
-        if (currentChannel != null)
-        {
-            var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
-            myConvosTest = convoPageTest?.Value ?? new List<ChatMessage>();
-
-            foreach (var conversation in myConvosTest)
-            {
-                fullPageLocal.Add(conversation);
-                var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
-                myRepliesTest = replyPageTest?.Value ?? new List<ChatMessage>();
-
-                foreach (var reply in myRepliesTest)
-                {
-                    fullPageLocal.Add(reply);
-                }
-            }
-
-            fullPage = fullPageLocal;
-            StateHasChanged();
-        }
-    }
+    
 
     //public class myTeamClass
     //{

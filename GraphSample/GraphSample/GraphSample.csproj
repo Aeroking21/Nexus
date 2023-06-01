@@ -30,6 +30,7 @@
 
     <PackageReference Include="Microsoft.Graph.Beta" Version="5.32.0-preview" />
     <PackageReference Include="Open-XML-SDK" Version="2.9.1" />
+    <PackageReference Include="DocumentFormat.OpenXmlSDK" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
