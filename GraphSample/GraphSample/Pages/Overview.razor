@@ -989,23 +989,26 @@
         graphClient = clientFactory.GetAuthenticatedClient();
         var fullPageLocal = new List<ChatMessage>();
 
-        var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
-        myConvosTest = convoPageTest?.Value ?? new List<ChatMessage>();
-
-        foreach (var conversation in myConvosTest)
+        if (currentChannel != null)
         {
-            fullPageLocal.Add(conversation);
-            var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
-            myRepliesTest = replyPageTest?.Value ?? new List<ChatMessage>();
+            var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
+            myConvosTest = convoPageTest?.Value ?? new List<ChatMessage>();
 
-            foreach (var reply in myRepliesTest)
+            foreach (var conversation in myConvosTest)
             {
-                fullPageLocal.Add(reply);
-            }
-        }
+                fullPageLocal.Add(conversation);
+                var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
+                myRepliesTest = replyPageTest?.Value ?? new List<ChatMessage>();
 
-        fullPage = fullPageLocal;
-        StateHasChanged();
+                foreach (var reply in myRepliesTest)
+                {
+                    fullPageLocal.Add(reply);
+                }
+            }
+
+            fullPage = fullPageLocal;
+            StateHasChanged();
+        }
     }
 
     //public class myTeamClass
