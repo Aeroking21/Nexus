@@ -989,10 +989,8 @@
         graphClient = clientFactory.GetAuthenticatedClient();
         var fullPageLocal = new List<ChatMessage>();
 
-
         var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
         myConvosTest = convoPageTest?.Value ?? new List<ChatMessage>();
-
 
         foreach (var conversation in myConvosTest)
         {
@@ -1009,5 +1007,64 @@
         fullPage = fullPageLocal;
         StateHasChanged();
     }
+
+    //public class myTeamClass
+    //{
+    //    public Team? myTeam { get; set; }
+    //    public IList<myChannelClass>? allChannels { get; set; }
+    //}
+
+    //public class myChannelClass
+    //{
+    //    public Channel? myChannel { get; set; }
+    //    public IList<myConvosClass>? allConvos { get; set; }
+    //}
+
+    //public class myConvosClass
+    //{
+    //    public ChatMessage myConvos { get; set; }
+    //    public IList<ChatMessage>? allReplies { get; set; }
+    //}
+
+    //private IList<myTeamClass> allMyTeams = new List<myTeamClass>();
+
+    //public async Task getAllTeamsContent()
+    //{
+    //    graphClient = clientFactory.GetAuthenticatedClient();
+
+    //    var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
+    //    var myTeamPage = teamPage?.Value ?? new List<Team>();
+
+    //    List<myTeamClass>? localTeams = new List<myTeamClass>();
+
+    //    foreach (var team in myTeamPage)
+    //    {
+    //        List<myChannelClass>? localChannels = new List<myChannelClass>();
+
+    //        var channelPage = await graphClient.Teams[team.Id].Channels.GetAsync();
+    //        var myChannelsPage = channelPage?.Value ?? new List<Channel>();
+
+    //        foreach (var channel in myChannelsPage)
+    //        {
+    //            List<myConvosClass>? localConvos = new List<myConvosClass>();
+
+    //            var convoPage = await graphClient.Teams[team.Id].Channels[channel.Id].Messages.GetAsync();
+    //            var myConvosPage = convoPage?.Value ?? new List<ChatMessage>();
+
+    //            foreach (var convo in myConvosPage)
+    //            {
+    //                var replyPage = await graphClient.Teams[team.Id].Channels[channel.Id].Messages[convo.Id].Replies.GetAsync();
+    //                var myRepliesPage = replyPage?.Value ?? new List<ChatMessage>();
+
+    //                Console.WriteLine("in here????");
+
+    //                localConvos.Add(new myConvosClass { myConvos = convo, allReplies = myRepliesPage } );
+    //            }
+    //            localChannels.Add(new myChannelClass { myChannel = channel, allConvos = localConvos } );
+    //        }
+    //        localTeams.Add(new myTeamClass { myTeam = team, allChannels = localChannels });
+    //    }
+    //    allMyTeams = localTeams;
+    //}
 }
 
