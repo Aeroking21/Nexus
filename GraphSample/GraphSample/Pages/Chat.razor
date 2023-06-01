@@ -19,12 +19,12 @@
 
 <style>
     .chatbox {
+        align-self: center;
         width: 300px;
         height: 400px;
-        background-color: #f1f1f1;
+        background-color: #f1f1f16e;
         padding: 5px;
         justify-content: flex-end;
-        /* display by rows  */
         display: flex;
         flex-direction: column;
         overflow: auto;
@@ -32,12 +32,10 @@
     }
 
     .message-bar {
-        background-color: #fff;
+        background-color: #ffffff00;
         padding: 10px;
-        height: fit-content;
         width: 100%;
-        overflow: auto;
-
+        display: block;
     }
 
     .right-bubble{
@@ -93,14 +91,14 @@
             </div>
         </div> *@
 
-        @foreach (var key in mesReply.Keys){
-            <div class=message>
+        @foreach (var key in messages){
+            <div class=message-bar>
                 <div class=right-bubble>
                     <p>@key</p>
                 </div>
             </div>
             @if (mesReply[key].Length < 1){
-                <div class=message>
+                <div class=message-bar>
                     <div class=left-bubble>
                         <p style="color:rgb(122, 122, 122);">Typing...</p>
                     </div>
@@ -165,7 +163,11 @@
     {
         Console.WriteLine(value3);
         messages.Add(value3);
-        mesReply.Add(value3, "");
+        if (!mesReply.ContainsKey(value3))
+        {
+            mesReply.Add(value3, "");
+        }
+        
 
         foreach (var item in messages)
         {
@@ -174,7 +176,8 @@
         string temp = value3;
         value3 = "";
         StateHasChanged();
-        await AIAnswer(temp);
+        reply = "Hello World";
+        //await AIAnswer(temp);
         mesReply[temp] = reply;
         StateHasChanged();
 
