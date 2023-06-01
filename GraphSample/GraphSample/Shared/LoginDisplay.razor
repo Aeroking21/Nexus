@@ -5,6 +5,12 @@
 @inject SignOutSessionStateManager SignOutManager
 
 <style>
+
+    body {
+       font-family: "Segoe UI,SegoeUI,Helvetica Neue,Helvetica,Arial,sans-serif";
+       font-weight:400;
+    }
+
     .nav-profile-photo {
         width: 32px;
         height: 32px;
@@ -59,10 +65,9 @@
 
     .navbarLink {
         box-shadow: inset 0 0 0 0 #81de1d;
-        padding: 0 .25rem;
-        margin: 0 -.25rem;
-        margin-top: 0.5;
-        transition: color .3s ease-in-out, box-shadow .3s ease-in-out;
+        padding: 0.25rem;
+        margin: 0.25rem;
+        transition: box-shadow .3s ease-in-out;
         text-decoration: none !important;
         color: white;
         font-size: 1.3rem;
@@ -70,8 +75,7 @@
     }
 
     .navbarLink:hover {
-        color: #fff;
-        box-shadow: inset 200px 0 0 0 #54b3d6;
+        box-shadow: inset 250px 0 0 0 #54b3d6;
         text-decoration: none !important;
     }
 
@@ -85,22 +89,15 @@
         <div class="left-content-bar">
 
             <a href="" style="color:white; text-decoration:none;">
-                <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px"/>
+                <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" width="100px" />
             </a>
 
             <a href="/calendar" class="navbarLink">
                 <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
             </a>
 
-            <a href="/inbox" class="navbarLink">
-                <span class="oi oi-envelope-open" aria-hidden="true"></span> Inbox
-            </a>
 
-            <a href="/teams" class="navbarLink">
-                <span class="oi oi-people" aria-hidden="true"></span> Teams
-            </a>
-
-            <a href="/overview" class="navbarLink">
+            <a href="/overview/menu" class="navbarLink">
                 <span class="oi oi-cloud" aria-hidden="true"></span> Overview
             </a>
 
@@ -108,23 +105,28 @@
                 <span class="oi oi-clipboard" aria-hidden="true"></span> Application Dashboard
             </a>
 
-            <a href="/fileupload" class="navbarLink">
-                <span class="oi oi-clipboard" aria-hidden="true"></span> File Upload
-            </a>
-
             <a href="/UniversalSearch" class="navbarLink">
+                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> 
                 Search
             </a>
 
-            <a href="/AiSummarize" class="navbarLink">
-                AI
+            <a href="/SummariseFiles" class="navbarLink">
+                <span class="oi oi-File" aria-hidden="true"></span> Summarise Files
+            </a>
+
+            <a href="/chat" class="navbarLink">
+                <span class="oi oi-comment-square" aria-hidden="true"></span> Chat
+            </a>
+
+            <a href="/AiTranscript" class="navbarLink">
+                MtgsAi
             </a>
 
         </div>
 
         <div class="right-content-bar">
             <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
-            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:white;">
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
                 <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
             </a>
             <div class="dropdown-menu dropdown-menu-end">

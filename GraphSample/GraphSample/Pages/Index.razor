@@ -16,48 +16,90 @@
 
 <style>
     .container{
+        @* background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)); *@
+        @* border-radius: 0.7rem; *@
+        position: absolute;
+        left: 0;
+        right: 0;
+        padding-bottom: 15px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 
-        height: 100% !important;
-        width: 100% !important;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 1rem;
-        padding: 1px;
     }
     .grid-container {
-    
         display: grid;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: 48% 48%;
         grid-template-rows: 300px 300px;
-        height: 100%;
-        width: 100%;
-        gap: 20px;
+        gap: 20px;  
+        padding-left: 20px;
     }
 
     .grid-item {
-        @* transparent white *@
-        background-color: rgba(255, 255, 255, 0.5);
-        border: 5px solid #0078d4;
-        padding: 15px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         font-size: 30px;
         text-align: center;
-        border-radius: 1.5rem;
-        color: rgba(0, 0, 0, 0.8);
         font-size: 1.1rem;
         height: 100%;
         width: 100%; 
-        overflow-y: scroll;
+        overflow-y: auto;
         margin-bottom: 0%;
+        padding-right: 5px; 
+        position: relative;
+    }
+
+    .grid-item::-webkit-scrollbar {
+        width: 17px;
+        height: 70%;
+        background-color: transparent;
+        height: calc(100% - 34px);
+ 
+        
+    }
+
+    .grid-item::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 1.5rem;
+    }
+   
+    .grid-item::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+    .grid-container .grid-item a { 
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+        font-size: 1.5rem;
+    }
+
+    .grid-container .grid-item a:hover { 
+        color: rgb(0, 0, 0);
+        text-decoration: none; 
+    }
+
+    .grid-container .grid-item a:active { 
+        color: rgb(0, 0, 0);
+        text-decoration: none; 
     }
 
     .lists {
         border: 1px solid rgba(190, 190, 190, 0.8);
         background-color: #005C97;
         padding: 3px;
-        border-radius: 10px;
+        border-radius: 3px;
         margin-bottom: 2%;
         font-size: small;
     }
 
+    .glass-container{
+        background: none !important;
+    }
+   
     .tasks{
         display: flex;
         justify-content: space-between;
@@ -120,39 +162,13 @@
 
     }
 
-    .body{
-        font-size: 0.9rem;
-        float: left;
-        display: block;
-        border: 1px solid rgba(190, 190, 190, 0.8);
-        margin-bottom: 2%;
-        border-radius: 1rem;
-        padding: 5px;
-        width: 100%;
-    }
-
-
     .group{
         display: block;
         width: 100%;
     }
 
 
-    .grid-container .grid-item a { 
-        color: rgb(0, 0, 0);
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
 
-    .grid-container .grid-item a:hover { 
-        color: rgb(0, 0, 0);
-        text-decoration: none; 
-    }
-
-    .grid-container .grid-item a:active { 
-        color: rgb(0, 0, 0);
-        text-decoration: none; 
-    }
 
     @* -----------------------Email -------------------------------------- *@
     
@@ -195,8 +211,9 @@
     @* -------------------------------------------------------------------- *@
 
     h1 {
-        font-size: 65px;
-        background: -webkit-linear-gradient(#005C97,#363795);
+        font-size: 55px !important;
+        background: white;
+        padding-left: 30px;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
@@ -207,6 +224,7 @@
         font-size: 16px;
         line-height: 1.5;
     }
+
     @* ------------------------------------------------Teams -------------------------------------------------- *@
     .team-circle {
         width: 100px;
@@ -226,6 +244,7 @@
         grid-gap: 10px;
         padding: 10px;
     }
+
    
 </style>
 
@@ -238,7 +257,9 @@
                 
                 <div class="grid-item">
                     <h4 style="color: #0078d4">To Do</h4>
-                        <mgt-todo></mgt-todo>     
+                    <div class="glass-container">
+                        <mgt-todo></mgt-todo>
+                    </div>     
                 </div>
                 <div class="grid-item">
                     <h4 style="color: #0078d4;">What have you missed?</h4>
@@ -249,8 +270,8 @@
                             string mailId = mail.Id;
                             string url = "overview/mailid=" + mailId;
                             <a href=@url>
-                                @* @mail.WebLink *@
-                                <div class="email">
+                                @* link to the *@
+                                <div class="email" href="https://localhost:7067/overview/menu">
                                     @if (mail.Subject.Length != 0)
                                     {
                                         <h3>@mail.Subject</h3>
@@ -261,6 +282,8 @@
                                     }
                                     
                                     <h4>
+                                        @* <mgt-person person-query="@mail.Sender.EmailAddress.Name" view="oneline" person-card="hover">
+                                        </mgt-person> *@
                                         From: @mail.Sender.EmailAddress.Name
                                     </h4>
                                     <div class="preview">
@@ -271,13 +294,12 @@
                         }
                     }
                 </div>
-                <div class="grid-item">
+                <div class="grid-item" href="https://localhost:7067/calendar">
                     <h4 style="color: #0078d4;">Today</h4>
                     <mgt-agenda></mgt-agenda>
                 </div>  
-                <div class="grid-item">
+                <div class="grid-item" href="https://localhost:7067/overview/menu">
                     <h4 style="color:#0078d4;">Teams</h4>
-                    <mgt-teams-channel-picker></mgt-teams-channel-picker>
                     <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                         <template>
                             <div class="grid-container-v2">
@@ -289,7 +311,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </template>x
+                        </template>
                     </mgt-get>
                 </div>
             </div>

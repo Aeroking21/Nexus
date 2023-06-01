@@ -1,10 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using SharedModels.Models
 
+
+
 <div>
     <EditForm Model="_form" OnValidSubmit="SubmitForm">
         <label for="date">Date</label>
-        <InputDate @bind-Value="_form.date" />
+        <InputDate Type="InputDateType.DateTimeLocal"
+                   @bind-Value="_form.date" />
 
         <label for="type">Type</label>
         <div>
@@ -15,7 +18,7 @@
                     <option value="@option">@option</option>
                 }
             </select>
-            <input type="text" @bind="_form.customDescription" placeholder="Enter custom type" />
+            <input type="text" @bind="_form.customDescription" placeholder="Enter custom type" disabled="@(_form.type != AssessmentType.Custom)" />
         </div>
 
         <label for="status">Status</label>
@@ -37,11 +40,20 @@
 @code {
     public Assessment _form = new();
 
-    [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
+        [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
 
-    protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter the assessment details");
+        protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter the assessment details");
 
-    private async Task SubmitForm() => await BlazoredAssessmentModal.CloseAsync(ModalResult.Ok(_form));
-    private async Task Cancel() => await BlazoredAssessmentModal.CancelAsync();
+        private async Task SubmitForm()
+        {
+            Console.WriteLine("Confrimed");
+            _form.date = _form.date.AddHours(1);
+            await BlazoredAssessmentModal.CloseAsync(ModalResult.Ok(_form));
+        }
+
+        private async Task Cancel() {
+            Console.WriteLine("Cancelled");
+            await BlazoredAssessmentModal.CancelAsync();
+            }
     }
 

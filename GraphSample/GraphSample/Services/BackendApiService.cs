@@ -96,6 +96,16 @@ namespace GraphSample.Services
 
         }
 
+        public async Task<bool> addEmails(List<string> emails, string username, int timelineID)
+        {
+            var updatedEmails = new EmailsBson { emailAddresses = emails, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-emails/{username}", updatedEmails);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
         public async Task<bool> removeAssessment(Assessment assessment, string username, int timelineID)
         {
             var selectedAssessment = new AssessmentBson { assessment =  assessment, timelineID = timelineID};
@@ -121,6 +131,23 @@ namespace GraphSample.Services
             var  newAssessment = new AssessmentBson { assessment = assessment, timelineID =  timelineID};
 
             var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessment-status/{username}/{newStatus}", newAssessment);
+
+            return response.IsSuccessStatusCode;
+        }
+
+
+        public async Task<bool> updateAssessmentTodo(Assessment assessment, string username, int timelineID, bool newTodoStatus)
+        {
+            var newAssessment = new AssessmentBson { assessment = assessment, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessment-todo/{username}/{newTodoStatus}", newAssessment);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> updateAlertLevel(int timelineID, string username, int newLevel)
+        {
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/update-alert-level/{username}/{timelineID}/{newLevel}");
 
             return response.IsSuccessStatusCode;
         }

@@ -24,7 +24,7 @@ public class ApplicationTimeline
 
     public bool hasUnreadEmails { get; set; }
 
-    public Dictionary<string, bool> readEmails {get; set;}
+    public int alertLevel { get; set; }
 
 }
 
