@@ -73,6 +73,18 @@
         color: gray;
     }
 
+    .enter {
+        border: 2px solid #5B8899;
+        border-radius: 0.25rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .enter:hover {
+        background-color: #57D657;
+
+    }
 </style>
 
 
@@ -114,8 +126,9 @@
 
 
                     <div class="send-message-bar">
-                        <FluentTextField @bind-Value=value3 style="width:70%;"></FluentTextField>
-                        <FluentButton @onclick="AddMessage" style="width:30%;">Add</FluentButton>
+                        <FluentTextField @bind-Value=value3 @oninput="HandleInput" @onkeypress="HandleKeyPress" style="width:80%;"></FluentTextField>
+                        <span class="enter" aria-hidden="true" @onclick="AddMessage" style="width:20%;"> Enter </span>
+                   
                     </div>
 
                 </div>
@@ -123,7 +136,7 @@
             </FluentDialog>
 
 
-           <img src="img/openai-white-logomark.png" width="50" height="50" @onclick="OnOpen"/>  
+           <img src="img/openai-white-logomark.png" width="40" height="40" @onclick="OnOpen"/>  
 
 
         </div>
@@ -137,24 +150,19 @@
 
 
 @code {
-    string? value3;
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+
+    private GraphServiceClient? graphClient;
+    protected string value3 = string.Empty;
     public List<string> messages = new List<string>();
     private FluentDialog? MyFluentDialog;
     public bool Modal = true;
-
     Dictionary<string, string> mesReply = new Dictionary<string, string>();
-
-    string? reply;
-
+    protected string reply = string.Empty;
     private OpenAIService? openAIService;
 
-    [Inject]
-    protected IAccessTokenProvider? AccessTokenProvider { get; set; }
-    protected string? AccessToken { get; private set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationStateTask { get; set; }
-    private GraphServiceClient? graphClient;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -179,11 +187,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var tokenResult = await AccessTokenProvider.RequestAccessToken();
-        if (tokenResult.TryGetToken(out var accessToken))
-        {
-            AccessToken = accessToken.Value;
-        }
 
         if (authenticationStateTask == null)
         {
@@ -191,15 +194,31 @@
                 "Unable to access authentication state");
         }
 
-        //user = (await authenticationStateTask).User;
+        var user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
 
         openAIService = new OpenAIService(); // Create an instance of the 'OpenAIService'
     }
 
+    private void HandleInput(ChangeEventArgs e)
+    {
+        value3 = e.Value.ToString();
+        Console.WriteLine("hi enter");
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            // call the async function from here;
+            await AddMessage();
+            Console.WriteLine("Entered: " + value3);
+        }
+    }
+
+
     public async Task AddMessage()
     {
-        Console.WriteLine(value3);
         messages.Add(value3);
         mesReply.Add(value3, "");
 
