@@ -31,6 +31,15 @@
         justify-content: space-between;
     }
 
+    .button-message-bar {
+        background-color: #fff;
+        padding: 10px;
+        height: auto;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+    }
+
 
     .outer {
         display: flex;
@@ -125,9 +134,9 @@
                         }
                     </div>
 
-                    <div class="send-message-bar">
-                        <FluentButton @onclick=TodoPressed style="border-radius:5px; background-color: #6200ff; color:white;"> Create To Do</FluentButton>
-                        <FluentButton @onclick=WeatherPressed style="border-radius:5px; background-color: #6200ff; color:white;"> Today's Weather </FluentButton>
+                    <div class="button-message-bar">
+                        <FluentButton @onclick=TodoPressed style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;"> Create To Do</FluentButton>
+                        <FluentButton @onclick=WeatherPressed style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;"> Today's Weather </FluentButton>
                     </div>
 
                     <div class="send-message-bar">
