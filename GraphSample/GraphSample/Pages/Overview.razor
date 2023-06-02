@@ -105,7 +105,7 @@
                                                 <p class="subject">@mail?.Subject</p>
                                                 <p class="content">@mail?.Body?.Content</p>
                                             </div>
-                                            <div class="timing">3:30</div>
+                                            <div class="timing">@mail?.ReceivedDateTime</div>
                                         </div>
                                     </FluentCard>
                                 }
@@ -169,26 +169,38 @@
                         </div>
                         <div class="teamChatBar">
                             <div class="teamChatSelect">
-
-                                @foreach (var full in fullPage)
-                                {
-                                    @if (full.ReplyToId == null)
-                                    {
-                                        <FluentCard>
-                                            <div class="teamChatSelectBox">
-                                                <div class="teamChatName">@full?.From?.User?.DisplayName</div>
-                                                <div class="teamChatContent">@full?.Body?.Content</div>
-                                            </div>
-                                        </FluentCard>
-                                    }
-                                    else
-                                    {
-                                        <div class="replySection">
-                                            <div class="teamChatName">@full?.From?.User?.DisplayName</div>
-                                            <div class="teamChatContent">@full?.Body?.Content</div>
+                                <div class="teamsMessageBlock">
+                                    <ul class="nestedMessages">
+                                        @foreach (var full in fullPage)
+                                        {
+                                            <li class="teamMessageBlock">
+                                                <div class="teamChatInital">
+                                                    <div class="teamChatName">@full?.mainMessage?.From?.User?.DisplayName</div>
+                                                    <div>@full?.mainMessage?.CreatedDateTime</div>
+                                                    <div class="teamChatContent">@full?.mainMessage?.Body?.Content</div>
+                                                    <button>Reply</button>
+                                                </div>
+                                                <ul>
+                                                    @foreach (var reply in full?.replies)
+                                                    {
+                                                        <li>
+                                                            <div class="teamReplySection">
+                                                                <div class="teamChatName">@reply?.From?.User?.DisplayName</div>
+                                                                <div>@reply?.CreatedDateTime</div>
+                                                                <div class="teamChatContent">@reply?.Body?.Content</div>
+                                                            </div>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </li>
+                                        }
+                                        <div hidden="@(!newChannelMessageBool)">
+                                            <FluentTextArea @bind-Value=newChannelMessageContent></FluentTextArea>
+                                            <button @onclick="() => newChannelMessage(newChannelMessageContent)">New Chat</button>
                                         </div>
-                                    }
-                                }
+                                    </ul>
+                                    <button @onclick="() => sendChannelMessage(true)">New Message</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -251,6 +263,13 @@
             </FluentTabs>
 
         <style>
+            /*
+             *Generic
+             */
+            ul {
+                list-style-type: none;
+            }
+
             /*
              * Group settings
              */
@@ -367,7 +386,7 @@
                         width: 100%;
                     }
 
-                        .teamsSelectBox {
+                        .teamChatIntial {
                             width: 100%;
                             padding: 5px;
                         }
@@ -408,14 +427,17 @@
                 .teamChatBar {
                     width: 60%;
                     overflow-y: scroll;
+                    display: flex;
+                    flex-direction: column-reverse;
                 }
                     .teamChatSelect {
                         width: 100%;
                     }
 
-                        .teamChatSelectBox {
+                        .teamChatInital {
                             width: 100%;
                             padding: 5px;
+                            padding-top: 20px;
                         }
 
                             .teamChatName {
@@ -434,7 +456,7 @@
                                 max-width: 90%;
                             }
 
-                        .replySection {
+                        .teamReplySection {
                             width: 70%;
                             align-items
                         }
@@ -631,34 +653,36 @@
     /*
     * GET ALL CHANNEL CHATS
     */
+    public class messageBlock
+    {
+        public ChatMessage? mainMessage { get; set; }
+        public IList<ChatMessage>? replies { get; set; }
+    }
+
+    private IList<messageBlock> fullPage = new List<messageBlock>();
     private IList<ChatMessage> myConvos = new List<ChatMessage>();
     private IList<ChatMessage> myReplies = new List<ChatMessage>();
-    private IList<ChatMessage> fullPage = new List<ChatMessage>();
 
     public async void displayChannelData(Channel thisChannel)
     {
         graphClient = clientFactory.GetAuthenticatedClient();
-        var fullPageLocal = new List<ChatMessage>();
+        var fullPageLocal = new List<messageBlock>();
 
         if (currentChannel != null)
         {
-
             var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
             myConvos = convoPageTest?.Value ?? new List<ChatMessage>();
 
             foreach (var conversation in myConvos)
             {
-                fullPageLocal.Add(conversation);
                 var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
                 myReplies = replyPageTest?.Value ?? new List<ChatMessage>();
 
-                foreach (var reply in myReplies)
-                {
-                    fullPageLocal.Add(reply);
-                }
+                fullPageLocal.Add(new messageBlock { mainMessage = conversation, replies = myReplies });
             }
         }
 
+        fullPageLocal.Reverse();
         fullPage = fullPageLocal;
         StateHasChanged();
     }
@@ -954,6 +978,30 @@
         emailReply = false;
     }
 
+    /*
+    * Create new channel message
+    */
+    string? newChannelMessageContent;
+    private bool newChannelMessageBool { get; set; } = false;
+    private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
+
+    public async void newChannelMessage(string content)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new ChatMessage
+            {
+                Body = new ItemBody
+                {
+                    Content = content,
+                },
+            };
+        var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.PostAsync(requestBody);
+
+        StateHasChanged();
+        newChannelMessageContent = String.Empty;
+        newChannelMessageBool = false;
+
+    }
 
 
     //public class myTeamClass
