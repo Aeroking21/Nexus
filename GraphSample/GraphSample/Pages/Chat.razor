@@ -51,8 +51,8 @@
     }
 
     .right-bubble {
-        background-color: #DCF8C6;
-        color: black;
+        background-color: #006AFF;
+        color: rgb(255, 255, 255);
         align-self: flex-end;
         padding: 10px;
         margin: 5px;
@@ -74,16 +74,16 @@
     }
 
     .enter {
-        border: 2px solid #5B8899;
-        border-radius: 0.25rem;
+        border: 2px solid #939393;
+        border-radius: 2px;
         display: flex;
         justify-content: center;
         align-items: center;
     }
 
     .enter:hover {
-        background-color: #57D657;
-
+        background-color: #006AFF;
+        color: #fff;
     }
 </style>
 
@@ -97,7 +97,7 @@
                 <div class="outer">
                     <div class="chatbox">
 
-                        @foreach (var key in mesReply.Keys)
+                        @foreach (var key in messages)
                         {
 
                             <div class="right-bubble">
@@ -110,11 +110,9 @@
                                 <div class="left-bubble typing">
                                     Typing....
                                 </div>
-
                             }
                             else
                             {
-
                                 <div class="left-bubble">
                                     @mesReply[key]
                                 </div>
@@ -124,10 +122,13 @@
                         }
                     </div>
 
+                    <div class="send-message-bar">
+                        <FluentButton @onclick=TodoPressed style="border-radius:5px; background-color: #6200ff; color:white;"> Create To Do</FluentButton>
+                    </div>
 
                     <div class="send-message-bar">
                         <FluentTextField @bind-Value=value3 @oninput="HandleInput" @onkeypress="HandleKeyPress" style="width:80%;"></FluentTextField>
-                        <span class="enter" aria-hidden="true" @onclick="AddMessage" style="width:20%;"> Enter </span>
+                        <span class="enter" aria-hidden="true" @onclick="AddMessage" style="width:20%; border-radius:5px;"> Enter </span>
                    
                     </div>
 
@@ -161,7 +162,18 @@
     Dictionary<string, string> mesReply = new Dictionary<string, string>();
     protected string reply = string.Empty;
     private OpenAIService? openAIService;
+    public bool creating = false;
+    private string[]? todolist;
+    private string? todoStart;
+    private string todoTasks;
 
+    Dictionary<string,string> TaskDict = new Dictionary<string, string>();
+
+    public bool Todo = false;
+
+    private string selectedList = "Tasks";
+
+    private IList<TodoTaskList> toDos = new List<TodoTaskList>();
 
 
     protected override void OnAfterRender(bool firstRender)
@@ -198,6 +210,20 @@
         graphClient = clientFactory.GetAuthenticatedClient();
 
         openAIService = new OpenAIService(); // Create an instance of the 'OpenAIService'
+
+        var getLists = await graphClient.Me.Todo.Lists.GetAsync();
+        toDos = getLists?.Value ?? new List<TodoTaskList>();
+
+        foreach(var item in toDos)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+            if (item.DisplayName == "Tasks"){
+                selectedList = item.Id;
+            }
+        }
     }
 
     private void HandleInput(ChangeEventArgs e)
@@ -220,20 +246,98 @@
     public async Task AddMessage()
     {
         messages.Add(value3);
-        mesReply.Add(value3, "");
-
-        foreach (var item in messages)
+        if (!mesReply.ContainsKey(value3))
         {
-            Console.WriteLine(item);
+            mesReply.Add(value3, "");
         }
+        
         string temp = value3;
         value3 = "";
         StateHasChanged();
-        await AIAnswer(temp);
+        //reply = "Hello World";
+        if (Todo){
+            await ConvertTasks(temp);
+            reply = "Your To Do List has been created";
+            Todo = false;
+        }
+        else{
+            await AIAnswer(temp);
+        }
         mesReply[temp] = reply;
         StateHasChanged();
 
     }
+
+    public async Task TodoPressed()
+    {
+        messages.Add("Create To Do List");
+        StateHasChanged();
+        mesReply["Create To Do List"] = "Enter your plans for the day";
+        Todo = true;
+        StateHasChanged();
+    }
+
+    private async Task ConvertTasks(string textValue)
+    {
+        creating = true;
+        //string completion = "+10:00 - 11:00> Reply to emails +11:00 - 12:00> Schedule a meeting +12:00 - 12:30> Grab morning coffee +12:30 - 13:30> Meet colleague at cafe for lunch +19:00 - 20:00> Meet friend for dinner"; *@
+        string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
+        //Console.Write($"Input: {prompt}\n");
+
+        var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
+        var completion = completionsResponse.Value.Choices[0].Text;
+        //string completion = "+06:00 > Grab morning coffee +08:00 > Reply to emails +12:00 > Meet colleague at cafe for lunch +18:00 > Meet friend for dinner +20:00 > Schedule meeting with someone in Toronto";
+        Console.WriteLine(completion);
+        todolist = completion.Split("\n");
+        //todolist = completion.Split("+");
+
+        foreach (string todo in todolist)
+        {
+            if (todo.Length > 2)
+            {
+                todoStart = todo.Split(">")[0].Split("+")[1];
+                //todoStart = todo.Split(">")[0];
+                todoTasks = todo.Split(">")[1];
+
+                TaskDict[todoStart] = todoTasks;
+                await SendToDo(todoTasks, todoStart);
+            }
+        }  
+        creating = false;
+        
+    }
+
+    private async Task SendToDo(string todoTasks, string todoStart){
+        Console.WriteLine(todoStart);
+        Console.WriteLine("Sending");
+        DateTime now = DateTime.UtcNow.Date; // Get the current date in UTC
+
+        // Split the time string into hours and minutes
+        string[] timeParts = todoStart.Split(':');
+        int hours = int.Parse(timeParts[0]);
+        int minutes = int.Parse(timeParts[1]);
+
+        // Create a new DateTime object with the current date and the specified time
+        DateTime startTime = now.AddHours(hours).AddMinutes(minutes);
+
+        DateTimeTimeZone dateTimeTimeZone = new DateTimeTimeZone
+        {
+            DateTime = startTime.ToString("yyyy-MM-ddTHH:mm:ss"),
+            TimeZone = TimeZoneInfo.Local.Id
+        };
+
+        var requestBody = new TodoTask
+        {
+            Title = todoTasks,
+            ReminderDateTime = dateTimeTimeZone,
+        };
+
+        var todoTask = await graphClient.Me.Todo.Lists[selectedList].Tasks
+            .PostAsync(requestBody);
+        Console.WriteLine("Sent");
+
+    }
+
 
 
     private async Task AIAnswer(string prompt)

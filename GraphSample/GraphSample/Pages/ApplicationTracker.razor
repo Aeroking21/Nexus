@@ -49,15 +49,15 @@
                                 @foreach (var timeline in timelines)
                                 {
                                     <tr height="2.5em">
-                                        <td width="35%">
+                                        <td width="40%">
                                             <div calss="flex-container">
                                                 @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
                                                 {
-                                                    <button class="show-emails-button-highlighted" @onclick="() => emailsShowing = false">Hide emails</button>
+                                                    <button class="show-emails-button-highlighted" @onclick="() => emailsShowing = false">Hide Emails</button>
                                                 }
                                                 else
                                                 {
-                                                    <button class="show-emails-button" @onclick="() => ShowEmails(timeline)">Show emails</button>
+                                                    <button class="show-emails-button" @onclick="() => ShowEmails(timeline)">Show Emails</button>
                                                 }
                                                 <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
                                                 @if (timeline.hasUnreadEmails)
@@ -76,12 +76,12 @@
                                                 }
                                             </div>
                                         </td>
-                                        <td width="30%">
+                                        <td width="27%">
                                             <div class="company-content">
                                                 <p>@timeline.company</p>
                                             </div>
                                         </td>
-                                        <td width="35%"><div class="role-content">@timeline.role</div></td>
+                                        <td width="33%"><div class="role-content">@timeline.role</div></td>
                                     </tr>
                                 }
                             </tbody>
@@ -100,24 +100,45 @@
                                                 <tr height="5em">
                                                     <td width="85%">
                                                         <div class="associated-emails-content">
-                                                            <button class="add-email-button" @onclick="() => { ShowAddEmailModal(timeline.timelineID); }">
-                                                                Add email Address
-                                                            </button>
-                                                            <button class="add-email-button" @onclick="() => { HandleEmailAutofill(timeline); }">
-                                                                Autofill Email Addressess
-                                                            </button>
-                                                            @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
+                                                            @if (expandActions && (expandedActionsTimeline == timeline.timelineID))
                                                             {
-                                                                <button class="show-emails-button-highlighted" @onclick="() => {expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
+                                                                <button class="show-email-addresses-highlighted" @onclick="() => { expandActions = expandedActionsTimeline == timeline.timelineID ? (!expandActions) : true; expandedActionsTimeline = timeline.timelineID;}">
                                                                     @*<FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
-                                                                    <span style="display: inline-block; vertical-align: middle;">hide email addresses</span>
+                                                                    <span style="display: inline-block; vertical-align: middle;">Actions</span>
                                                                 </button>
                                                             }
                                                             else
                                                             {
-                                                                <button class="show-emails-button" @onclick="() => {expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
+                                                                <button class="show-email-addresses" @onclick="() => { expandAssociatedEmails = false; expandActions = expandedActionsTimeline == timeline.timelineID ? (!expandActions) : true; expandedActionsTimeline = timeline.timelineID;}">
                                                                     @*<FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
-                                                                    <span style="display: inline-block; vertical-align: middle;">show email addresses</span>
+                                                                    <span style="display: inline-block; vertical-align: middle;">Actions</span>
+                                                                </button>
+                                                            }
+                                                            @if (expandActions && (expandedActionsTimeline == timeline.timelineID))
+                                                            {
+                                                                <div class="actions-container">
+                                                                    <button class="action-item" @onclick="() => { ShowAddEmailModal(timeline.timelineID); }">
+                                                                        Add Email Address
+                                                                    </button>
+                                                                    <button class="action-item" @onclick="() => { HandleEmailAutofill(timeline); }">
+                                                                        Autofill Email Addressess
+                                                                    </button>
+                                                                </div>
+                                                            }
+
+
+                                                            @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
+                                                            {
+                                                                <button class="show-email-addresses-highlighted" @onclick="() => {expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
+                                                                    @*<FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
+                                                                    <span style="display: inline-block; vertical-align: middle;">Hide Email Addresses</span>
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <button class="show-email-addresses" @onclick="() => { expandActions = false; expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
+                                                                    @*<FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
+                                                                    <span style="display: inline-block; vertical-align: middle;">Show Email Addresses</span>
                                                                 </button>
                                                             }
                                                             @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
@@ -125,7 +146,7 @@
                                                                 <div class="email-list-container">
                                                                     @if (timeline.associatedEmailAddresses.Count() == 0)
                                                                     {
-                                                                        <div class="email-item">
+                                                                        <div class="email-item-test">
                                                                             <span>None</span>
                                                                         </div>
                                                                     }
@@ -402,7 +423,7 @@
     }
 
     .right-emails-div {
-        width: 80%;
+        width: 100%;
         border: 2px solid #d3d3d3;
         border-radius: 3px;
     }
@@ -427,11 +448,22 @@
     .email-list-container {
         position: absolute;
         z-index: 2;
-        background-color: #ffffff;
         box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
         padding: 8px;
         margin-top: 8px;
         border: 1px solid #ccc;
+        background-color: buttonface;
+        border-radius: 5px;
+    }
+
+    .actions-container {
+        position: absolute;
+        z-index: 2;
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        padding: 4px;
+        margin-top: 4px;
+        border: 1px solid #ccc;
+        background-color: buttonface;
         border-radius: 5px;
     }
 
@@ -448,21 +480,29 @@
         background-color: #dddddd;
     }
 
-    .email-item {
+    .action-item {
         display: flex;
         align-items: center;
         border: 1px solid;
         border-color: #d3d3d3;
         border-radius: 5px;
-        background-color: #f0f0f0;
+        background-color: #D3D3D3;
         margin-bottom: 4px;
         position: relative;
         justify-content: space-between;
+        width: 100%;
     }
+
+        .action-item:hover {
+            background-color: #C0C0C0;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+        }
+
+
     .email-item-test {
         border: 1px solid #d3d3d3;
         border-radius: 5px;
-        background-color: #f0f0f0;
+        background-color: #D3D3D3;
         margin-bottom: 4px;
         padding: 4px 8px;
         overflow: hidden;
@@ -501,7 +541,7 @@
 
     .fixed-height-row-button {
         padding: 2px 4px;
-        font-size: 12px;
+        font-size: 14px;
         height: 35px;
         width: 100%;
     }
@@ -521,19 +561,39 @@
             border-color: #0a58ca;
         }
 
-    .show-emails-button {
-        padding: 2px 6px;
+    .show-email-addresses {
+        padding: 2px 3px;
         color: black;
-        font-size: 12px;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        width: 85%;
+    }
+
+    .show-email-addresses-highlighted {
+        padding: 2px 3px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #999;
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        background-color: #d3d3d3;
+        width: 85%;
+    }
+
+    .show-emails-button {
+        padding: 2px 3px;
+        color: black;
+        font-size: 14px;
         border-radius: 5px;
         border: 1px solid #ccc;
         width: 85%;
     }
 
     .show-emails-button-highlighted {
-        padding: 2px 6px;
+        padding: 2px 3px;
         color: black;
-        font-size: 12px;
+        font-size: 14px;
         border-radius: 5px;
         border: 1px solid #999;
         box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
@@ -667,6 +727,9 @@
 
     private bool expandAssociatedEmails = false;
     private int expandedEmailsTimeline = -1;
+
+    private bool expandActions = false;
+    private int expandedActionsTimeline = -1;
 
     private IList<Message> allMessages = new List<Message>();
     public HashSet<string> allSenders;
@@ -944,14 +1007,17 @@
             newLevel = (timelines[index].alertLevel + 1) % 2;
             timelines[index].alertLevel = newLevel;
             StateHasChanged();
+            HandleSortCriterionChange();
+            StateHasChanged();
 
             var response = await backendApiService.updateAlertLevel(timeline.timelineID, Username, newLevel);
             var newTimeline = await backendApiService.getUserTimelineAsync(Username, timeline.timelineID);
 
             if (newTimeline != null)
             {
+                int newIndex = timelines.FindIndex(tl => tl.timelineID == timeline.timelineID);
                 newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
-                timelines[index] = newTimeline;
+                timelines[newIndex] = newTimeline;
                 HandleSortCriterionChange();
                 //StateHasChanged();
             }
@@ -1118,6 +1184,7 @@
                     }
                 }
             }
+            expandActions = false;
             expandAssociatedEmails = true;
             expandedEmailsTimeline = timeline.timelineID;
             StateHasChanged();
@@ -1168,7 +1235,22 @@
             if (newEmail != "")
             {
                 int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
-                timelines[index].associatedEmailAddresses.Add(newEmail);
+
+                if (!timelines[index].associatedEmailAddresses.Contains(newEmail))
+                {
+                    timelines[index].associatedEmailAddresses.Add(newEmail);
+                }
+                else
+                {
+                    expandActions = false;
+                    expandAssociatedEmails = true;
+                    expandedEmailsTimeline = timelineID;
+                    StateHasChanged();
+                    return;
+
+                }
+
+                expandActions = false;
                 expandAssociatedEmails = true;
                 expandedEmailsTimeline = timelineID;
                 StateHasChanged();
