@@ -1,0 +1,38 @@
+@page "/weather"
+
+@using Newtonsoft.Json;
+
+<h1>Weather</h1>
+
+<p>@weatherData</p>
+
+@code {
+    private string weatherData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient client = new HttpClient();
+
+        var response = await client.GetAsync("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/London?key=SWMLUUAV7UHPW5NZ6ZQQNK2G6");
+
+        response.EnsureSuccessStatusCode(); // Throw an exception if error
+
+        weatherData = await response.Content.ReadAsStringAsync();
+
+        dynamic weather = JsonConvert.DeserializeObject(weatherData);
+
+        // Loop through every "day" in the JSON and print a few details
+        foreach(var day in weather.days)
+        {
+            string weather_date = day.datetime;
+            string weather_desc = day.description;
+            string weather_tmax = day.tempmax;
+            string weather_tmin = day.tempmin;
+
+            Console.WriteLine(" Forecast for date: " + weather_date);
+            Console.WriteLine(" General conditions: " +  weather_desc);
+            Console.WriteLine(" The high temperature will be " +   weather_tmax);
+            Console.WriteLine(" The low temperature will be: " +   weather_tmin);
+        }
+    }
+}
