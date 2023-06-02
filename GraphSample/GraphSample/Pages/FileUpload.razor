@@ -163,11 +163,12 @@
 
         // Combine the individual summaries into an overall summary
         overallSummary = string.Join(" ", summaries);
-        summaries.Clear();
 
         //Break the loop if the overall summary exceeds 2500 characters
         if (overallSummary.Length >= 2500)
         {
+            summaries.Clear(); // Bug fix to prevent summaries from being wiped when 500<length<2500
+
             string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
             Console.Write($"Input: {prompt}\n");
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
@@ -183,6 +184,8 @@
         //Break the loop if the overall summary exceeds 2500 characters
         else if (overallSummary.Length <= 500)
         {
+            summaries.Clear(); // Bug fix to prevent summaries from being wiped when 500<length<2500
+
             string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
             Console.Write($"Input: {prompt}\n");
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
@@ -198,7 +201,11 @@
 
 
 
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
         summary = overallSummary;
+        Console.WriteLine("Generated AI summary");
+        Console.WriteLine(summary);
 
         isSummarizing = false; // Set the flag to indicate that summarization is complete
     }
