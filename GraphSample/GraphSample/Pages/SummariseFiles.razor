@@ -17,63 +17,32 @@
 @inject GraphSample.AI.OpenAIService OpenAIService
 
 <style>
-    .container{
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        position: absolute;
-        height: 100vh;
-        right: 0;
-        left: 0;
-        
-    }
-
-    .tile {
-        background-color: rgba(255, 255, 255, 0.3) !important;
-        border-radius: 10px !important;
-        padding: 20px !important;
-        backdrop-filter: blur(10px) !important;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2) !important;
-       @* put this in the centre of the screen *@
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        width: 85% !important;
-        height: 85% !important;
-      
-
-    }
-
-    .button-custom{
-        background-color: #0078D4 !important;
-        color: white !important;
-        border-radius: 5px !important;
-        border: none !important;
-        padding: 10px !important;
-        font-size: 16px !important;
-        cursor: pointer !important;
-        display: flex;
-        gap: 10px;
-    }
+    
 
 </style>
-<div class="container">
+
+
 <AuthorizeView>
+
     <Authorized>
-        <div class="tile">
-             <h1 style="color: white!important; font-size: 55px !important;">Upload File</h1>
-            <FileUpload> </FileUpload>
-                <div class="mt-3">
-                <Summarize></Summarize>
-                </div>
+  
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                SmartScribe
+            </button>
+            <ul class="dropdown-menu">
+                <li class="dropdown-item" > <InputFile/> </li>
+                <li class="dropdown-item"> OneDrive </li>
+                
+            </ul>
         </div>
+
     </Authorized>
+
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
+
 </AuthorizeView>
 
-</div>
+

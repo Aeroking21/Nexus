@@ -19,7 +19,7 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-   
+
     .send-message-bar {
         background-color: #fff;
         padding: 10px;
@@ -51,12 +51,12 @@
     }
 
     .right-bubble {
-        background-color: #006AFF;
+        background-color: #1982fc;
         color: rgb(255, 255, 255);
         align-self: flex-end;
         padding: 10px;
         margin: 5px;
-        border-radius: 10px;
+        border-radius: 12px;
     }
 
     .left-bubble {
@@ -65,7 +65,7 @@
         align-self: flex-start;
         padding: 10px;
         margin: 5px;
-        border-radius: 10px;
+        border-radius: 12px;
     }
 
     .typing {
@@ -85,6 +85,29 @@
         background-color: #006AFF;
         color: #fff;
     }
+
+    .logo-container {
+        background-color: #00A67E;
+        width: 50px;
+        height: 50px;
+        border-radius: 25%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .logo-container:hover {
+        transform: scale(1.2);
+    }
+
+    .logo-image {
+        width: 28px;
+        height: 28px;
+    }
+
+
+
 </style>
 
 
@@ -136,8 +159,9 @@
 
             </FluentDialog>
 
-
-           <img src="img/openai-white-logomark.png" width="40" height="40" @onclick="OnOpen"/>  
+            <div class="logo-container" @onclick="OnOpen">
+                <img src="img/openai-white-logomark.png" class="logo-image" />
+            </div>
 
 
         </div>
@@ -345,7 +369,6 @@
         //string agenda = "Wake up, make my bed and eat breakfast";
         //string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
         Console.Write($"Input: {prompt}\n");
-        Console.WriteLine(prompt);
 
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
         var completion = completionsResponse.Value.Choices[0].Text;
