@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="7.0.5" />
     <PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.3.0" />
     <PackageReference Include="Microsoft.Graph" Version="5.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
     <PackageReference Include="Blazored.Modal" Version="7.1.0" />
 
