@@ -14,6 +14,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Newtonsoft.Json;
 
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
@@ -28,6 +29,15 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+    }
+
+    .button-message-bar {
+        background-color: #fff;
+        padding: 10px;
+        height: auto;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
     }
 
 
@@ -56,7 +66,8 @@
         align-self: flex-end;
         padding: 10px;
         margin: 5px;
-        border-radius: 12px;
+        border-radius: 10px;
+        max-width: 70%;
     }
 
     .left-bubble {
@@ -65,7 +76,9 @@
         align-self: flex-start;
         padding: 10px;
         margin: 5px;
-        border-radius: 12px;
+        border-radius: 10px;
+        max-width: 70%;
+
     }
 
     .typing {
@@ -145,8 +158,9 @@
                         }
                     </div>
 
-                    <div class="send-message-bar">
-                        <FluentButton @onclick=TodoPressed style="border-radius:5px; background-color: #6200ff; color:white;"> Create To Do</FluentButton>
+                    <div class="button-message-bar">
+                        <FluentButton @onclick=TodoPressed style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;"> Create To Do</FluentButton>
+                        <FluentButton @onclick=WeatherPressed style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;"> Today's Weather </FluentButton>
                     </div>
 
                     <div class="send-message-bar">
@@ -195,9 +209,17 @@
 
     public bool Todo = false;
 
+    public bool Weather = false;
+
+
     private string selectedList = "Tasks";
 
     private IList<TodoTaskList> toDos = new List<TodoTaskList>();
+
+    private string weatherData;
+
+    public string weatherReply;
+    
 
 
     protected override void OnAfterRender(bool firstRender)
@@ -279,10 +301,17 @@
         value3 = "";
         StateHasChanged();
         //reply = "Hello World";
+        //Console.Write("Entered: " + temp);
         if (Todo){
+            Console.Write("Entered: " + temp);
             await ConvertTasks(temp);
             reply = "Your To Do List has been created";
             Todo = false;
+        }
+        else if (Weather){
+            await GetWeather(temp);
+            reply = weatherReply;
+            Weather = false;
         }
         else{
             await AIAnswer(temp);
@@ -301,12 +330,23 @@
         StateHasChanged();
     }
 
+    public async Task WeatherPressed()
+    {
+        messages.Add("What is today's weather?");
+        StateHasChanged();
+        mesReply["What is today's weather?"] = "Enter your location";
+        Weather = true;
+        StateHasChanged();
+    }
+
     private async Task ConvertTasks(string textValue)
     {
-        creating = true;
+        creating = true;    
+        Console.WriteLine("Entered: " + textValue);
+        textValue = textValue + " |||";
         //string completion = "+10:00 - 11:00> Reply to emails +11:00 - 12:00> Schedule a meeting +12:00 - 12:30> Grab morning coffee +12:30 - 13:30> Meet colleague at cafe for lunch +19:00 - 20:00> Meet friend for dinner"; *@
-        string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
-        //Console.Write($"Input: {prompt}\n");
+        string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise, the plans list ends with '|||' : \n {textValue}";
+        Console.Write($"Input: {prompt}\n");
 
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
         var completion = completionsResponse.Value.Choices[0].Text;
@@ -317,7 +357,7 @@
 
         foreach (string todo in todolist)
         {
-            if (todo.Length > 2)
+            if (todo.Contains("+") && todo.Contains(">"))
             {
                 todoStart = todo.Split(">")[0].Split("+")[1];
                 //todoStart = todo.Split(">")[0];
@@ -330,6 +370,42 @@
         creating = false;
         
     }
+
+    private string FarenheitToCelsius(string temp)
+    {
+        double tempF = double.Parse(temp);
+
+        double tempC = (tempF - 32) * 5 / 9; 
+
+        return tempC.ToString("F2");
+    }
+
+    private async Task GetWeather(string location){
+        HttpClient client = new HttpClient();
+
+        var response = await client.GetAsync("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"+ location +"?key=SWMLUUAV7UHPW5NZ6ZQQNK2G6");
+
+        response.EnsureSuccessStatusCode(); // Throw an exception if error
+
+        weatherData = await response.Content.ReadAsStringAsync();
+
+        dynamic weather = JsonConvert.DeserializeObject(weatherData);
+
+
+        string weather_date = weather.days[0].datetime;
+        string weather_desc = weather.days[0].description;
+        string weather_tmaxF = weather.days[0].tempmax;
+        string weather_tmaxC = FarenheitToCelsius(weather_tmaxF);
+        string weather_tminF = weather.days[0].tempmin;
+        string weather_tminC = FarenheitToCelsius(weather_tminF);
+
+
+        weatherReply = "The date is " + weather_date + " \nGeneral conditions: " +  weather_desc + "\nThe high temperature will be " +  weather_tmaxC + " ºC\nThe low temperature will be: " +  weather_tminC + " ºC" ;
+
+
+       //weatherReply = "General conditions: " +  weather_desc + "\nThe high temperature will be " +  weather_tmax + "\nThe low temperature will be: " +  weather_tmin ;
+    }
+
 
     private async Task SendToDo(string todoTasks, string todoStart){
         Console.WriteLine(todoStart);
@@ -364,10 +440,14 @@
 
 
 
-    private async Task AIAnswer(string prompt)
+    private async Task AIAnswer(string input)
     {
+        //Given this question respond in a chatgpt like manner and don't take up a real human persona:
         //string agenda = "Wake up, make my bed and eat breakfast";
         //string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
+
+        string prompt = "Given this question respond in a ChatGPT like manner and don't take up a real human persona:" + input;
+        
         Console.Write($"Input: {prompt}\n");
 
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
