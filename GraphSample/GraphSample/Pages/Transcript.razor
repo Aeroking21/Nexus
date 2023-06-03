@@ -20,13 +20,16 @@
     <Authorized>
 
         <div>
-            <h3> Transcript Ai </h3>
+            <h3> Transcript.Ai </h3>
         </div>
 
+        <button class="btn btn-primary" type="button" aria-expanded="false" @onclick="testing">
+            Magic
+        </button>
 
     </Authorized>
 
-    <NotAuthorized>
+    <NotAuthorized> 
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
@@ -37,9 +40,9 @@
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
     private GraphServiceClient? graphClient;
 
-    protected override async Task OnInitializedAsync()
-    {
 
+    protected async Task testing()
+    {
         if (authenticationStateTask == null)
         {
             throw new AuthenticationException(
@@ -49,12 +52,28 @@
         var user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
 
-        var result = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+
+        var me = await graphClient.Me.GetAsync();
+
+        var user1 = await graphClient.Me.Events.GetAsync((requestConfiguration) =>
         {
-            requestConfiguration.QueryParameters.Filter = "joinMeetingIdSettings/joinMeetingId eq '1234567890'";
+            requestConfiguration.QueryParameters.Select = new string[] { "subject", "organizer", "attendees", "isOnlineMeeting", "onlineMeeting" };
         });
 
+        var meetingLink = user1?.Value?[0].OnlineMeeting?.JoinUrl;
+        var originalString = "joinMeetingIdSettings/joinMeetingId eq '1234'";
+        string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
 
-        Console.WriteLine(result);
+        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.Filter = modifiedLink;
+        });
+
+        //https://graph.microsoft.com/beta/me/onlineMeetings?$filter=joinWebUrl eq 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_YTAxYjU2OTgtMzlmNy00Y2VhLTlhNDMtZmUzYWEzNmQzMzE5%40thread.v2/0?context=%7b%22Tid%22%3a%2290928426-9cee-454b-808b-acb4a34437de%22%2c%22Oid%22%3a%229e0e9478-c521-46f0-99fe-e6e5a4def94b%22%7d'
+
+        //var result2 = await graphClient.Users[me.Id].OnlineMeetings[user1?.Value?[0].Id].Transcripts.GetAsync();
+
+        //Console.WriteLine(result2);
+
     }
 }
