@@ -1,4 +1,5 @@
-﻿@page "/onedrive"
+@page "/SummariseFiles"
+
 @using System.Security.Authentication
 @using System.IO;
 @using GrapeCity.Documents.Pdf;
@@ -11,10 +12,12 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
 
+
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject ILogger<FileUpload> Logger
+@inject GraphSample.AI.OpenAIService OpenAIService
+
 <style>
-    h3 {
-        color: blue;
-    }
 
     .dropdown-content {
         max-height: 100%;
@@ -22,19 +25,35 @@
         max-width: 99%;
     }
 
-    .button-custom {
-        background-color: #0078D4 !important;
-        color: white !important;
-        border-radius: 5px !important;
-        border: none !important;
-        padding: 10px !important;
-        font-size: 16px !important;
-        cursor: pointer !important;
+    .textbox {
+        margin: 10vw;
+        min-height: 50vh;
+        min-width: 50vw;
+        max-height: 50vh;
+        max-width: 50vw;
+        background-color: ghostwhite;
+        color: black;
+        overflow: scroll;
+        border-radius: 0.25rem;
     }
+
 </style>
 
+
 <AuthorizeView>
+
     <Authorized>
+
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                SmartScribe
+            </button>
+            <ul class="dropdown-menu">
+                <li class="dropdown-item"> <InputFile OnChange="@LoadFile" /> </li>
+                <li class="dropdown-item" @onclick="OnOpen"> Upload from OneDrive </li>
+
+            </ul>
+        </div>
 
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
@@ -51,13 +70,50 @@
             </FluentDialog>
         </div>
 
-        <button class="button-custom" Appearance=Appearance.Accent @onclick="OnOpen">Open dialog</button>
+        <button class="btn btn-success" @onclick="SummarizeFile"> Summarize </button>
+        <button class="btn btn-warning" @onclick="WriteToOneNote"> Write To OneNote </button>
+
+        @if (isLoading)
+        {
+            <p>Uploading...</p>
+        }
+
+        else if (isSummarizing)
+        {
+            <p>Summarizing...</p>
+            <FluentProgressRing></FluentProgressRing>
+        }
+
+        <div class="textbox">
+
+            @if (!string.IsNullOrEmpty(summary))
+            {
+                <h3>Summary:</h3>
+                <p>@summary</p>
+            }
+
+            @if (noSummary)
+            {
+                <p>No summary to write to OneNote yet...</p>
+            }
+
+
+            @if (isWriting)
+            {
+                <p>Writing to OneNote...</p>
+            }
+
+        </div>
+
+
+
 
     </Authorized>
 
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
+
 </AuthorizeView>
 
 @code{
@@ -65,6 +121,8 @@
     //ToDo:
     //    1.  Return tuple instead for PDF/DOC/ppt to refactor
     //    2. Apply error handling to GetContent so folders not clicked
+    //    3. Clean up the AI function too bulky
+    //    4. OneNote button (Angus)
 
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
@@ -73,8 +131,19 @@
     private GraphServiceClient? graphClient;
     private List<DriveItem> data_response = new List<DriveItem>();
     protected const string path = "/me/drive/items/";
-    protected string driveId = string.Empty;
-    private string summary = string.Empty;
+    protected string driveId = "";
+    protected string itemId = "";
+    protected string summary = "";
+    protected bool uploadMethod = true; // true for file upload, false for M365
+
+    //File Upload variables
+    private List<IBrowserFile> loadedFile = new();
+    private long maxFileSize = 1024 * 100000;
+    private int maxAllowedFiles = 1;
+    private bool isLoading;
+    private bool isSummarizing;
+    private bool isWriting;
+    private bool noSummary;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -90,6 +159,7 @@
     private async void OnOpen()
     {
         MyFluentDialog!.Show();
+        uploadMethod = false;
         await listFiles();
 
     }
@@ -102,38 +172,89 @@
         }
     }
 
-    // apply error handling
-    protected async void GetContent(string args)
+    // Loading files
+    private void LoadFile(InputFileChangeEventArgs e)
     {
-        if (authenticationStateTask == null)
+        isLoading = true;
+        loadedFile.Clear();
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
-            throw new AuthenticationException(
-                "Unable to access authentication state");
+            loadedFile.Add(file);
+        }
+        isLoading = false;
+    }
+
+
+    // apply error handling to not click on folders
+    // Can do regex to check if path is folder
+    protected void GetContent(string path)
+    {
+
+        Console.WriteLine("Clicked on: " + path);
+        itemId = path;
+        MyFluentDialog!.Hide();
+
+    }
+
+    // Extracts all the text from file
+    private async Task<string> ExtractAllTextAsync(IBrowserFile file)
+    {
+        using var memoryStream = new MemoryStream();
+        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+        var document = new GcPdfDocument();
+        document.Load(memoryStream);
+        var text = document.GetText();
+        return text;
+    }
+
+    private async Task SummarizeFile()
+    {
+
+        var content = "";
+        isSummarizing = true; // Set the flag to indicate that summarization is in progress
+
+        if (uploadMethod)
+        {
+            if (loadedFile.Count == 0) return;
+
+            // Read the content of the file
+            var file = loadedFile[0];
+            content = await ExtractAllTextAsync(file);
+
+            Console.WriteLine("Extracted text");
         }
 
-        // Get the user
-        var user = (await authenticationStateTask).User;
+        else
+        {
+            if (authenticationStateTask == null)
+            {
+                throw new AuthenticationException(
+                    "Unable to access authentication state");
+            }
 
-        graphClient = clientFactory.GetAuthenticatedClient();
+            var user = (await authenticationStateTask).User;
+            var contentStream = await graphClient.Drives[driveId].Items[itemId].Content.GetAsync();
+            content = ExtractTextFromStream(contentStream);
 
-        Console.WriteLine("Clicked on: " + args);
+            Console.WriteLine("Got text response");
+        }
 
-        var contentStream = await graphClient.Drives[driveId].Items[args].Content.GetAsync();
+        await SummarizeText(content);
 
-        var textResponse = ExtractTextFromStream(contentStream);
-        Console.WriteLine("Got text response");
-        var content2 = await SummarizeText(textResponse);
+        isSummarizing = false;
+        Console.WriteLine(summary);
     }
 
 
     // Event handler for the "Summarize" button click
-    protected async Task<string> SummarizeText(string content)
+    protected async Task SummarizeText(string content)
     {
 
         // Perform summarization until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
-
+        Console.WriteLine("Inside ai" + content);
 
         // Split the content into smaller chunks
         var chunkSize = 750; // Adjust this value as per your model's character limit
@@ -142,60 +263,63 @@
         // Perform summarization for each chunk
         foreach (var chunk in chunks)
         {
-            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
-            Console.Write($"Input: {prompt}\n");
+            string prompt = $"Summarize the following slides in a professional and business like manner and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
+            //Console.Write($"Input: {prompt}\n");
 
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
-            Console.Write($"Completion: {completion}\n");
+            //Console.Write($"Completion: {completion}\n");
             summaries.Add(completion);
             string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-            Console.Write($"Completion: {completionFinish}\n");
+            //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
         }
 
         // Combine the individual summaries into an overall summary
         overallSummary = string.Join(" ", summaries);
-        summaries.Clear();
-
+       
         //Break the loop if the overall summary exceeds 2500 characters
         if (overallSummary.Length >= 2500)
         {
+            summaries.Clear();
+
             string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
-            Console.Write($"Input: {prompt}\n");
+            //Console.Write($"Input: {prompt}\n");
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
-            Console.Write($"Completion: {completion}");
+            //Console.Write($"Completion: {completion}");
             summaries.Add(completion);
             string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-            Console.Write($"Completion: {completionFinish}\n");
+            //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
         }
 
         //Break the loop if the overall summary exceeds 2500 characters
         else if (overallSummary.Length <= 500)
         {
+            summaries.Clear();
+
             string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
-            Console.Write($"Input: {prompt}\n");
+            //Console.Write($"Input: {prompt}\n");
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
-            Console.Write($"Completion: {completion}");
+            //Console.Write($"Completion: {completion}");
             summaries.Add(completion);
             string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-            Console.Write($"Completion: {completionFinish}\n");
+            //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
         }
 
         overallSummary = string.Join(" ", summaries);
         summaries.Clear();
         summary = overallSummary;
-        return summary;
+        Console.WriteLine("Generated AI summary");
 
     }
 
@@ -351,7 +475,6 @@
 
         graphClient = clientFactory.GetAuthenticatedClient();
 
-
         var driveItem = await graphClient.Me.Drive.GetAsync();
         driveId = driveItem.Id;
 
@@ -363,7 +486,56 @@
         // The type of files is Microsoft.Graph.Models.DriveItem
     }
 
+    private async Task WriteToOneNote()
+    {
+        summary = "Hello World";
+        if (summary == null)
+        {
+            noSummary = true;
+            return;
+        }
+        isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
+        var user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new Notebook
+        {
+            //set the displayName to the name of the uploaded file witha unique ID
+            DisplayName = $"{loadedFile[0].Name} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
+        };
+        var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
+
+        // Get the ID of the newly created notebook
+        var notebookId = result.Id;
+        // create a new section in the notebook
+        var section = new OnenoteSection
+        {
+            DisplayName = "Summarized Notes"
+
+        };
+        var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
+        // Get the ID of the newly created section
+        var sectionId = sectionResult.Id;
+
+        // Create the title of the page
+        string pageTitle = $"Summary of {loadedFile[0].Name}";
+
+        // Create the HTML body content
+        string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
+
+        // Convert the HTML string to a byte array using UTF-8 encoding
+        byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
+        // create a new page in the section
+        var page = new OnenotePage
+        {
+            Title = "Summary",
+            Content = contentBytes
+        };
+        var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
+
+
+        isWriting = false; // Set the flag to indicate that writing to OneNote is complete
+    }
+
+
 
 }
-
-
