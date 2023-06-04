@@ -1,4 +1,4 @@
-@page "/weather"
+@* @page "/weather"
 
 @using Newtonsoft.Json;
 
@@ -33,6 +33,54 @@
             Console.WriteLine(" General conditions: " +  weather_desc);
             Console.WriteLine(" The high temperature will be " +   weather_tmax);
             Console.WriteLine(" The low temperature will be: " +   weather_tmin);
+        }
+    }
+} *@
+
+
+
+@page "/weather"
+
+@using Newtonsoft.Json;
+@using System.Collections.Generic;
+
+@inject IJSRuntime JSRuntime
+
+<h1>Weather</h1>
+
+<canvas id="weatherChart" width="400" height="200"></canvas>
+
+@code {
+    private List<string> dates = new List<string>();
+    private List<double> tmax = new List<double>();
+    private List<double> tmin = new List<double>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient client = new HttpClient();
+
+        var response = await client.GetAsync("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/London?key=SWMLUUAV7UHPW5NZ6ZQQNK2G6");
+
+        response.EnsureSuccessStatusCode(); // Throw an exception if error
+
+        var weatherData = await response.Content.ReadAsStringAsync();
+
+        dynamic weather = JsonConvert.DeserializeObject(weatherData);
+
+        // Loop through every "day" in the JSON and extract temperature data
+        foreach (var day in weather.days)
+        {
+            dates.Add(day.datetime.ToString());
+            tmax.Add(day.tempmax.ToString());
+            tmin.Add(day.tempmin.ToString());
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("createWeatherChart", dates, tmax, tmin);
         }
     }
 }
