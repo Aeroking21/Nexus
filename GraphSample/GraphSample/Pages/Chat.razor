@@ -1,5 +1,3 @@
-@page "/chat"
-
 @using System.Security.Authentication
 @using System.Text
 @using Microsoft.Graph
@@ -94,15 +92,15 @@
         align-items: center;
     }
 
-        .enter:hover {
-            background-color: #32CD32;
-            color: #fff;
-        }
+    .enter:hover {
+        background-color: #32CD32;
+        color: #fff;
+    }
 
     .logo-container {
-        background-color: #00A67E;
-        width: 50px;
-        height: 50px;
+        background-color: #0078d4;
+        width: 80px;
+        height: 80px;
         border-radius: 25%;
         display: flex;
         justify-content: center;
@@ -115,13 +113,15 @@
     }
 
     .logo-image {
-        width: 28px;
-        height: 28px;
+        width: 50px;
+        height: 50px;
     }
 
 
 
 </style>
+
+<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css">
 
 
 <AuthorizeView>
@@ -161,6 +161,7 @@
                     <div class="button-message-bar">
                         <FluentButton @onclick=TodoPressed style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;"> Create To Do</FluentButton>
                         <FluentButton @onclick=WeatherPressed style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;"> Today's Weather </FluentButton>
+                        <FluentButton style="border-radius:5px; background-color: #6200ff; color:white; margin-right: 10px;">Schedule Meeting </FluentButton>
                     </div>
 
                     <div class="send-message-bar">
@@ -174,7 +175,9 @@
             </FluentDialog>
 
             <div class="logo-container" @onclick="OnOpen">
-                <img src="img/openai-white-logomark.png" class="logo-image" />
+                @* use a chat icon here *@
+                <i class="ms-Icon ms-Icon--Chat" style="font-size: 50px; color: white;"></i>
+                @* <img src="img/openai-white-logomark.png" class="logo-image" /> *@
             </div>
 
 
