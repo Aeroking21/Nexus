@@ -1,326 +1,263 @@
-    @page "/fileupload"
-    @using System.Security.Authentication
-    @using System.Text
-    @using Microsoft.Graph
-    @using Microsoft.Graph.Models
-    @using TimeZoneConverter
-    @using Microsoft.Extensions.Logging
-    @using GrapeCity.Documents.Pdf
-    @using Azure
-    @using Azure.AI.OpenAI
-    @using static System.Environment
+@page "/fileupload"
+@using System.Security.Authentication
+@using System.Text
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using TimeZoneConverter
+@using Microsoft.Extensions.Logging
+@using GrapeCity.Documents.Pdf
+@using Azure
+@using Azure.AI.OpenAI
+@using static System.Environment
 
 
-    @inject GraphSample.Graph.GraphClientFactory clientFactory
-    @inject ILogger<FileUpload> Logger
-    @inject GraphSample.AI.OpenAIService OpenAIService
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject ILogger<FileUpload> Logger
+@inject GraphSample.AI.OpenAIService OpenAIService
 
-    <style>
-        .container{
-            background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-            border-radius: 0.7rem;
-            position: absolute;
-            left: 0;
-            right: 0;
-            
-            padding-bottom: 30px;
-            padding-top: 30px;
-            padding-left: 30px;
-            padding-right: 30px;
-        }
-        .tiles-container {
-    display: flex;
-    gap: 20px;
-    }
 
-    .tile {
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
-
-    </style>
-    <div class="container">
-    <AuthorizeView>
-        <Authorized>
-            @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" /> *@
-            @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
-            <div class="tiles-container">
-    <div class="tile">
-        <h1 class="mb-3">Upload File</h1>
+<AuthorizeView>
+    <Authorized>
         <p>
-        <label>
-            Upload a file of up to 500kB:
-            <InputFile OnChange="@LoadFile" />
-        </label>
+            <label>
+                Upload a file of up to 500kB:
+                <InputFile OnChange="@LoadFile" />
+            </label>
         </p>
-        @if (isLoading) {
+        @if (isLoading)
+        {
             <p>Uploading...</p>
-        } else if (isSummarizing) {
+        }
+        else if (isSummarizing)
+        {
             <p>Summarizing...</p>
             <FluentProgressRing></FluentProgressRing>
-        } else if (!string.IsNullOrEmpty(summary)) {
+        }
+        else if (!string.IsNullOrEmpty(summary))
+        {
             <h3>Summary:</h3>
             <p>@summary</p>
         }
-        <button @onclick="SummarizeFile">Summarize</button>
-    </div>
+        <button class="button-custom" @onclick="SummarizeFile">Summarise</button>
 
-    <div class="tile">
         <p></p>
-        @if (noSummary) {
+        @if (noSummary)
+        {
             <p>No summary to write to OneNote yet...</p>
         }
-        <button @onclick="WriteToOneNote">Write To OneNote</button>
-        @if (isWriting) {
+        <button class="button-custom" @onclick="WriteToOneNote">Write To OneNote</button>
+        @if (isWriting)
+        {
             <p>Writing to OneNote...</p>
         }
-    </div>
-    </div>
 
-    @* 
-            <h1 class="mb-3">Upload File</h1>
 
-            <p>
-                <label>
-                    Upload a file of up to 500kB:
-                    <InputFile OnChange="@LoadFile" />
-                </label>
-            </p>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
 
-            @if (isLoading)
-            {
-                <p>Uploading...</p>
-            }
-            else if (isSummarizing)
-            {
-                <p>Summarizing...</p>
-            }
-            else if (!string.IsNullOrEmpty(summary))
-            {
-                <h3>Summary:</h3>
-                <p>@summary</p>
-            }
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    private GraphServiceClient? graphClient;
+    private List<IBrowserFile> loadedFile = new();
+    private long maxFileSize = 1024 * 100000;
+    private int maxAllowedFiles = 1;
+    private bool isLoading;
+    private bool isSummarizing;
+    private bool isWriting;
+    private bool noSummary;
+    private string summary;
 
-            <button @onclick="SummarizeFile">Summarize</button>
+    // Event handler for file upload
+    private void LoadFile(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+        loadedFile.Clear();
 
-            <p></p>
-
-            @if (noSummary)
-            {
-                <p>No summary to write to OneNote yet...</p>
-            }
-
-            <button @onclick="WriteToOneNote">Write To OneNote</button>
-
-            @if (isWriting)
-            {
-                <p>Writing to OneNote...</p>
-            } *@
-
-        </Authorized>
-        <NotAuthorized>
-            <RedirectToLogin />
-        </NotAuthorized>
-    </AuthorizeView>
-
-    @code {
-        [CascadingParameter]
-        private Task<AuthenticationState>? authenticationStateTask { get; set; }
-        private GraphServiceClient? graphClient;
-        private List<IBrowserFile> loadedFile = new();
-        private long maxFileSize = 1024 * 100000;
-        private int maxAllowedFiles = 1;
-        private bool isLoading;
-        private bool isSummarizing;
-        private bool isWriting;
-        private bool noSummary;
-        private string summary;
-
-        // Event handler for file upload
-        private void LoadFile(InputFileChangeEventArgs e)
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
-            isLoading = true;
-            loadedFile.Clear();
-
-            foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
-            {
-                loadedFile.Add(file);
-            }
-            isLoading = false;
+            loadedFile.Add(file);
         }
-
-        // Helper method to split the content into smaller chunks
-        private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
-        {
-            var sentences = content.Split('.', '!', '?');
-            var currentChunk = new StringBuilder();
-
-            foreach (var sentence in sentences)
-            {
-                if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
-                {
-                    currentChunk.Append(sentence).Append('.');
-                }
-                else
-                {
-                    yield return currentChunk.ToString();
-                    currentChunk.Clear().Append(sentence).Append('.');
-                }
-            }
-
-            if (currentChunk.Length > 0)
-            {
-                yield return currentChunk.ToString();
-            }
-        }
-
-
-        private async Task<string> ExtractAllTextAsync(IBrowserFile file)
-        {
-            using var memoryStream = new MemoryStream();
-            await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
-            var document = new GcPdfDocument();
-            document.Load(memoryStream);
-            var text = document.GetText();
-            return text;
-        }
-
-        // Event handler for the "Summarize" button click
-        private async Task SummarizeFile()
-        {
-            if (loadedFile.Count == 0)
-            {
-                return;
-            }
-            isSummarizing = true; // Set the flag to indicate that summarization is in progress
-
-            // Read the content of the file
-            var file = loadedFile[0];
-            //var stream = file.OpenReadStream(maxFileSize);
-            //var reader = new StreamReader(stream);
-            var content = await ExtractAllTextAsync(file);
-
-            // Perform summarization until the overall summary is less than 3000 characters
-            var summaries = new List<string>();
-            var overallSummary = "";
-
-
-            // Split the content into smaller chunks
-            var chunkSize = 750; // Adjust this value as per your model's character limit
-            var chunks = SplitContentIntoChunks(content, chunkSize);
-
-            // Perform summarization for each chunk
-            foreach (var chunk in chunks)
-            {
-                string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
-                Console.Write($"Input: {prompt}\n");
-
-                var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-                var completion = completionsResponse.Value.Choices[0].Text;
-                Console.Write($"Completion: {completion}\n");
-                summaries.Add(completion);
-                string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
-                var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-                var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-                Console.Write($"Completion: {completionFinish}\n");
-                summaries.Add(completionFinish);
-            }
-
-            // Combine the individual summaries into an overall summary
-            overallSummary = string.Join(" ", summaries);
-            summaries.Clear();
-
-            //Break the loop if the overall summary exceeds 2500 characters
-            if (overallSummary.Length >= 2500)
-            {
-                string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
-                Console.Write($"Input: {prompt}\n");
-                var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-                var completion = completionsResponse.Value.Choices[0].Text;
-                Console.Write($"Completion: {completion}");
-                summaries.Add(completion);
-                string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
-                var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-                var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-                Console.Write($"Completion: {completionFinish}\n");
-                summaries.Add(completionFinish);
-            }
-            //Break the loop if the overall summary exceeds 2500 characters
-            else if (overallSummary.Length <= 500)
-            {
-                string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
-                Console.Write($"Input: {prompt}\n");
-                var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-                var completion = completionsResponse.Value.Choices[0].Text;
-                Console.Write($"Completion: {completion}");
-                summaries.Add(completion);
-                string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
-                var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-                var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-                Console.Write($"Completion: {completionFinish}\n");
-                summaries.Add(completionFinish);
-            }
-
-
-
-            summary = overallSummary;
-
-            isSummarizing = false; // Set the flag to indicate that summarization is complete
-        }
-
-        private async Task WriteToOneNote()
-        {
-            summary = "Hello World";
-            if (summary == null)
-            {
-                noSummary = true;
-                return;
-            }
-            isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
-            var user = (await authenticationStateTask).User;
-            graphClient = clientFactory.GetAuthenticatedClient();
-            var requestBody = new Notebook
-                {
-                    //set the displayName to the name of the uploaded file witha unique ID
-                    DisplayName = $"{loadedFile[0].Name} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
-                };
-            var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
-
-            // Get the ID of the newly created notebook
-            var notebookId = result.Id;
-            // create a new section in the notebook
-            var section = new OnenoteSection
-            {
-                DisplayName = "Summarized Notes"
-
-            };
-            var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
-            // Get the ID of the newly created section
-            var sectionId = sectionResult.Id;
-
-            // Create the title of the page
-            string pageTitle = $"Summary of {loadedFile[0].Name}";
-
-            // Create the HTML body content
-            string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
-
-            // Convert the HTML string to a byte array using UTF-8 encoding
-            byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
-            // create a new page in the section
-            var page = new OnenotePage
-            {
-                Title = "Summary",
-                Content = contentBytes
-            };
-            var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
-
-
-            isWriting = false; // Set the flag to indicate that writing to OneNote is complete
-        }
-        
+        isLoading = false;
     }
 
-    </div>
+    // Helper method to split the content into smaller chunks
+    private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
+    {
+        var sentences = content.Split('.', '!', '?');
+        var currentChunk = new StringBuilder();
+
+        foreach (var sentence in sentences)
+        {
+            if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
+            {
+                currentChunk.Append(sentence).Append('.');
+            }
+            else
+            {
+                yield return currentChunk.ToString();
+                currentChunk.Clear().Append(sentence).Append('.');
+            }
+        }
+
+        if (currentChunk.Length > 0)
+        {
+            yield return currentChunk.ToString();
+        }
+    }
+
+
+    private async Task<string> ExtractAllTextAsync(IBrowserFile file)
+    {
+        using var memoryStream = new MemoryStream();
+        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+        var document = new GcPdfDocument();
+        document.Load(memoryStream);
+        var text = document.GetText();
+        return text;
+    }
+
+    // Event handler for the "Summarize" button click
+    private async Task SummarizeFile()
+    {
+        if (loadedFile.Count == 0)
+        {
+            return;
+        }
+        isSummarizing = true; // Set the flag to indicate that summarization is in progress
+
+        // Read the content of the file
+        var file = loadedFile[0];
+        //var stream = file.OpenReadStream(maxFileSize);
+        //var reader = new StreamReader(stream);
+        var content = await ExtractAllTextAsync(file);
+
+        // Perform summarization until the overall summary is less than 3000 characters
+        var summaries = new List<string>();
+        var overallSummary = "";
+
+
+        // Split the content into smaller chunks
+        var chunkSize = 750; // Adjust this value as per your model's character limit
+        var chunks = SplitContentIntoChunks(content, chunkSize);
+
+        // Perform summarization for each chunk
+        foreach (var chunk in chunks)
+        {
+            string prompt = $"Summarize the following slides in a scientific and engineering way and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
+            Console.Write($"Input: {prompt}\n");
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}\n");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+        // Combine the individual summaries into an overall summary
+        overallSummary = string.Join(" ", summaries);
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        if (overallSummary.Length >= 2500)
+        {
+            summaries.Clear(); // Bug fix to prevent summaries from being wiped when 500<length<2500
+
+            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+        //Break the loop if the overall summary exceeds 2500 characters
+        else if (overallSummary.Length <= 500)
+        {
+            summaries.Clear(); // Bug fix to prevent summaries from being wiped when 500<length<2500
+
+            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            Console.Write($"Input: {prompt}\n");
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+            Console.Write($"Completion: {completion}");
+            summaries.Add(completion);
+            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish);
+        }
+
+
+
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+        summary = overallSummary;
+        Console.WriteLine("Generated AI summary");
+        Console.WriteLine(summary);
+
+        isSummarizing = false; // Set the flag to indicate that summarization is complete
+    }
+
+    private async Task WriteToOneNote()
+    {
+        summary = "Hello World";
+        if (summary == null)
+        {
+            noSummary = true;
+            return;
+        }
+        isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
+        var user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new Notebook
+        {
+            //set the displayName to the name of the uploaded file witha unique ID
+            DisplayName = $"{loadedFile[0].Name} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
+        };
+        var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
+
+        // Get the ID of the newly created notebook
+        var notebookId = result.Id;
+        // create a new section in the notebook
+        var section = new OnenoteSection
+        {
+            DisplayName = "Summarized Notes"
+
+        };
+        var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
+        // Get the ID of the newly created section
+        var sectionId = sectionResult.Id;
+
+        // Create the title of the page
+        string pageTitle = $"Summary of {loadedFile[0].Name}";
+
+        // Create the HTML body content
+        string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
+
+        // Convert the HTML string to a byte array using UTF-8 encoding
+        byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
+        // create a new page in the section
+        var page = new OnenotePage
+        {
+            Title = "Summary",
+            Content = contentBytes
+        };
+        var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
+
+
+        isWriting = false; // Set the flag to indicate that writing to OneNote is complete
+    }
+
+}

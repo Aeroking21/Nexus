@@ -245,16 +245,24 @@
         padding: 10px;
     }
 
+    @* -------------------------------------------Chat Bot --------------------------------------------- *@
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
    
 </style>
+
+<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 
 <div class="container">
     <AuthorizeView>
         <Authorized>
             <Dashbar />
             
-            <div class="grid-container">
-                
+            <div class="grid-container">               
                 <div class="grid-item">
                     <h4 style="color: #0078d4">To Do</h4>
                     <div class="glass-container">
@@ -270,8 +278,8 @@
                             string mailId = mail.Id;
                             string url = "overview/mailid=" + mailId;
                             <a href=@url>
-                                @* @mail.WebLink *@
-                                <div class="email">
+                                @* link to the *@
+                                <div class="email" href="https://localhost:7067/overview/menu">
                                     @if (mail.Subject.Length != 0)
                                     {
                                         <h3>@mail.Subject</h3>
@@ -294,11 +302,11 @@
                         }
                     }
                 </div>
-                <div class="grid-item">
+                <div class="grid-item" href="https://localhost:7067/calendar">
                     <h4 style="color: #0078d4;">Today</h4>
                     <mgt-agenda></mgt-agenda>
                 </div>  
-                <div class="grid-item">
+                <div class="grid-item" href="https://localhost:7067/overview/menu">
                     <h4 style="color:#0078d4;">Teams</h4>
                     <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                         <template>
@@ -313,13 +321,18 @@
                             </div>
                         </template>
                     </mgt-get>
-                </div>
+                </div>                
             </div>
+            
         </Authorized>
         <NotAuthorized>
             <SignIn />
         </NotAuthorized>
     </AuthorizeView>
+</div>
+
+<div class="chat-bot">
+    <Chat />
 </div>
 
 @code{
