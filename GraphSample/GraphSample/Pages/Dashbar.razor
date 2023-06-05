@@ -1,50 +1,26 @@
 <style>
-    
-    .left-content {
-        float: left;
-    }
+  .searchbar {
+    background-image: transparent;
+  }
 
-    .left-contentC {
-        float: left;
-        text-decoration: line-through;
-    }
+  .searchbar button input[type=submit] {
+    background-color: #0078d4;
+    border: 1px solid rgba(190, 190, 190, 0);
+    border-radius: 3px;
+    padding: 5px;
+    margin: 5px;
+    color: black;
+  }
 
-    .right-content {
-        float: right;
-    }
-
-    .grid-container-temp {
-        display: flex;
-    }
-
-    .grid-item-temp {
-        flex: 1;
-        margin-right: 5px;
-        display: flex;
-        flex-direction: column;
-    }
-    .searchbar{
-        width: 100%;
-        background-image: transparent;
-    }
-
-    .searchbar button input[type=submit]{
-        background-color:#0078d4;
-        border: 1px solid rgba(190, 190, 190, 0);
-        border-radius: 3px;
-        padding: 5px;
-        margin: 5px;
-        color: black;
-    }
-      
-  .search-box{
+  .search-box {
     width: fit-content;
     height: fit-content;
-    position: relative;
     background-image: transparent;
+    position: relative;
 
   }
-  .input-search{
+
+  .input-search {
     height: 50px;
     width: 50px;
     border-style: none;
@@ -53,18 +29,20 @@
     letter-spacing: 2px;
     outline: none;
     border-radius: 25px;
-    transition: all .5s ease-in-out;
+    box-shadow: inset 0 0 0 0 #81de1d;
+    transition: box-shadow .3s ease-in-out;
     background-color: #0078d4;
     padding-right: 40px;
-    color:black;
+    color: black;
   }
-  .input-search::placeholder{
-    color:#5680E9
-    font-size: 18px;
+
+  .input-search::placeholder {
+    color: #5680E9 font-size: 18px;
     letter-spacing: 2px;
     font-weight: 100;
   }
-  .btn-search{
+
+  .btn-search {
     width: 50px;
     height: 50px;
     border-style: none;
@@ -75,52 +53,44 @@
     border-radius: 50%;
     position: absolute;
     right: 0px;
-    color:black ;
-    background-color:#0078d4;
-    pointer-events: painted;  
+    color: black;
+    background-color: #0078d4;
+    pointer-events: painted;
   }
-  .btn-search:focus ~ .input-search{
+
+  .btn-search:focus~.input-search {
     width: 300px;
     border-radius: 0px;
     background-color: transparent;
-    border-bottom:1px solid #0078d4
-    transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
+    border-bottom: 1px solid #0078d4 transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
   }
-  .input-search:focus{
+
+  .input-search:focus {
     width: 300px;
     border-radius: 0px;
     background-color: transparent;
-    border-bottom:1px solid #0078d4
-    transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
+    border-bottom: 1px solid #0078d4 transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
   }
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 
-<nav class="navbar navbar-expand-lg navbar-light">
+<!-- place the search bar on the top right, under the nav -->
+
 <div class="searchbar">
-            <span class="left-content"><h1>Dashboard</h1></span>
-            <span class="right-content">
-                  <div class="search-box">
-                        <button class="btn-search"><i class="fa fa-search" style="color:white;"></i></button>
-                        <input type="text" class="input-search" placeholder="Type to Search...">
-                    </div>
-            </span>
-           <div class="grid-container-temp">
-              <div class="grid-item-temp" style=" margin-left: 10px;">
-                  <h4 style="color: #0078d4">Weather</h4>
-                      <i class="ms-Icon ms-Icon--Sunny ms-font-xl"></i>
-              </div>
-              <div class="grid-item-temp">
-                  <h4 style="color: #0078d4">Time</h4>
-                      <i class="ms-Icon ms-Icon--Clock ms-font-xl"></i>
-              </div>
-              <div class="grid-item-temp">
-                  <h4 style="color: #0078d4">Location</h4>
-                      <i class="ms-Icon ms-Icon--Location ms-font-xl"></i>
-              </div>
-          </div>
+    <span class="right-content">
+        <div class="search-box">
+              <button class="btn-search"><i class="fa fa-search" style="color:white;"></i></button>
+              <input type="text" class="input-search" placeholder="Type to Search...">
+         </div>
+      </span>
+
+  <div class="search-box">
+    <input type="text" class="input-search" placeholder="Search" />
+    <button class="btn-search" type="submit"><i class="fa fa-search"></i></button>
+  </div>
+
 </div>
- </nav>
+
 
