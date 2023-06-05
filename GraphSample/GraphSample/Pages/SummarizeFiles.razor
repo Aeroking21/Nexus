@@ -46,7 +46,7 @@
 
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                SmartScribe
+                Choose File
             </button>
             <ul class="dropdown-menu">
                 <li class="dropdown-item"> <InputFile OnChange="@LoadFile" /> </li>
@@ -78,11 +78,7 @@
             <p>Uploading...</p>
         }
 
-        else if (isSummarizing)
-        {
-            <p>Summarizing...</p>
-            <FluentProgressRing></FluentProgressRing>
-        }
+        
 
         <div class="textbox">
 
@@ -90,6 +86,12 @@
             {
                 <h3>Summary:</h3>
                 <p>@summary</p>
+            }
+            
+            else if (isSummarizing)
+            {
+                <p>Summarizing...</p>
+                <FluentProgressRing></FluentProgressRing>
             }
 
             @if (noSummary)
@@ -101,6 +103,8 @@
             @if (isWriting)
             {
                 <p>Writing to OneNote...</p>
+                <h3>Summary:</h3>
+                <p>@summary</p>
             }
 
         </div>
@@ -254,7 +258,7 @@
         // Perform summarization until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
-        Console.WriteLine("Inside ai" + content);
+        Console.WriteLine("Inside ai: " + content);
 
         // Split the content into smaller chunks
         var chunkSize = 750; // Adjust this value as per your model's character limit
@@ -279,7 +283,7 @@
 
         // Combine the individual summaries into an overall summary
         overallSummary = string.Join(" ", summaries);
-       
+
         //Break the loop if the overall summary exceeds 2500 characters
         if (overallSummary.Length >= 2500)
         {
@@ -488,11 +492,20 @@
 
     private async Task WriteToOneNote()
     {
-        summary = "Hello World";
         if (summary == null)
         {
-            noSummary = true;
-            return;
+            summary = "Hello World";
+            //noSummary = true;
+            //return;
+        }
+        var fileName = "";
+        if (loadedFile.Count == 0)
+        {
+            fileName = "summary";
+        }
+        else
+        {
+            fileName = loadedFile[0].Name;
         }
         isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
         var user = (await authenticationStateTask).User;
@@ -500,7 +513,7 @@
         var requestBody = new Notebook
         {
             //set the displayName to the name of the uploaded file witha unique ID
-            DisplayName = $"{loadedFile[0].Name} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
+            DisplayName = $"{fileName} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
         };
         var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
 
@@ -510,28 +523,31 @@
         var section = new OnenoteSection
         {
             DisplayName = "Summarized Notes"
-
         };
         var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
         // Get the ID of the newly created section
         var sectionId = sectionResult.Id;
 
         // Create the title of the page
-        string pageTitle = $"Summary of {loadedFile[0].Name}";
+        string pageTitle = $"Summary of {fileName}";
 
         // Create the HTML body content
-        string htmlContent = $"<!DOCTYPE html><html><head><title>{pageTitle}</title></head><body><p>{summary}</p></body></html>";
+        string htmlContent = $"\n<!DOCTYPE html>\n<html>\n<head>\n<title>{pageTitle}</title>\n</head>\n<body>\n<p>{summary}</p>\n</body>\n</html>";
 
         // Convert the HTML string to a byte array using UTF-8 encoding
         byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
         // create a new page in the section
         var page = new OnenotePage
-        {
-            Title = "Summary",
-            Content = contentBytes
-        };
-        var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
-
+            {
+                Content = contentBytes
+            };
+        var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
+            .Pages
+            .PostAsync(page, requestConfiguration =>
+                {
+                    requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
+                });
+        //var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
 
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
     }
