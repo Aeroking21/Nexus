@@ -7,16 +7,6 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-    .calendar-class {
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 0.7rem;
-        position: absolute;
-        left: 10vh;
-        right: 10vh;
-        top: 10vh;
-        bottom 10vh;
-        padding-bottom: 15px;
-    }
 
 
     .row {
@@ -66,12 +56,12 @@
 
 
 <!-- include app.css here , call this div calendar-class-->
-<div class="calendar-class">
+@* <div class="calendar-class"> *@
     <AuthorizeView>
         <Authorized>
             <link rel="stylesheet"
                 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-            <h1 style="color: white !important; font-size: 55px !important;">Calendar</h1> 
+            @* <h1 style="color: white !important; font-size: 55px !important;">Calendar</h1>  *@
             <div class="row">
                 <div class="col-3" 
                     style="background-color: rgba(255, 255, 255, 0.3); border-radius: 10px;
@@ -115,7 +105,6 @@
 
                             @if (getEventsOfSelectedDay(selectedDay).Count == 0)
                             {
-                                Console.WriteLine(selectedDay.Date);
                                 <tr>
                                     <td colspan="4">No events for this day</td>
                                 </tr>
@@ -173,25 +162,31 @@
                                         {
                                             if (item.Date == DateTime.Now.Date)
                                             {
-                                            // onclick getEventsOfSelectedDay(item)
                                                 <td class="day text-white" style="background-color: #1b6ec2"
                                                 @onclick="() => getEventsOfSelectedDay(item)"><b>@DayTemplate(item)</b></td>
-                                                // this is where the events will be displayed
                                             }
                                             else
                                             {
-                                                // onclick getEventsOfSelectedDay(item)
-                                                if (item.Date.ToString()[0..10] == selectedDay.Date.ToString()[0..10])
+                                                if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
                                                 {
-                                                    <td class="day selected" @onclick="() => getEventsOfSelectedDay(item)">
-                                                        @DayTemplate(item) </td>
+                                                     <td class="day" >@DayTemplate(item)
+                                                        </td>
                                                 }
-                                                else
-                                                {
-                                                    <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)
-                                                    </td>
-                                                    // this is where the events will be displayed
+                                                else{
+                                                    if (item.Date.ToString()[0..10] == selectedDay.Date.ToString()[0..10])
+                                                    {
+                                                            <td class="day selected" @onclick="() => getEventsOfSelectedDay(item)">
+                                                                @DayTemplate(item) </td>
+                                                    }
+                                                    
+                                                    else
+                                                    {
+                                                        <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)
+                                                        </td>
+                                                        // this is where the events will be displayed
+                                                    }
                                                 }
+                                            
                                             }
                                         }
                                     </tr>
@@ -208,7 +203,7 @@
         </NotAuthorized>
     </AuthorizeView>
 
-</div>
+@* <//div> *@
 @code {
 
     public class CalendarDay
@@ -279,8 +274,6 @@
     public List<Event> getEventsOfSelectedDay(CalendarDay day)
     {
         selectedDay = day;
-        Console.WriteLine("selected day is " + selectedDay.Date.ToString()[0..10]);
-        Console.WriteLine("day " + day.Date.ToString()[0..10]);
         return selectedDay.dayEvents;
     }
 

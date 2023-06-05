@@ -245,16 +245,24 @@
         padding: 10px;
     }
 
+    @* -------------------------------------------Chat Bot --------------------------------------------- *@
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
    
 </style>
+
+<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 
 <div class="container">
     <AuthorizeView>
         <Authorized>
             <Dashbar />
             
-            <div class="grid-container">
-                
+            <div class="grid-container">               
                 <div class="grid-item">
                     <h4 style="color: #0078d4">To Do</h4>
                     <div class="glass-container">
@@ -313,13 +321,18 @@
                             </div>
                         </template>
                     </mgt-get>
-                </div>
+                </div>                
             </div>
+            
         </Authorized>
         <NotAuthorized>
             <SignIn />
         </NotAuthorized>
     </AuthorizeView>
+</div>
+
+<div class="chat-bot">
+    <Chat />
 </div>
 
 @code{
