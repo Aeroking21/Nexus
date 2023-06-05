@@ -229,11 +229,12 @@
         padding: 10px;
     }
 
-    @*-------------------------------------------ChatBot---------------------------------------------*@
-    .chat-bot {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
+
+    @* -------------------------------------------Chat Bot --------------------------------------------- *@
+    .chat-bot{
+        position: sticky;
+        bottom: -20px;
+        right: -20px;
         z-index: 9999;
     }
       @* -----------------------------------smaller squares-------------------------------------------- *@
@@ -327,23 +328,24 @@
                                 </div>
                             </div>
                         </div>
-                    </template>
-                </mgt-get>
+
+                        </template>
+                    </mgt-get>
+                </div>                
+            </div>  
+            <div class="chat-bot">
+                <Chat />
             </div>
-        </div>
-        <div class="chat-bot">
-            <Chat />
-        </div>
-
-    </Authorized>
-    <NotAuthorized>
-        <SignIn />
-    </NotAuthorized>
-</AuthorizeView>
+        </Authorized>
+        <NotAuthorized>
+            <SignIn />
+        </NotAuthorized>
+        
+    </AuthorizeView>
+</div>
 
 
-
-@code {
+@code{
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private GraphServiceClient? graphClient;
