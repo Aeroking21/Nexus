@@ -27,7 +27,6 @@
         padding: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-
     }
     .grid-container {
         display: grid;
@@ -247,9 +246,9 @@
 
     @* -------------------------------------------Chat Bot --------------------------------------------- *@
     .chat-bot{
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
+        position: sticky;
+        bottom: -20px;
+        right: -20px;
         z-index: 9999;
     }
    
@@ -322,18 +321,18 @@
                         </template>
                     </mgt-get>
                 </div>                
+            </div>  
+            <div class="chat-bot">
+                <Chat />
             </div>
-            
         </Authorized>
         <NotAuthorized>
             <SignIn />
         </NotAuthorized>
+        
     </AuthorizeView>
 </div>
 
-<div class="chat-bot">
-    <Chat />
-</div>
 
 @code{
     [CascadingParameter]
