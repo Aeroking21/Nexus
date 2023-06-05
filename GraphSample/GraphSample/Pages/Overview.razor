@@ -15,6 +15,13 @@
         border-radius: 1rem;
         padding: 1px;
     }
+
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 </style>
 <div class="container">
 <AuthorizeView>
@@ -582,7 +589,12 @@
 
 </AuthorizeView>
 </div>
-@code {
+
+<div class="chat-bot">
+    <Chat />
+</div>
+@code{
+
     [Parameter]
     public string ids{ get; set; }
 

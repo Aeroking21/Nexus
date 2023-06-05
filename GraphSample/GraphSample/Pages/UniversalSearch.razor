@@ -49,6 +49,13 @@
         text-decoration: none;
         color: inherit;
     }
+
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 </style>
 
 <AuthorizeView>
@@ -121,6 +128,12 @@
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
+
+
+<div class="chat-bot">
+    <Chat />
+</div>
+
 
 @code{
 
