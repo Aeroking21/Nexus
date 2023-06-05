@@ -6,7 +6,8 @@
 @using SharedModels.Models
 @using GraphSample.ReusableComponents
 @using  System.Globalization
-
+@using System.Diagnostics 
+@using System.Timers;
 
 @inject GraphSample.Services.IBackendApiService backendApiService
 @inject GraphSample.Graph.GraphClientFactory clientFactory
@@ -16,19 +17,19 @@
         <Authorized>
             <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" />
             @if (fetchingTimelines || creatingApplicant)
-            {
+                {
                 <h1 class="mb-3" style="margin-left: 10px; margin-top: 10px;">Application Dashboard</h1>
                 <div style="margin-left: 10px;">
                 <FluentProgressRing></FluentProgressRing>
                 </div>
-            }
-            else if (!isRegistered)
-            {
+                }
+                else if (!isRegistered)
+                {
                 <h1 class="mb-3" style="margin-left: 10px; margin-top: 10px;">Application Dashboard</h1>
                 <button class="btn btn-primary" @onclick="() => CreateApplicant()">Start Your Application Journey Now!</button>
-            }
-            else
-            {
+                }
+                else
+                {
         <div class="header-container">
             <h1 class="mb-3" style="margin-left: 10px; margin-top: 10px;">Application Dashboard</h1>
             <button class="add-timeline-button" @onclick="() => ShowAddTimelineModal()">Add Application</button>
@@ -36,44 +37,52 @@
                 <span>Sort by:</span>
                 <select @bind="sortingCriterion" @oninput="(args) => { sortingCriterion = Enum.Parse<SortingCriteria>(args.Value.ToString()); HandleSortCriterionChange(); }">
                     @foreach (SortingCriteria criterion in Enum.GetValues(typeof(SortingCriteria)))
-                    {
+                        {
                         <option value="@criterion">@criterion.ToString().Replace("_", " ")</option>
-                    }
+                        }
+                </select>
+                <span>Select Dsiplay Mode:</span>
+                <select @bind="displayMode" @oninput="(args) => { displayMode = Enum.Parse<DisplayMode>(args.Value.ToString()); HandleDisplayChange(); }"> 
+                    @foreach (DisplayMode mode in Enum.GetValues(typeof(DisplayMode)))
+                        {
+                        <option value="@mode">@mode.ToString().Replace("_", " ")</option>
+                        }
                 </select>
             </span>
         </div>
-                <div class="inner-container">
-                    <div class="left-div">
+            <div class="outer-container">
+                <div class="@((emailsShowing) ? "restricted-inner-container" : "inner-container")">
+                    <div class="@((emailsShowing) ? "restricted-left-div" : "left-div")">
                         <table class="left-table">
                             <tbody>
                                 @foreach (var timeline in timelines)
-                                {
-                                    <tr height="2.5em">
+                                    {
+                                    <tr height="77px">
                                         <td width="40%">
                                             <div calss="flex-container">
                                                 @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
-                                                {
+                                                    {
                                                     <button class="show-emails-button-highlighted" @onclick="() => emailsShowing = false">Hide Emails</button>
-                                                }
-                                                else
-                                                {
+                                                    }
+                                                    else
+                                                    {
                                                     <button class="show-emails-button" @onclick="() => ShowEmails(timeline)">Show Emails</button>
-                                                }
+                                                    }
                                                 <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
                                                 @if (timeline.hasUnreadEmails)
-                                                {
+                                                    {
                                                     <span class="timeline-icon">
                                                         <FluentIcon Name="@FluentIcons.MailAllUnread" Color="@Color.Error" Variant="@IconVariant.Regular"></FluentIcon>
                                                     </span>
-                                                }
+                                                    }
                                                 @if (timeline.alertLevel == 0)
-                                                {
+                                                    {
                                                     <span class="timeline-icon" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Neutral"></FluentIcon></span>
-                                                }
-                                                else
-                                                {
+                                                    }
+                                                    else
+                                                    {
                                                     <span class="timeline-icon" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Custom" Variant="@IconVariant.Filled" CustomColor="#ffff00"></FluentIcon></span>
-                                                }
+                                                    }
                                             </div>
                                         </td>
                                         <td width="27%">
@@ -83,39 +92,39 @@
                                         </td>
                                         <td width="33%"><div class="role-content">@timeline.role</div></td>
                                     </tr>
-                                }
+                                    }
                             </tbody>
                         </table>
                     </div>
-                    <div class="right-div">
+                    <div class="@GetRightDivClass()">
                         @if (!emailsShowing)
-                        {
-                            <div class="inner-container">
+                            {
+                            <div class="right-inner-container">
                                 <div class="right-left-div">
                                     <table class="left-table">
                                         <tbody>
                                             @for (int i = 0; i < timelines.Count(); i++)
-                                            {
-                                                var timeline = timelines[i];
+                                                {
+                                                    var timeline = timelines[i];
                                                 <tr height="5em">
                                                     <td width="85%">
                                                         <div class="associated-emails-content">
                                                             @if (expandActions && (expandedActionsTimeline == timeline.timelineID))
-                                                            {
-                                                                <button class="show-email-addresses-highlighted" @onclick="() => { expandActions = expandedActionsTimeline == timeline.timelineID ? (!expandActions) : true; expandedActionsTimeline = timeline.timelineID;}">
+                                                                {
+                                                                <button class="show-email-addresses-highlighted" @onclick="() => { expandActions = expandedActionsTimeline == timeline.timelineID ? (!expandActions) : true; expandedActionsTimeline = timeline.timelineID; }">
                                                                     @*<FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
                                                                     <span style="display: inline-block; vertical-align: middle;">Actions</span>
                                                                 </button>
-                                                            }
-                                                            else
-                                                            {
-                                                                <button class="show-email-addresses" @onclick="() => { expandAssociatedEmails = false; expandActions = expandedActionsTimeline == timeline.timelineID ? (!expandActions) : true; expandedActionsTimeline = timeline.timelineID;}">
+                                                                }
+                                                                else
+                                                                {
+                                                                <button class="show-email-addresses" @onclick="() => { expandAssociatedEmails = false; expandActions = expandedActionsTimeline == timeline.timelineID ? (!expandActions) : true; expandedActionsTimeline = timeline.timelineID; }">
                                                                     @*<FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
                                                                     <span style="display: inline-block; vertical-align: middle;">Actions</span>
                                                                 </button>
-                                                            }
+                                                                }
                                                             @if (expandActions && (expandedActionsTimeline == timeline.timelineID))
-                                                            {
+                                                                {
                                                                 <div class="actions-container">
                                                                     <button class="action-item" @onclick="() => { ShowAddEmailModal(timeline.timelineID); }">
                                                                         Add Email Address
@@ -124,149 +133,229 @@
                                                                         Autofill Email Addressess
                                                                     </button>
                                                                 </div>
-                                                            }
+                                                                }
 
 
                                                             @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
-                                                            {
-                                                                <button class="show-email-addresses-highlighted" @onclick="() => {expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
+                                                                {
+                                                                <button class="show-email-addresses-highlighted" @onclick="() => { expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID; }">
                                                                     @*<FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
                                                                     <span style="display: inline-block; vertical-align: middle;">Hide Email Addresses</span>
                                                                 </button>
-                                                            }
-                                                            else
-                                                            {
-                                                                <button class="show-email-addresses" @onclick="() => { expandActions = false; expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID;}">
+                                                                }
+                                                                else
+                                                                {
+                                                                <button class="show-email-addresses" @onclick="() => { expandActions = false; expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID; }">
                                                                     @*<FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
                                                                     <span style="display: inline-block; vertical-align: middle;">Show Email Addresses</span>
                                                                 </button>
-                                                            }
+                                                                }
                                                             @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
-                                                            {
+                                                                {
                                                                 <div class="email-list-container">
                                                                     @if (timeline.associatedEmailAddresses.Count() == 0)
-                                                                    {
+                                                                        {
                                                                         <div class="email-item-test">
                                                                             <span>None</span>
                                                                         </div>
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        @foreach (var email in timeline.associatedEmailAddresses)
+                                                                        }
+                                                                        else
                                                                         {
+                                                                        @foreach (var email in timeline.associatedEmailAddresses)
+                                                                            {
                                                                             <div class="email-item-test">
                                                                                 <span class="email-address">@email</span>
                                                                                 <span class="remove-icon" @onclick="() => RemoveEmail(email, timeline.timelineID)">
                                                                                     <FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon>
                                                                                 </span>
                                                                             </div>
+                                                                            }
                                                                         }
-                                                                    }
                                                                 </div>
-                                                            }
+                                                                }
                                                         </div>
                                                     </td>
                                                     <td width="15%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
                                                 </tr>
-                                            }
+                                                }
                                         </tbody>
                                     </table>
                                 </div>
                                 <div class="right-right-div">
+                                    @if (displayMode == DisplayMode.Default_Display)
+                                    {
                                     <table class="bordered-table">
                                         <tbody>
                                             @for (int i = 0; i < timelines.Count(); i++)
-                                            {
-                                                var timeline = timelines[i];
-                                                <tr height="2.5em">
+                                                {
+                                                    var timeline = timelines[i];
+                                                <tr height="77px">
                                                     <td width="100%">
                                                         <div class="assessments-container">
                                                             @for (int j = 0; j < timeline.assessments.Count(); j++)
-                                                            {
-                                                                var assessment = timeline.assessments[j];
+                                                                {
+                                                                    var assessment = timeline.assessments[j];
                                                                 <div class="pane @("status" + assessment.status)">
-                                                                    <div style="display: flex; width: 100%;">
-                                                                        <div>
+                                                                    <div class="assessment-line">
+                                                                        <div class="assessment-type-container">
                                                                             @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
                                                                         </div>
                                                                         <span class="remove-assessment-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)"><FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon></span>
                                                                     </div>
                                                                     <div>
-                                                                        <select class="status-select" @bind="assessment.status" @oninput="(e) => HandleStatusChange(timeline, assessment,  Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
+                                                                        <select class="status-select" @bind="assessment.status" @oninput="(e) => HandleStatusChange(timeline, assessment, Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
                                                                             @*<option value="@assessment.status">@assessment.status</option>*@
 
                                                                             @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
-                                                                            {
+                                                                                {
                                                                                 <option value="@option">@option</option>
 
-                                                                            }
+                                                                                }
                                                                         </select>
                                                                     </div>
                                                                     <div style="display: flex; width: 100%;">
                                                                         <div>@assessment.date</div>
                                                                         @if (assessment.type == AssessmentType.Online_Assessment)
-                                                                        {
+                                                                            {
                                                                             @if (!assessment.todoScheduled)
-                                                                            {
+                                                                                {
                                                                                 <button class="add-todo-button" @onclick="() => SendToDo(assessment, timeline.company, timeline.role, assessment.date, timeline.timelineID)">Schedule Todo</button>
-                                                                            }
-                                                                            else
-                                                                            {
+                                                                                }
+                                                                                else
+                                                                                {
                                                                                 <button class="todo-scheduled-button" @onclick="() => RemoveTodo(assessment, timeline.timelineID)">Remove ToDo</button>
+                                                                                }
                                                                             }
-                                                                        }
                                                                     </div>
                                                                 </div>
-                                                            }
+                                                                }
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            }
+                                                }
                                         </tbody>
                                     </table>
+                                    }
+                                    else{
+                                        <div class="calendar-div">
+                                        @foreach (var assessmentGroup in sortedAssessments)
+                                        {
+                                            <div class="calendar-column">
+                                                @foreach(var assessmentPair in assessmentGroup)
+                                                {
+                                                        var assessment = assessmentPair.Item2;
+                                                        int index = timelines.FindIndex(tl => tl.timelineID == assessmentPair.Item1);
+                                                        var timeline = timelines[index];
+
+                                                                <div class="pane @("status" + assessment.status)" style="position: absolute; top: @((index)* 77.55)px">
+                                                                    <div class="assessment-line">
+                                                                        <div class="assessment-type-container">
+                                                                            @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
+                                                                        </div>
+                                                                        <span class="remove-assessment-button" @onclick="() => RemoveAssessment(assessment, assessmentPair.Item1)"><FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon></span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <select class="status-select" @bind="assessment.status" @oninput="(e) => HandleStatusChange(timeline, assessment, Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
+                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
+
+                                                                            @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
+                                                                                {
+                                                                                <option value="@option">@option</option>
+
+                                                                                }
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="display: flex; width: 100%;">
+                                                                        <div>@assessment.date</div>
+                                                                        @if (assessment.type == AssessmentType.Online_Assessment)
+                                                                            {
+                                                                            @if (!assessment.todoScheduled)
+                                                                                {
+                                                                                <button class="add-todo-button" @onclick="() => SendToDo(assessment, timeline.company, timeline.role, assessment.date, timeline.timelineID)">Schedule Todo</button>
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                <button class="todo-scheduled-button" @onclick="() => RemoveTodo(assessment, timeline.timelineID)">Remove ToDo</button>
+                                                                                }
+                                                                            }
+                                                                    </div>
+                                                                </div>
+                                                }
+                                            </div>
+                                        }
+                                        </div>
+                                    }
                                 </div>
                             </div>
-                        }
-                        else
-                        {
-                            @if (fetchingEmails)
-                            {
+                            }
+                            else {
+                               <div style="display: none"></div> 
+                            }
+                        </div>
+                    
+                    </div> 
+            <div class="@((emailsShowing) ? "right-div" : "hidden" )">
+            @if (emailsShowing){
+                    @if (fetchingEmails)
+                                {
                                 <div class="right-div">
                                     <div style="margin-left: 10px;">
                                     <FluentProgressRing></FluentProgressRing>
                                 </div>
                                 </div>
-                            }
-                            else
-                            {
-                                <div class="right-emails-div">
-                                    @foreach (var email in selectedAssociatedEmails)
-                                    {
+                                }
+                                else
+                                {
+                                    var tmpEmails = filteresSelectedEmails == null ? selectedAssociatedEmails : filteresSelectedEmails;
+                                    <div class="right-emails-div">
+                                        <div class="emails-search-div">
+                                                @* <FluentSearch
+                                                              @oninput=HandleEmailsSearchTest
+                                                              @onchange=HandleEmailsSearchTest
+                                                              Placeholder="Search"
+                                                              @bind-Value="@searchValue"
+                                                              autocomplete="off" /> *@
+                                                @* <input type="text" @onfocus="() => HandleEmailSearchFocus()" @onblur="() => HandleEmailSearchBlur()" placeholder="Search" @bind="searchValue"> *@
+                                                 <FluentSearch 
+                                                                @bind-Value="@searchValue"
+                                                                @oninput="(e => SearchValue = e.Value?.ToString())"
+                                                                @onchange=HandleClear
+                                                                Placeholder="Search" 
+                                                                style="height: 100%; font-size: 14px;"/> 
+                                        </div>
+                                        <div class="right-emails-scrollable-div">
+                                    @foreach (var email in tmpEmails)
+                                        {
                                         <button class="email-info-div">
                                             @if (email.IsRead.HasValue ? !email.IsRead.Value : false)
-                                            {
+                                                {
                                                 <span class="timeline-icon">
                                                     <FluentIcon Name="@FluentIcons.MailUnread" Color="@Color.Error" Variant="@IconVariant.Regular"></FluentIcon>
                                                 </span>
-                                            }
-                                            else
-                                            {
+                                                }
+                                                else
+                                                {
                                                 <span class="timeline-icon">
                                                     <FluentIcon Name="@FluentIcons.MailUnread" Color="@Color.Custom" CustomColor="#ffffff00"></FluentIcon>
                                                 </span>
-                                            }
+                                                }
                                             <span style="margin-left: 10px; width: 150px !important; max-height: 50px !important;">@email.Sender?.EmailAddress?.Address</span>
                                             <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 220px;">@email.Subject</span>
                                             <span style="position: absolute; right: 120px;">@email.ReceivedDateTime?.DateTime.ToString("HH:mm:ss")</span>
                                             <span style="position: absolute; right: 5px;">@email.ReceivedDateTime?.DateTime.ToString("yyyy-MM-dd")</span>
                                         </button>
-                                    }
+                                        }
+                                        </div>
                                 </div>
-                            }
-                        }
-                    </div>
+                            } 
+                    }
+                    else {
+                        <div style="display: none"></div>
+                    }
+
                 </div>
-            }
+            </div>
+                }
         </Authorized>
         <NotAuthorized>
             <RedirectToLogin />
@@ -275,15 +364,19 @@
 
 </div>
 
+<div class="chat-bot">
+    <Chat />
+</div>
+
+
 <style>
 
-    /*    .container {
-        width: 100% !important;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 5px;
-        padding: 1px;
-    }*/
-
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
     .container {
         background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
         border-radius: 0.7rem;
@@ -299,6 +392,7 @@
         position: absolute;
         left: 5vh;
         right: 5vh;
+        max-heigth 85vh !important: 
         top: 15vh;
         padding-bottom: 15px;
     }
@@ -387,11 +481,35 @@
     .inner-container {
         display: flex;
         width: 100%;
+        overflow-y: scroll;
+        max-height: 77vh !important;
     }
+
+    .restricted-inner-container {
+        display: flex;
+        width: 100%;
+        overflow-y: scroll;
+        max-height: 77vh !important;
+        width: 20% !important;
+    }
+
+
+    .outer-container {
+        display: flex;
+        width: 100%;
+        max-height: 77vh !important;
+    }
+
+    .right-inner-container {
+        display: flex;
+        width: 100%
+    }
+
 
     .header-container {
         display: flex;
         align-items: center;
+        height: 8vh;
         width: 100%;
     }
 
@@ -401,8 +519,18 @@
 
     .left-div {
         width: 20%;
-        border: 1px solid #ccc;
-        border-radius: 3px;
+        border: 0px solid #ccc;
+        border-radius: 0px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .restricted-left-div {
+        width: 100%;
+        border: 0px solid #ccc;
+        border-radius: 0px;
+        display: flex;
+        flex-direction: column;
     }
 
     .right-div {
@@ -411,7 +539,7 @@
 
     .right-left-div {
         width: 20%;
-        border: 1px solid #ccc;
+        border: 0px solid #ccc;
         border-radius: 3px;
     }
 
@@ -420,12 +548,43 @@
         overflow-x: scroll;
         border: 1px solid #ccc;
         border-radius: 3px;
+        display: flex;
     }
 
     .right-emails-div {
         width: 100%;
         border: 2px solid #d3d3d3;
         border-radius: 3px;
+        height: 77vh !important;
+    }
+
+    .right-emails-scrollable-div {
+        width: 100%;
+        border: 2px solid #d3d3d3;
+        border-radius: 3px;
+        overflow-y: scroll;
+        height: 72vh !important;
+    }
+
+
+    .calendar-column {
+        width: 300px !important;
+        height: 100% !important;
+        border: 2px solid #656464;
+        border-radius: 3px; 
+        position: relative
+    }
+
+    .calendar-div {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+        background-color: white;
+        flex: 1;
+    }
+
+    .emails-search-div {
+       height: 5vh !important;
     }
 
     .email-info-div {
@@ -508,6 +667,7 @@
         overflow: hidden;
     }
 
+
     .email-address {
         float: left;
         margin-right: 10px;
@@ -517,6 +677,25 @@
         float: right;
         cursor: pointer;
     }
+
+    .assessment-line {
+        border: 0px solid;
+        border-color: transparent;
+        border-radius: 5px;
+        background-color: transparent;
+        margin-bottom: 0px;
+        overflow: hidden;
+    }
+
+    .assessment-type-container {
+        float: left;
+    }
+
+    .remove-assessment-button {
+        float: right;
+        cursor: pointer;
+    }
+
     .associated-emails-content {
         height: 75px;
     }
@@ -653,6 +832,8 @@
     .left-table {
         border-collapse: collapse;
         width: 100%;
+        max-height: 100%;
+        overflow: auto;
     }
 
         .left-table tr:first-child td {
@@ -698,6 +879,10 @@
         margin-bottom: 4px;
     }
 
+    .hidden {
+        display: none;
+    }
+
 </style>
 
 @code {
@@ -710,9 +895,41 @@
     private string userTimeZone = string.Empty;
     private List<ApplicationTimeline>? timelines;
     private bool emailsShowing;
+    private DisplayMode displayMode = DisplayMode.Default_Display;
+
+    private enum DisplayMode {
+        Default_Display,
+        Calendar_Display,
+    }
+
+    private List<IGrouping<DateTime, (int, Assessment)>>? sortedAssessments;
     private int emailsShowingTimeline;
     //private List<Message>? selectedAssociatedEmails;
     private List<Message> selectedAssociatedEmails;
+    private List<Message>? filteresSelectedEmails;
+    string? searchValue = string.Empty;
+
+    private string? SearchValue
+    {
+        get => searchValue;
+        set
+        {
+            if (value != searchValue)
+            {
+                searchValue = value;
+                DisposeTimer();
+                //Add the debounce time in ms to the timer below
+                timer = new Timer(1500);
+                timer.Elapsed += TimerElapsed_TickAsync;
+                timer.Enabled = true;
+                timer.Start();
+            }
+        }
+    }
+    private bool emailSearchIsFocused;
+    private static Timer timer;
+    private System.Threading.Timer debounceTimer;
+    private bool isSearchPending;
 
     private IList<TodoTaskList> toDos = new List<TodoTaskList>();
     Dictionary<string, string> TaskLists = new Dictionary<string, string>();
@@ -743,6 +960,11 @@
     }
 
     bool IsHovered { get; set; }
+
+    private string GetRightDivClass()
+        {
+            return emailsShowing ? "hidden" : "right-div";
+        }
 
     protected override async Task OnInitializedAsync()
 
@@ -856,7 +1078,7 @@
         }
 
         fetchingTimelines = false;
-
+        sortedAssessments = GetSortedAssessments();
     }
     public async void ShowEmails(ApplicationTimeline timeline)
     {
@@ -891,6 +1113,7 @@
         var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
         {
             requestConfiguration.QueryParameters.Filter = filter;
+            requestConfiguration.QueryParameters.Top = 999;
         });
 
         fetchedEmails = result?.Value;
@@ -906,16 +1129,16 @@
 
     public async void RemoveEmail(string email, int timelineID)
     {
+
+        int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
+
+        timelines[index].associatedEmailAddresses.RemoveAll(e => e == email);
+        StateHasChanged();
         var response = await backendApiService.removeEmail(email, Username, timelineID);
 
 
         if (response)
         {
-            int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
-
-            timelines[index].associatedEmailAddresses.RemoveAll(e => e == email);
-            StateHasChanged();
-
             var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
             List<string?> allAssociatedEmailStrings = new();
             foreach (var emailString in newTimeline.associatedEmailAddresses)
@@ -951,7 +1174,7 @@
                 {
                     newTimeline.hasUnreadEmails = fetchedEmails.Exists(msg => msg.IsRead.HasValue ? !msg.IsRead.Value : false);
                     timelines[index] = newTimeline;
-
+                    HandleSortCriterionChange();
                     StateHasChanged();
                 }
             }
@@ -1210,13 +1433,173 @@
 
                 newTimeline.hasUnreadEmails = timeline.hasUnreadEmails ? true : newHasUnread;
                 timelines[index] = newTimeline;
+                HandleSortCriterionChange();
                 StateHasChanged();
             }
         }
 
+    }
+
+
+    ///////////////////////////////////////
+    //////Email SearchSection /////////////
+    ///////////////////////////////////////
+
+    private void HandleEmailsSearchTest(ChangeEventArgs args)
+    {
+
+        if (isSearchPending)
+        {
+            return;
+        }
+
+        isSearchPending = true;
+
+        debounceTimer?.Dispose();
+
+        debounceTimer = new System.Threading.Timer((state) =>
+        {
+
+            if (args is not null && !string.IsNullOrWhiteSpace(args.Value?.ToString()))
+            {
+                string searchTerm = args.Value.ToString()!.ToLower();
+
+                if (searchTerm.Length > 0)
+                {
+                    List<Message> temp = selectedAssociatedEmails.Where(msg => ($"{msg.Sender?.EmailAddress?.Address} {msg.Subject}").ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                    if (temp.Count() > 0)
+                    {
+                        filteresSelectedEmails = temp;
+                    }
+                }
+                else
+                {
+                    filteresSelectedEmails = null;
+                }
+            }
+            else
+            {
+                filteresSelectedEmails = null;
+            }
+
+            InvokeAsync(StateHasChanged);
+
+            // Reset the search pending flag
+            isSearchPending = false;
+        }, null, (int)TimeSpan.FromMilliseconds(300).TotalMilliseconds, -1);
+    }
+
+
+    private void HandleEmailSearchFocus(){
+ 
+        timer = new Timer(500);
+        Console.WriteLine("Focus");
+
+        timer.Elapsed += HandleEmailsSearchTest2;
+
+        timer.Start();
+    }
+
+    private void HandleEmailSearchBlur(){
+
+        Console.WriteLine("Blur");
+        emailSearchIsFocused = false;
+        timer?.Stop();
+        timer?.Dispose();
+    }
+        private void HandleEmailsSearchTest2(object? sender, ElapsedEventArgs e)
+    {
+
+        Console.WriteLine("Searching");
+        Console.WriteLine($"Before loop: {searchValue}");
+        if (searchValue is not null && !string.IsNullOrWhiteSpace(searchValue))
+        {
+            string searchTerm = searchValue.ToLower();
+
+            if (searchTerm.Length > 0)
+            {
+                Console.WriteLine($"{searchValue}");
+                List<Message> temp = selectedAssociatedEmails.Where(msg => ($"{msg.Sender?.EmailAddress?.Address} {msg.Subject}").ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                if (temp.Count() > 0)
+                {
+                    filteresSelectedEmails = temp;
+                }
+            }
+            else
+            {
+                filteresSelectedEmails = null;
+            }
+        }
+        else
+        {
+            filteresSelectedEmails = null;
+        }
 
     }
 
+    private async Task HandleEmailsSearch()
+    {
+
+        Console.WriteLine("Searching");
+        if (searchValue is not null && !string.IsNullOrWhiteSpace(searchValue))
+        {
+            string searchTerm = searchValue.ToLower();
+
+            if (searchTerm.Length > 0)
+            {
+                List<Message> temp = selectedAssociatedEmails.Where(msg => ($"{msg.Sender?.EmailAddress?.Address} {msg.Subject}").ToLower().Contains(searchTerm)).Select(str => str).ToList();
+                if (temp.Count() > 0)
+                {
+                    filteresSelectedEmails = temp;
+                }
+            }
+            else
+            {
+                filteresSelectedEmails = null;
+            }
+        }
+        else
+        {
+            filteresSelectedEmails = null;
+        }
+
+        await InvokeAsync(StateHasChanged); 
+
+    }
+
+
+    private async void TimerElapsed_TickAsync(object? sender, EventArgs e)
+    {
+        DisposeTimer();
+        await HandleEmailsSearch();
+    }
+
+    private void DisposeTimer()
+    {
+        if (timer != null)
+        {
+            timer.Enabled = false;
+            timer.Elapsed -= TimerElapsed_TickAsync;
+            timer.Dispose();
+            timer = null;
+        }
+    }
+
+    private void HandleClear(ChangeEventArgs args)
+    {
+        if (args is not null && string.IsNullOrWhiteSpace(args.Value?.ToString()))
+        {
+            DisposeTimer();
+            filteresSelectedEmails = null;
+            SearchValue = string.Empty;
+            StateHasChanged();
+        }
+    }
+
+
+    ///////////////////////////////////////
+    //////Email SearchSection /////////////
+    ///////////////////////////////////////
 
 
     [CascadingParameter] IModalService ModalInputPopup { get; set; } = default!;
@@ -1267,12 +1650,14 @@
                 bool newHasUnread = fetchedEmails.Exists(msg => msg.IsRead.HasValue ? !msg.IsRead.Value : false);
                 if (response)
                 {
+                    index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                     var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
                     if (index != -1)
                     {
 
                         newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails ? true : newHasUnread;
                         timelines[index] = newTimeline;
+                        HandleSortCriterionChange();
                         StateHasChanged();
                     }
                 }
@@ -1354,6 +1739,38 @@
             }
         }
     }
+
+    ///////////////////////////////////////
+    //////   Calendar view    /////////////
+    ///////////////////////////////////////
+    public List<IGrouping<DateTime, (int, Assessment)>>? GetSortedAssessments()
+    {
+        List<(int, Assessment)>? flattenedTimelines = timelines?
+            .SelectMany(timeline => timeline.assessments
+            .Select(a => (timeline.timelineID, a)))
+            .ToList();
+
+        var sortedAssessments = flattenedTimelines?.GroupBy(a => a.Item2.date.Date).OrderBy(ag => ag.Key).ToList();
+
+        return sortedAssessments;
+    }
+
+    public int GetPaneTimelineIndex(int timelineID)
+    {
+       int index = timelines.FindIndex(tl => tl.timelineID == timelineID); 
+       return index;
+    }
+
+    public void HandleDisplayChange(){
+        if(displayMode == DisplayMode.Calendar_Display){
+            sortedAssessments = GetSortedAssessments();
+        }
+        StateHasChanged();
+    }
+
+    ///////////////////////////////////////
+    //////   Calendar view    /////////////
+    ///////////////////////////////////////
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {

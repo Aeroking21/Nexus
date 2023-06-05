@@ -13,6 +13,16 @@
         float: right;
     }
 
+    .grid-container-temp {
+        display: flex;
+    }
+
+    .grid-item-temp {
+        flex: 1;
+        margin-right: 5px;
+        display: flex;
+        flex-direction: column;
+    }
     .searchbar{
         width: 100%;
         background-image: transparent;
@@ -97,9 +107,20 @@
                         <input type="text" class="input-search" placeholder="Type to Search...">
                     </div>
             </span>
-                @* <input type="text" placeholder="Search..." name="search">
-                <button type="submit" style="background-color: #5680E9; border-radius: 3px; padding: 5px; margin: 5px; border: 0px;"><i class="oi oi-magnifying-glass" style="color:white;"></i></button>
-            </span> *@
+           <div class="grid-container-temp">
+              <div class="grid-item-temp" style=" margin-left: 10px;">
+                  <h4 style="color: #0078d4">Weather</h4>
+                      <i class="ms-Icon ms-Icon--Sunny ms-font-xl"></i>
+              </div>
+              <div class="grid-item-temp">
+                  <h4 style="color: #0078d4">Time</h4>
+                      <i class="ms-Icon ms-Icon--Clock ms-font-xl"></i>
+              </div>
+              <div class="grid-item-temp">
+                  <h4 style="color: #0078d4">Location</h4>
+                      <i class="ms-Icon ms-Icon--Location ms-font-xl"></i>
+              </div>
+          </div>
 </div>
  </nav>
 
