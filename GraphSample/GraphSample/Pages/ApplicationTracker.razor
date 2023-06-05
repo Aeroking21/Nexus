@@ -175,7 +175,7 @@
                                                                 }
                                                         </div>
                                                     </td>
-                                                    <td width="15%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
+                                                    <td width="15%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
                                                 </tr>
                                                 }
                                         </tbody>
@@ -1692,21 +1692,25 @@
         }
     }
 
-    private async Task ShowAddAssessmentModal(int timelineID)
+    private async Task ShowAddAssessmentModal(ApplicationTimeline timeline)
     {
         var assessmentModal = ModalInputPopup.Show<AssessmentInputPopup>();
         var result = await assessmentModal.Result;
+        int timelineID = timeline.timelineID;
 
         if (result.Confirmed)
         {
             Assessment? newAssessment = result.Data as Assessment;
             if (newAssessment != null)
             {
+                timeline.assessments.Add(newAssessment);
+                timeline.assessments.Sort((a1, a2) => a1.date.CompareTo(a2.date));
+                StateHasChanged();
+                int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                 var response = await backendApiService.addAssessment(newAssessment, Username, timelineID);
                 if (response)
                 {
                     var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
-                    int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                     if (index != -1)
                     {
                         newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
