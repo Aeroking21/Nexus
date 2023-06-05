@@ -23,11 +23,7 @@
         @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
         
         @* To get the id out of the link *@
-        @* @{
-            string idss = ids;
-            string[] idArray = idss.Split('=');
-        }
-        <h1>HI: @idArray[1]</h1> *@ 
+
         <div class="groupSec">
             <div class="seeGroups">
                 <FluentSelect Id="state" name="state" TOption="GroupItem" @onchange="UpdateGroup" @bind-Value="selectedGroupValue">
@@ -588,7 +584,7 @@
 </div>
 @code {
     [Parameter]
-    public string ids{ get; set; } 
+    public string ids{ get; set; }
 
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
@@ -605,6 +601,8 @@
             throw new AuthenticationException(
                 "Unable to access authentication state");
         }
+
+        if (ids != null) { await initialLayout(); }
 
         await getMail("All");
         await getTeams("All");
@@ -639,6 +637,28 @@
             _timer.Enabled = false;
         }
 
+        StateHasChanged();
+    }
+
+    public async Task initialLayout()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        string idss = ids;
+        string[] idArray = idss.Split('=', 2);
+
+        if (idArray[0] == "mailid")
+        {
+            activeid = "Mail";
+            var initMail = await graphClient.Me.Messages[idArray[1]].GetAsync();
+            currentEmail = initMail;
+        }
+        else if (idArray[0] == "teamid")
+        {
+            activeid = "Teams";
+            var initTeam = await graphClient.Teams[idArray[1]].GetAsync();
+            Console.WriteLine(initTeam.DisplayName);
+            currentTeam = initTeam;
+        }
         StateHasChanged();
     }
 
@@ -870,7 +890,7 @@
     /*
     * HANDLE WHICH TAB IS BEING PRESENTED
     */
-    string? activeid = "Mail";
+    string? activeid;
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
@@ -1020,18 +1040,18 @@
         }
 
         var requestBody = new Microsoft.Graph.Me.SendMail.SendMailPostRequestBody
+        {
+            Message = new Message
             {
-                Message = new Message
+                Subject = subject,
+                Body = new ItemBody
                 {
-                    Subject = subject,
-                    Body = new ItemBody
-                    {
-                        ContentType = BodyType.Text,
-                        Content = content,
-                    },
-                    ToRecipients = recipients,
+                    ContentType = BodyType.Text,
+                    Content = content,
                 },
-            };
+                ToRecipients = recipients,
+            },
+        };
 
         await graphClient.Me.SendMail.PostAsync(requestBody);
         StateHasChanged();
@@ -1051,12 +1071,12 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         var requestBody = new ChatMessage
+        {
+            Body = new ItemBody
             {
-                Body = new ItemBody
-                {
-                    Content = content,
-                },
-            };
+                Content = content,
+            },
+        };
         var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.PostAsync(requestBody);
 
         StateHasChanged();
