@@ -567,7 +567,7 @@
     .right-right-div {
         width: 80%;
         overflow-x: scroll;
-        border: 1px solid #ccc;
+        border: 0px solid #ccc;
         border-radius: 3px;
         display: flex;
     }
@@ -1719,16 +1719,20 @@
         }
     }
 
-    private async Task ShowAddAssessmentModal(int timelineID)
+    private async Task ShowAddAssessmentModal(ApplicationTimeline timeline)
     {
         var assessmentModal = ModalInputPopup.Show<AssessmentInputPopup>();
         var result = await assessmentModal.Result;
+        int timelineID = timeline.timelineID;
 
         if (result.Confirmed)
         {
             Assessment? newAssessment = result.Data as Assessment;
             if (newAssessment != null)
             {
+                timeline.assessments.Add(newAssessment);
+                timeline.assessments.OrderBy(a => a.date);
+                StateHasChanged();
                 var response = await backendApiService.addAssessment(newAssessment, Username, timelineID);
                 if (response)
                 {
