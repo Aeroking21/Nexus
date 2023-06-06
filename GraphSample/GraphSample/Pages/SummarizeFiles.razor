@@ -218,6 +218,14 @@
         return text;
     }
 
+    public async Task<Stream> ConvertToStream(IBrowserFile file)
+    {
+        var memoryStream = new MemoryStream();
+        await file.OpenReadStream().CopyToAsync(memoryStream);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return memoryStream;
+    }
+
 
     private async Task SummarizeFile()
     {
@@ -231,7 +239,7 @@
 
             // Read the content of the file
             var file = loadedFile[0];
-            var stream = file.OpenReadStream(maxFileSize);
+            Stream stream = await ConvertToStream(file);
             content = ExtractTextFromStream(stream);
 
             Console.WriteLine("Extracted text");
@@ -251,6 +259,7 @@
 
             Console.WriteLine("Got text response");
         }
+
 
         await SummarizeText(content);
 
@@ -368,14 +377,17 @@
         if (IsPDF(input))
         {
             text = ExtractTextFromPDF(input);
+            Console.WriteLine("Is PDF");
         }
         else if (IsWordDocument(input))
         {
             text = ExtractTextFromWord(input);
+            Console.WriteLine("Is Word");
         }
         else if (IsPowerPointDocument(input))
         {
             text = ExtractTextFromPowerPoint(input);
+            Console.WriteLine("Is PPT");
         }
 
         return text;
@@ -555,18 +567,18 @@
         byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
         // create a new page in the section
         var page = new OnenotePage
-            {
-                // set the title and include a textbox with the content of the summary
-                Title = pageTitle,
-                Content = contentBytes
-            };
+        {
+            // set the title and include a textbox with the content of the summary
+            Title = pageTitle,
+            Content = contentBytes
+        };
         Console.WriteLine(htmlContent);
         var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
             .Pages
             .PostAsync(page, requestConfiguration =>
-                {
-                    requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
-                });
+            {
+                requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
+            });
         //var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
 
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
