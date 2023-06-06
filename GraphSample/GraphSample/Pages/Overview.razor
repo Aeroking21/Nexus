@@ -9,12 +9,10 @@
 
 <style>
     .container{
-
-        height: 100vh;
-        width: 100% !important;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 1rem;
-        padding: 1px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        padding-bottom: 15px;
     }
 
     .chat-bot{
@@ -31,11 +29,7 @@
         @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
         
         @* To get the id out of the link *@
-        @* @{
-            string idss = ids;
-            string[] idArray = idss.Split('=');
-        }
-        <h1>HI: @idArray[1]</h1> *@
+
         <div class="groupSec">
             <div class="seeGroups">
                 <FluentSelect Id="state" name="state" TOption="GroupItem" @onchange="UpdateGroup" @bind-Value="selectedGroupValue">
@@ -92,130 +86,218 @@
             </div>
         </div>
 
-        <FluentTabs ActiveId="@activeid" OnTabChange="HandleOnTabChange">
-            <FluentTab Text="Mail" />
-            <FluentTab Text="Teams" />
-            <FluentTab Text="Calendar" />
 
-            @* OUTLOOK TAB *@
-            <FluentTabPanel>
-                <div class="row">
-                    <div class="splitleft">
-                        <div class="emailSec">
-                            @foreach (var mail in allMessages)
-                            {
-                                <FluentCard @onclick="() => Toggle(mail)">
-                                    <div class="emailEntryBox">
-                                        <div class="emailEntryData">
-                                            <p class="subject">@mail?.Subject</p>
-                                            <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
-                                            <p class="content">@mail?.Body?.Content</p>
-                                        </div>
+        <div class="mainContent">
+            <div class="emailTeamsSection">
+                <FluentTabs ActiveId="@activeid" OnTabChange="HandleOnTabChange">
+                    <FluentTab Text="Mail" />
+                    <FluentTab Text="Teams" />
+                    <FluentTab Text="Chats" />
+                    <FluentTab Text="Calendar" />
 
-                                        <div class="emailDateTime">3:30PM</div>
+                    @* OUTLOOK TAB *@
+                    <FluentTabPanel>
+                        <div class="mailPage">
+                            <div class="emailBar">
+                                <div class="emailSelect">
+                                    @foreach (var mail in myMessages)
+                                    {
+                                        <FluentCard @onclick="() => ToggleMail(mail)">
+                                            <div class="emailSelectBox">
+                                                <div class="emailData">
+                                                    <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
+                                                    <p class="subject">@mail?.Subject</p>
+                                                    <p class="content">@mail?.Body?.Content</p>
+                                                </div>
+                                                <div class="timing">@mail?.ReceivedDateTime</div>
+                                                <button class="deleteButton" @onclick="()=> deleteMail(mail)">Delete</button>
+                                            </div>
+                                        </FluentCard>
+                                    }
+                                </div>
+                            </div>
+                            <div class="emailDisplay">
+                                <div class="heading">
+                                    <p class="subject">@currentEmail?.Subject</p>
+                                    <p class="sender">@currentEmail?.Sender?.EmailAddress?.Name</p>
+                                    <p class="recipient">@currentEmail?.ToRecipients</p>
+                                </div>
+                                <div class="content">@currentEmail?.Body?.Content</div>
+
+                                <div class="emailReply" hidden="@(!emailReply)">
+                                    <button @onclick="() => replyToEmail(false)">CLOSE</button>
+                                    <div class="heading">
+                                        <p class="subject">Re: @currentEmail?.Subject</p>
+                                        <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                        <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
                                     </div>
-                                </FluentCard>
-                            }
+                                    <div class="emailResponseContent">
+                                        <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                                    </div>
+                                    <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
+                                </div>
+                            </div>
+                            <div class="mailInteract">
+                                <button @onclick="() => replyToEmail(true)">Reply</button>
+
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="splitright">
-                        <div class="majorContent">
-                            <div class="heading">@currentEmail?.Subject</div>
-                            <div class="email">
-                                <div class="send">
-                                    @currentEmail?.Sender.EmailAddress.Name
+                    </FluentTabPanel>
+
+                    @* TEAMS TAB *@
+                    <FluentTabPanel>
+                        <div class="teamsPage">
+                            <div class="teamsBar">
+                                <div class="teamsSelect">
+                                    @foreach (var team in myTeams)
+                                    {
+                                        <FluentCard @onclick="() => ToggleTeam(team)">
+                                            <div class="teamsSelectBox">
+                                                <div class="teamName">@team?.DisplayName</div>
+                                            </div>
+                                        </FluentCard>
+                                    }
                                 </div>
-
-                                <div class="sendee">
-                                    @currentEmail?.ToRecipients
+                            </div>
+                            <div class="channelBar">
+                                <div class="channelSelect">
+                                    @foreach (var channel in myChannels)
+                                    {
+                                        <FluentCard @onclick="() => {ToggleChannel(channel); displayChannelData(channel); }">
+                                            <div class="channelSelectBox">
+                                                <div class="channelName">@channel?.DisplayName</div>
+                                            </div>
+                                        </FluentCard>
+                                    }
                                 </div>
-
-                                <div class="emailContent">
-                                    @currentEmail?.Body?.Content
+                            </div>
+                            <div class="teamChatBar">
+                                <div class="teamChatSelect">
+                                    <div class="teamsMessageBlock">
+                                        <ul class="nestedMessages">
+                                            @foreach (var full in fullPage)
+                                            {
+                                                <li class="teamMessageBlock">
+                                                    <div class="teamChatInital">
+                                                        <div class="teamChatName">@full?.mainMessage?.From?.User?.DisplayName</div>
+                                                        <div>@full?.mainMessage?.CreatedDateTime</div>
+                                                        <div class="teamChatContent">@full?.mainMessage?.Body?.Content</div>
+                                                        <button>Reply</button>
+                                                    </div>
+                                                    <ul>
+                                                        @foreach (var reply in full?.replies)
+                                                        {
+                                                            <li>
+                                                                <div class="teamReplySection">
+                                                                    <div class="teamChatName">@reply?.From?.User?.DisplayName</div>
+                                                                    <div>@reply?.CreatedDateTime</div>
+                                                                    <div class="teamChatContent">@reply?.Body?.Content</div>
+                                                                </div>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </li>
+                                            }
+                                            <div hidden="@(!newChannelMessageBool)">
+                                                <FluentTextArea @bind-Value=newChannelMessageContent></FluentTextArea>
+                                                <button @onclick="() => newChannelMessage(newChannelMessageContent)">New Chat</button>
+                                            </div>
+                                        </ul>
+                                        <button @onclick="() => sendChannelMessage(true)">New Message</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </FluentTabPanel>
 
-            </FluentTabPanel>
+                    @* CHATS TAB *@
+                    <FluentTabPanel>
+                        <div class="row">
+                            <div class="splitleft">
+                                <div class="teamSec">
+                                    @foreach (var chat in myChats)
+                                    {
+                                        <FluentCard @onclick="() => ToggleChat(chat)">
+                                            <div class="teamEntryBox">
+                                                <div class="teamEntryData">
+                                                    <p class="subject">@chat?</p>
+                                                    <p class="subject">@chat?</p>
+                                                </div>
+                                            </div>
+                                        </FluentCard>
+                                    }
+                                </div>
+                            </div>
 
-
-            <FluentTabPanel>
-                <div class="row">
-                    <div class="splitleft">
-                        <div class="teamSec">
-                            @foreach (var teamsChat in teams)
-                            {
-                                <FluentCard>
-                                    <div class="teamEntryBox">
-                                        <div class="teamEntryData">
-                                            <p class="subject">@teamsChat?.DisplayName</p>
-                                        </div>
-                                    </div>
-                                </FluentCard>
-                            }
+                            <div class="splitright">
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="splitright">
+                    </FluentTabPanel>
 
-                    </div>
-                </div>
+                    @* CALENDAR TAB *@
+                    <FluentTabPanel>
+                        <div class="row">
+                            <div class="splitleft">
+                                <div class="calSec">
+                                    @foreach (var calendarEvent in myEvents)
+                                    {
+                                        <FluentCard>
+                                            <div class="calEntryBox">
+                                                <div class="calEntryData">
+                                                    <p class="subject">@calendarEvent?.Subject</p>
+                                                    <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
+                                                    <p class="content">Content</p>
+                                                </div>
 
-            </FluentTabPanel>
+                                                <div class="calDateTime">
+                                                    <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
+                                                    <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
+                                                </div>
+                                            </div>
+                                        </FluentCard>
+                                    }
+                                </div>
+                            </div>
 
-            <FluentTabPanel>
-                <div class="row">
-                    <div class="splitleft">
-                        <div class="calSec">
-                            @foreach (var calendarEvent in events)
-                            {
-                                <FluentCard>
-                                    <div class="calEntryBox">
-                                        <div class="calEntryData">
-                                            <p class="subject">@calendarEvent?.Subject</p>
-                                            <p class="organizer">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
-                                            <p class="content">Content</p>
-                                        </div>
-
-                                        <div class="calDateTime">
-                                            <p class="begin">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
-                                            <p class="fin">@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
-                                        </div>
-                                    </div>
-                                </FluentCard>
-                            }
+                            <div class="splitright">
+                            </div>
                         </div>
-                    </div>
+                    </FluentTabPanel>
+                </FluentTabs>
+            </div>
 
-                    <div class="splitright">
-                        <Calendar />
-                    </div>
-                </div>
-            </FluentTabPanel>
-        </FluentTabs>
+            <div class="calendarSection">
+                @foreach (var calendarEvent in myEvents)
+                {
+                    <FluentCard>
+                        <p>@calendarEvent?.Subject</p>
+                        <p>@calendarEvent?.Organizer?.EmailAddress?.Name</p>
+                        <p>Content</p>
+
+                        <p>@FormatIso8601DateTime(calendarEvent?.Start?.DateTime)</p>
+                        <p>@FormatIso8601DateTime(calendarEvent?.End?.DateTime)</p>
+                    </FluentCard>
+                }
+            </div>
+        </div>
 
         <style>
+            /*
+             *Generic
+             */
+            ul {
+                list-style-type: none;
+            }
 
-            /* Split page into 2 */
-            /* Control the left side */
-            .row {
+            .mainContent {
                 display: flex;
-            }
-
-            .splitleft {
-                max-width: 33.3%;
-            }
-
-            .splitright {
-                max-width: 66.6%;
             }
 
             /*
              * Group settings
-            */
+             */
             .groupSec {
                 display: flex;
             }
@@ -230,81 +312,192 @@
 
             /*
              * EMAILS
-            */
-
-            .emailSec {
-                max-height: 78vh;
-                overflow-y: scroll;
-            }
-
-            .emailEntryBox {
+             */
+            .mailPage {
+                height: 70vh;
                 display: flex;
-                padding-bottom: 5px;
-                padding-top: 5px;
             }
 
-            .emailEntryData {
-                flex: 100%;
+                .emailBar {
+                    width: 20%;
+                    overflow-y: scroll;
+                }
+
+                    .emailSelect {
+                    }
+
+                        .emailSelectBox {
+                            padding: 5px;
+                            display: flex;
+                        }
+
+                            .emailData {
+                                width: 90%;
+                            }
+
+                                .emailData .sender {
+                                    padding-right: 10px;
+                                    margin-bottom: 0;
+                                    font-size: large;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    max-width: 90%;
+                                }
+
+                                .emailData .subject {
+                                    padding: 0;
+                                    margin-bottom: 0;
+                                    font-size: small;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    max-width: 90%;
+                                }
+
+                                .emailData .content {
+                                    padding: 0;
+                                    margin-bottom: 0;
+                                    font-size: small;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    max-width: 90%;
+                                }
+
+                            .emailSelectBox .timing {
+                                width: 10%;
+                            }
+
+                .emailDisplay {
+                    width: 60%;
+                    overflow-y: scroll;
+                    padding-left: 25px;
+                }
+
+                    .emailDisplay .heading {
+                    }
+                        
+                        .heading .subject {
+                            overflow-wrap: break-all;
+                        }
+
+                        .heading .sender {
+                        }
+
+                        .heading .recipient {
+                        }
+
+                    .emailDisplay .content {
+                        width: 100%;
+                        word-wrap: break-word;
+                    }
+
+            /*
+             * TEAMS
+             */
+
+            .teamsPage {
+                display: flex;
+                height: 70vh;
             }
 
-            .emailEntryData .subject {
-                padding: 0;
-                padding-right: 10px;
-                margin-bottom: 0;
-                font-size: large;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 300px;
+                .teamsBar {
+                    width: 20%;
+                    overflow-y: scroll;
+                }
+
+                    .teamsSelect {
+                        width: 100%;
+                    }
+
+                        .teamChatIntial {
+                            width: 100%;
+                            padding: 5px;
+                        }
+
+                            .teamName {
+                                width: 90%;
+                                padding-bottom: 5px;
+                                font-size: large;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                max-width: 90%;
+                            }
+
+                .channelBar {
+                    width: 20%;
+                    overflow-y: scroll;
+                }
+                    .channelSelect {
+                        width: 100%;
+                    }
+
+                        .channelSelectBox {
+                            width: 100%;
+                            padding: 5px;
+                        }
+
+                            .channelName {
+                                width: 90%;
+                                padding-bottom: 5px;
+                                font-size: large;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                max-width: 90%;
+                            }
+
+                .teamChatBar {
+                    width: 60%;
+                    overflow-y: scroll;
+                    display: flex;
+                    flex-direction: column-reverse;
+                }
+                    .teamChatSelect {
+                        width: 100%;
+                    }
+
+                        .teamChatInital {
+                            width: 100%;
+                            padding: 5px;
+                            padding-top: 20px;
+                        }
+
+                            .teamChatName {
+                                width: 90%;
+                                padding-bottom: 5px;
+                                font-size: large;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                max-width: 90%;
+                            }
+
+                            .teamChatContent {
+                                width: 90%;
+                                padding-bottom: 5px;
+                                max-width: 90%;
+                            }
+
+                        .teamReplySection {
+                            width: 70%;
+                            align-items
+                        }
+
+            /* Split page into 2 */
+            /* Control the left side */
+            .row {
+                display: flex;
             }
 
-            .emailEntryData .sender {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 300px;
+            .splitleft {
+                max-width: 33.3%;
             }
 
-            .emailEntryData .content {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 200px;
-            }
-
-            .emailDateTime {
-                padding: 0;
-                flex: 15%;
-                font-size: small;
-            }
-
-            a {
-                color: white !important;
-                font-size: 1rem !important;
-            }
-
-            .heading {
-                white-space: nowrap;
-                overflow-wrap: break-all;
-            }
-
-            .send {
-                overflow-wrap: break-all;
-            }
-
-            .sendee {
-                overflow-wrap: break-all;
-            }
-
-            .emailContent {
-                overflow-wrap: break-all;
-                word-wrap: break-word;
+            .splitright {
+                max-width: 66.6%;
             }
 
             /*
@@ -400,16 +593,14 @@
     <Chat />
 </div>
 @code{
+
     [Parameter]
-    public string ids{ get; set; } 
+    public string ids{ get; set; }
 
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     private GraphServiceClient? graphClient;
-    private IList<Event> events = new List<Event>();
-    private IList<Message> allMessages = new List<Message>();
-    private IList<Team> teams = new List<Team>();
 
     private string? dateTimeFormat;
     private string? oldData;
@@ -422,25 +613,79 @@
                 "Unable to access authentication state");
         }
 
-        await BeginMail("All");
-        await BeginTeam();
-        //await BeginCal();
+        if (ids != null) { await initialLayout(); }
+
+        await getMail("All");
+        await getTeams("All");
+        //await getChats("All");
+        await getCal();
     }
 
-    /*public void GetQueryStringValues()
-    {
-        NavManager.TryGetQueryString<int>("initialCount", out currentCount);
-        Console.WriteLine
-    }*/
+    //Updating every 10s. Need to actually re-request though.
+    private static System.Timers.Timer _timer;
+    private int counter = 60;
 
-
-    public async Task BeginMail(string addresses)
+    protected override void OnInitialized()
     {
-        Console.WriteLine("GOT IN HERE??");
+        StartTimer();
+    }
+
+    public void StartTimer()
+    {
+        _timer = new System.Timers.Timer(10000);
+        _timer.Elapsed += CountDownTimer;
+        _timer.Enabled = true;
+    }
+
+    public void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
+    {
+        if (counter > 0)
+        {
+            counter -= 1;
+        }
+        else
+        {
+            _timer.Enabled = false;
+        }
+
+        StateHasChanged();
+    }
+
+    public async Task initialLayout()
+    {
         graphClient = clientFactory.GetAuthenticatedClient();
-        /*
-         * GET RECENT MAIL EVENTS
-         */
+        string idss = ids;
+        string[] idArray = idss.Split('=', 2);
+
+        if (idArray[0] == "mailid")
+        {
+            activeid = "Mail";
+            var initMail = await graphClient.Me.Messages[idArray[1]].GetAsync();
+            currentEmail = initMail;
+        }
+        else if (idArray[0] == "teamid")
+        {
+            activeid = "Teams";
+            var initTeam = await graphClient.Teams[idArray[1]].GetAsync();
+            currentTeam = initTeam;
+        }
+        StateHasChanged();
+    }
+
+/*
+* GET MAIL EVENTS
+*/
+
+    /* MAIL LIST */
+    private IList<Message> myMessages = new List<Message>();
+
+    /* ASYNCHRONOUSLY GET MAIL */
+    public async Task getMail(string addresses)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        var result = await graphClient.Me.MailFolders.GetAsync();
+
         var mailPage = await graphClient.Me
             .MailFolders["Inbox"]
             .Messages
@@ -454,24 +699,116 @@
                 config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
                 //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
+
         /*
-         * Set to non-async variable. Can then be accessed in html.
-         */
-        allMessages = mailPage?.Value ?? new List<Message>();
+        * Set to non-async variable. Can then be accessed in html.
+        */
+        myMessages = mailPage?.Value ?? new List<Message>();
     }
 
-    public async Task BeginTeam()
+    public async Task deleteMail(Message email)
     {
         graphClient = clientFactory.GetAuthenticatedClient();
-        /*
-         * GET RECENT TEAM CHATS
-         */
-
-        var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
-        teams = teamPage?.Value ?? new List<Team>();
+        await graphClient.Me.Messages[email.Id].DeleteAsync();
     }
 
-    public async Task BeginCal()
+/*
+* GET TEAM EVENTS
+*/
+
+    /* TEAMS LIST */
+    private IList<Team> myTeams = new List<Team>();
+
+    /* ASYNCHRONOUSLY GET TEAMS */
+    public async Task getTeams(string addresses)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
+        myTeams = teamPage?.Value ?? new List<Team>();
+    }
+
+/*
+* GET CHANNEL EVENTS
+*/
+
+    /* CHANNEL LIST */
+    private IList<Channel> myChannels = new List<Channel>();
+
+    /* ASYNCHRONOUSLY GET CHANNELS */
+    public async Task getChannels()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var channelPage = await graphClient.Teams[currentTeam.Id].Channels.GetAsync();
+        myChannels = channelPage?.Value ?? new List<Channel>();
+    }
+
+/*
+* GET ALL CHANNEL CHATS
+*/
+
+    public class messageBlock
+    {
+        public ChatMessage? mainMessage { get; set; }
+        public IList<ChatMessage>? replies { get; set; }
+    }
+
+    private IList<messageBlock> fullPage = new List<messageBlock>();
+    private IList<ChatMessage> myConvos = new List<ChatMessage>();
+    private IList<ChatMessage> myReplies = new List<ChatMessage>();
+
+    public async void displayChannelData(Channel thisChannel)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var fullPageLocal = new List<messageBlock>();
+
+        if (currentChannel != null)
+        {
+            var convoPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.GetAsync();
+            myConvos = convoPageTest?.Value ?? new List<ChatMessage>();
+
+            foreach (var conversation in myConvos)
+            {
+                var replyPageTest = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[conversation.Id].Replies.GetAsync();
+                myReplies = replyPageTest?.Value ?? new List<ChatMessage>();
+
+                fullPageLocal.Add(new messageBlock { mainMessage = conversation, replies = myReplies });
+            }
+        }
+
+        fullPageLocal.Reverse();
+        fullPage = fullPageLocal;
+        StateHasChanged();
+    }
+
+/*
+* GET PERSONAL CHATS
+*/
+
+    /* CHAT LIST */
+    private IList<Chat> myChats = new List<Chat>();
+
+    /* ASYNCHRONOUSLY GET CHATS */
+    //public async Task getChats(string addresses)
+    //{
+    //    graphClient = clientFactory.GetAuthenticatedClient();
+    //    var chatPage = await graphClient.Me.Chats.GetAsync();
+    //    myChats = chatPage?.Value ?? new List<Chat>();
+    //}
+
+/*
+* GET PERSONAL CHAT REPLIES
+*/
+
+
+/*
+* GET CALENDAR EVENTS
+*/
+
+    /* EVENTS LIST */
+    private IList<Event> myEvents = new List<Event>();
+
+    /* ASYNCHRONOUSLY GET EVENTs */
+    public async Task getCal()
     {
         // Get the user
         //var user = (await authenticationStateTask).User;
@@ -485,9 +822,9 @@
         graphClient = clientFactory.GetAuthenticatedClient();
 
         /*
-         * GET ALL CALENDAR EVENTS
-         */
-        var eventPage = await graphClient.Me
+        * GET ALL CALENDAR EVENTS
+        */
+        /*var eventPage = await graphClient.Me
             .CalendarView
             .GetAsync(config =>
             {
@@ -497,25 +834,32 @@
                 config.QueryParameters.Top = 50;
                 config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
                 config.QueryParameters.Orderby = new[] { "start/dateTime" };
-            });
+            });*/
+
+        var eventPage = await graphClient.Me.Calendar.Events.GetAsync();
         /*
-         * Set to non-async variable. Can then be accessed in html.
-         */
-        events = eventPage?.Value ?? new List<Event>();
+        * Set to non-async variable. Can then be accessed in html.
+        */
+
+        myEvents = eventPage?.Value ?? new List<Event>();
     }
+
+/*
+* NEW GROUP ADDED - UPDATE ASYNC
+*/
 
     async void UpdateGroup(ChangeEventArgs args)
     {
         if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
         {
             string searchTerm = args.Value.ToString()!.ToLower();
-            if (searchTerm == "all") { await BeginMail("All"); StateHasChanged(); }
+            if (searchTerm == "all") { await getMail("All"); StateHasChanged(); }
             else
             {
                 string mailQuery = searchTerm.Split(';')[0] + "'";
                 string teamQuery = searchTerm.Split(';')[1] + "'";
                 string calQuery = searchTerm.Split(';')[2] + "'";
-                await BeginMail(mailQuery);
+                await getMail(mailQuery);
                 StateHasChanged();
             }
         }
@@ -557,23 +901,32 @@
         return iso8601DateTime;
     }
 
-    /*
-     * HANDLE WHICH TAB IS BEING PRESENTED
-    */
-    string? activeid = "Mail";
+/*
+* HANDLE WHICH TAB IS BEING PRESENTED
+*/
+    string? activeid;
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    /*
-     * SHOW THE DETAILS OF THE CURRENT EMAIL
-    */
+/*
+* SHOW THE DETAILS OF THE CURRENT ITEM
+*/
     private Message currentEmail { get; set; } = null;
-    private void Toggle(Message email) { currentEmail = email; }
+    private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
 
-    /*
-     * ALL INPUT BOXES TO CREATE GROUPS
-     * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-     */
+    private Team currentTeam { get; set; } = null;
+    private async void ToggleTeam(Team teamsChat) { currentTeam = (currentTeam == teamsChat) ? null : teamsChat; await getChannels(); StateHasChanged(); }
+
+    private Channel currentChannel { get; set; } = null;
+    private async void ToggleChannel(Channel channelChat) { currentChannel = (currentChannel == channelChat) ? null : channelChat; StateHasChanged(); }
+
+    private Chat currentChat { get; set; } = null;
+    private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
+
+/*
+* ALL INPUT BOXES TO CREATE GROUPS
+* GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+*/
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -658,10 +1011,10 @@
         }
     }
 
-    /*
-     * CREATE LOCAL CLASS TO STORE GROUPS.
-     * ALSO SEND TO API MONGO DB
-     */
+/*
+* CREATE LOCAL CLASS TO STORE GROUPS.
+* ALSO SEND TO API MONGO DB
+*/
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -682,4 +1035,127 @@
         }
     }
 
+/*
+* REPLY TO EMAILS
+*/
+    string? emailContent;
+    private bool emailReply { get; set; } = false;
+    private void replyToEmail(bool change) { emailReply = change; }
+
+    public async void sendEmail(string mainAddress, List<Recipient> recipients, string subject, string content)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        if (recipients == null) { recipients = new List<Recipient> { new Recipient { EmailAddress = new EmailAddress { Address = mainAddress, }, }, }; }
+        else
+        {
+            var mainAddressSend = new Recipient { EmailAddress = new EmailAddress { Address = mainAddress, }, };
+            recipients.Add(mainAddressSend);
+        }
+
+        var requestBody = new Microsoft.Graph.Me.SendMail.SendMailPostRequestBody
+        {
+            Message = new Message
+            {
+                Subject = subject,
+                Body = new ItemBody
+                {
+                    ContentType = BodyType.Text,
+                    Content = content,
+                },
+                ToRecipients = recipients,
+            },
+        };
+
+        await graphClient.Me.SendMail.PostAsync(requestBody);
+        StateHasChanged();
+
+        emailContent = String.Empty;
+        emailReply = false;
+    }
+
+/*
+* Create new channel message
+*/
+    string? newChannelMessageContent;
+    private bool newChannelMessageBool { get; set; } = false;
+    private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
+
+    public async void newChannelMessage(string content)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new ChatMessage
+        {
+            Body = new ItemBody
+            {
+                Content = content,
+            },
+        };
+        var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.PostAsync(requestBody);
+
+        StateHasChanged();
+        newChannelMessageContent = String.Empty;
+        newChannelMessageBool = false;
+
+    }
+
+
+    //public class myTeamClass
+    //{
+    //    public Team? myTeam { get; set; }
+    //    public IList<myChannelClass>? allChannels { get; set; }
+    //}
+
+    //public class myChannelClass
+    //{
+    //    public Channel? myChannel { get; set; }
+    //    public IList<myConvosClass>? allConvos { get; set; }
+    //}
+
+    //public class myConvosClass
+    //{
+    //    public ChatMessage myConvos { get; set; }
+    //    public IList<ChatMessage>? allReplies { get; set; }
+    //}
+
+    //private IList<myTeamClass> allMyTeams = new List<myTeamClass>();
+
+    //public async Task getAllTeamsContent()
+    //{
+    //    graphClient = clientFactory.GetAuthenticatedClient();
+
+    //    var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
+    //    var myTeamPage = teamPage?.Value ?? new List<Team>();
+
+    //    List<myTeamClass>? localTeams = new List<myTeamClass>();
+
+    //    foreach (var team in myTeamPage)
+    //    {
+    //        List<myChannelClass>? localChannels = new List<myChannelClass>();
+
+    //        var channelPage = await graphClient.Teams[team.Id].Channels.GetAsync();
+    //        var myChannelsPage = channelPage?.Value ?? new List<Channel>();
+
+    //        foreach (var channel in myChannelsPage)
+    //        {
+    //            List<myConvosClass>? localConvos = new List<myConvosClass>();
+
+    //            var convoPage = await graphClient.Teams[team.Id].Channels[channel.Id].Messages.GetAsync();
+    //            var myConvosPage = convoPage?.Value ?? new List<ChatMessage>();
+
+    //            foreach (var convo in myConvosPage)
+    //            {
+    //                var replyPage = await graphClient.Teams[team.Id].Channels[channel.Id].Messages[convo.Id].Replies.GetAsync();
+    //                var myRepliesPage = replyPage?.Value ?? new List<ChatMessage>();
+
+    //                Console.WriteLine("in here????");
+
+    //                localConvos.Add(new myConvosClass { myConvos = convo, allReplies = myRepliesPage } );
+    //            }
+    //            localChannels.Add(new myChannelClass { myChannel = channel, allConvos = localConvos } );
+    //        }
+    //        localTeams.Add(new myTeamClass { myTeam = team, allChannels = localChannels });
+    //    }
+    //    allMyTeams = localTeams;
+    //}
 }

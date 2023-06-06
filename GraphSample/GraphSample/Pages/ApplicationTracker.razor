@@ -1719,25 +1719,21 @@
         }
     }
 
-    private async Task ShowAddAssessmentModal(ApplicationTimeline timeline)
+    private async Task ShowAddAssessmentModal(int timelineID)
     {
         var assessmentModal = ModalInputPopup.Show<AssessmentInputPopup>();
         var result = await assessmentModal.Result;
-        int timelineID = timeline.timelineID;
 
         if (result.Confirmed)
         {
             Assessment? newAssessment = result.Data as Assessment;
             if (newAssessment != null)
             {
-                timeline.assessments.Add(newAssessment);
-                timeline.assessments.Sort((a1, a2) => a1.date.CompareTo(a2.date));
-                StateHasChanged();
-                int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                 var response = await backendApiService.addAssessment(newAssessment, Username, timelineID);
                 if (response)
                 {
                     var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
+                    int index = timelines.FindIndex(tl => tl.timelineID == timelineID);
                     if (index != -1)
                     {
                         newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
