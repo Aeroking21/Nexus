@@ -532,15 +532,26 @@
         string pageTitle = $"Summary of {fileName}";
 
         // Create the HTML body content
-        string htmlContent = $"\n<!DOCTYPE html>\n<html>\n<head>\n<title>{pageTitle}</title>\n</head>\n<body>\n<p>{summary}</p>\n</body>\n</html>";
+        string htmlContent =  "<!DOCTYPE html>" +
+                              "<html>" +
+                              "<head>" +
+                              "<title>" + pageTitle + "</title>" +
+                              "</head>" +
+                              "<body>" +
+                              "<p>" + summary + "</p>" +
+                              "</body>" +
+                              "</html>";
 
         // Convert the HTML string to a byte array using UTF-8 encoding
         byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
         // create a new page in the section
         var page = new OnenotePage
             {
+                // set the title and include a textbox with the content of the summary
+                Title = pageTitle,
                 Content = contentBytes
             };
+        Console.WriteLine(page);
         var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
             .Pages
             .PostAsync(page, requestConfiguration =>
