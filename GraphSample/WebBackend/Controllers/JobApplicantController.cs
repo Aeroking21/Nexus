@@ -378,6 +378,47 @@ public class JobApplicantsController : ControllerBase
         }
     }
 
+    [Route("add-assessments/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> AddAssesments([FromRoute] string username, [FromBody] AssessmentsBson assessmentsBson)
+    {
+        var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
+
+        var timelineFilter = Builders<ApplicationTimeline>.Filter.Eq(at => at.timelineID, assessmentsBson.timelineID);
+
+        //var update = Builders<JobApplicant>.Update.PullFilter("ApplicationTimelines.$.AssociatedEmailAddresses", Builders<string>.Filter.Where(e => e == email.EmailAddress));
+        List<Assessment> assessments = new();
+        List<Assessment> orderedAssessments = new();
+        var applicant = _collection.Find(userFilter).ToList();
+        var timelines = applicant[0].applicationTimelines;
+        foreach (ApplicationTimeline timeline in timelines)
+        {
+            if (timeline.timelineID == assessmentsBson.timelineID)
+            {
+                assessments = timeline.assessments;
+                break;
+            }
+        }
+        try
+        {
+            assessments.AddRange(assessmentsBson.assessments);
+            orderedAssessments = assessments.OrderBy(a => a.date).ToList();
+            var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", assessmentsBson.timelineID)
+        );
+
+            var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.assessments", orderedAssessments);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
 
 
