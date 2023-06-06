@@ -21,5 +21,10 @@ public class Assessment
     public bool todoScheduled { get; set; } = false;
 
     public string? taskId { get; set; }
+
+    public override string ToString()
+    {
+        return $"date: {date}, type: {type}, status: {status}, customDescription: {customDescription}, todoScheduled: {todoScheduled}, taskId: {taskId}";
+    }
 }
 

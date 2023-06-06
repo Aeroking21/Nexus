@@ -7,10 +7,15 @@
 @using GraphSample.ReusableComponents
 @using  System.Globalization
 @using System.Diagnostics 
-@using System.Timers;
+@using System.Timers
+@using System.Text.RegularExpressions
+@using Newtonsoft.Json
+@using Azure.AI.OpenAI
+@using Azure
 
 @inject GraphSample.Services.IBackendApiService backendApiService
 @inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
 
 <div class="dashboard-class">
     <AuthorizeView>
@@ -132,6 +137,9 @@
                                                                     <button class="action-item" @onclick="() => { HandleEmailAutofill(timeline); }">
                                                                         Autofill Email Addressess
                                                                     </button>
+                                                                    <button class="action-item" @onclick=" async () => { await AutofillAssessments(timeline); }">
+                                                                        Autofill Assessments
+                                                                    </button>
                                                                 </div>
                                                                 }
 
@@ -150,6 +158,7 @@
                                                                     <span style="display: inline-block; vertical-align: middle;">Show Email Addresses</span>
                                                                 </button>
                                                                 }
+                                                            <div>
                                                             @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
                                                                 {
                                                                 <div class="email-list-container">
@@ -173,9 +182,21 @@
                                                                         }
                                                                 </div>
                                                                 }
+                                                            </div>
                                                         </div>
                                                     </td>
-                                                    <td width="15%"> <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span></td>
+                                                    <td width="15% !important"> 
+                                                        @if (!fillingAssessments || (timeline.timelineID != fillingAssessmentsTimeline))
+                                                        {
+                                                            <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span style="overflow-x: hidden; max-height: 75px !important;">
+                                                            <FluentProgressRing style="width: 100%; height: 100%;"></FluentProgressRing> 
+                                                            </span>
+                                                        }
+                                                    </td>
                                                 </tr>
                                                 }
                                         </tbody>
@@ -609,7 +630,6 @@
         z-index: 2;
         box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
         padding: 8px;
-        margin-top: 8px;
         border: 1px solid #ccc;
         background-color: buttonface;
         border-radius: 5px;
@@ -620,7 +640,6 @@
         z-index: 2;
         box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
         padding: 4px;
-        margin-top: 4px;
         border: 1px solid #ccc;
         background-color: buttonface;
         border-radius: 5px;
@@ -642,18 +661,19 @@
     .action-item {
         display: flex;
         align-items: center;
-        border: 1px solid;
-        border-color: #d3d3d3;
         border-radius: 5px;
-        background-color: #D3D3D3;
+        background-color: #1b6ec2;
+        border: 1px solid grey;
         margin-bottom: 4px;
         position: relative;
         justify-content: space-between;
         width: 100%;
+        color : white;
     }
 
         .action-item:hover {
-            background-color: #C0C0C0;
+            background-color: #0b5ed7;
+            border-color: rgb(119, 119, 119); 
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
         }
 
@@ -730,14 +750,13 @@
         color: white;
         font-size: 12px;
         border-radius: 5px;
-        border: 1px none;
+        border: 1px solid grey; 
         background-color: #1b6ec2;
-        border-color: #1861ac;
     }
 
         .add-email-button:hover {
             background-color: #0b5ed7;
-            border-color: #0a58ca;
+            border-color: rgb(119, 119, 119);
         }
 
     .show-email-addresses {
@@ -786,14 +805,14 @@
         font-size: 12px;
         border-radius: 5px;
         background-color: #1b6ec2;
-        border-color: #1861ac;
+        border 1px solid grey;
         width: 100px;
         margin-left: 20px;
     }
 
     .add-todo-button:hover {
         background-color: #0b5ed7;
-        border-color: #0a58ca;
+        border-color: rgb(119, 119, 119);
     }
 
     .todo-scheduled-button {
@@ -938,6 +957,10 @@
     private bool fetchingEmails = false;
     private bool fetchingTimelines = false;
     private bool creatingApplicant = false;
+
+    private bool fillingAssessments = false;
+
+    private int fillingAssessmentsTimeline = -1;
 
     private string Username;
     private bool isRegistered;
@@ -1442,7 +1465,7 @@
 
 
     ///////////////////////////////////////
-    //////Email SearchSection /////////////
+    //////Email Search Section ////////////
     ///////////////////////////////////////
 
     private void HandleEmailsSearchTest(ChangeEventArgs args)
@@ -1598,7 +1621,7 @@
 
 
     ///////////////////////////////////////
-    //////Email SearchSection /////////////
+    //////Email Search Section ////////////
     ///////////////////////////////////////
 
 
@@ -1774,6 +1797,170 @@
 
     ///////////////////////////////////////
     //////   Calendar view    /////////////
+    ///////////////////////////////////////
+
+
+    ///////////////////////////////////////
+    //////      AI stuff      /////////////
+    ///////////////////////////////////////
+
+
+    public async Task AutofillAssessments(ApplicationTimeline timeline)
+    {
+
+        fillingAssessments = true;
+        fillingAssessmentsTimeline = timeline.timelineID;
+        List<string> allAssociatedEmailStrings = new();
+        List<Message>? fetchedEmails = new();
+        
+        if (timeline.associatedEmailAddresses.Count() == 0)
+        {
+            selectedAssociatedEmails = new List<Message>();
+            StateHasChanged();
+            return;
+        }
+
+        foreach (var email in timeline.associatedEmailAddresses)
+        {
+            allAssociatedEmailStrings.Add(email);
+        }
+
+        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
+        var filter = string.Join(" or ", emailFilters);
+
+        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.Filter = filter;
+            requestConfiguration.QueryParameters.Top = 999;
+        });
+
+        fetchedEmails = result?.Value;
+        //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
+        if (fetchedEmails != null)
+        {
+            selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
+        }
+
+        emailsShowing = false;
+        string prompt;
+        List<AssessmentAIResponse> predictedAssessments = new();
+
+       foreach(var email in selectedAssociatedEmails){
+            //var body = new MarkupString(email.Body.Content);
+            string plainTextBody = Regex.Replace(email.Body.Content, "<.*?>", "");
+            Console.WriteLine($"Body || {plainTextBody} || End of body");
+            if(plainTextBody.Count() < 10)
+            {
+                continue;
+            }
+            @* prompt = $"Based on the email body I provide further on, fill the following json file based on if you think it is an invitation to an assessment: {{IsAssessmentInvitation: 'bool', type:'AssessmentType', status:'AssessmentStatus', AssessmentDate:'DateTime'}}. This is the email body: {plainTextBody}. Use these definitions for AssessmentType and AssessmentStatus: "+  
+       @" public enum AssessmentType
+        {{
+            Online_HR_Interview,
+            In_Person_HR_Interview,
+            Online_Technical_Interview,
+            In_Person_Technical_Interview,
+            Online_Assessment,
+            Manager_Interview,
+            Custom
+        }}
+        public enum AssessmentStatus
+        {{
+            Scheduled,
+            Passed,
+            Pending,
+            Failed
+        }}. Only fill in 'true' for IsAssessmentInvitation if you belive the email is an assessment invitation and be strickt about that.
+             The other Json fields can be null if it is not. Return A string in Json format so I can directly desirealize it into Json In my C# code by JsonConvert.DeserializeObject(response)" ;  *@
+
+            prompt = $@"Please analyze the given email body and determine if it is an invitation to a job application assessment/interview. Fill in the fields of a JSON object with the following structure: {{'IsAssessmentInvitation': 'bool', 'Type': 'AssessmentType', 'Status': 'AssessmentStatus', 'AssessmentDate': 'DateTime', 'CustomDescription': 'string'}}.
+
+            AssessmentType: Online_HR_Interview, In_Person_HR_Interview, Online_Technical_Interview, In_Person_Technical_Interview, Online_Assessment, Manager_Interview, Custom
+            AssessmentStatus: Scheduled, Passed, Pending, Failed
+            IsAssessmentInvitation: true, false
+            AssessmentDate: DateTime (with format 'yyyy-MM-dd HH:mm:ss')
+            CustomDescription: string
+
+            Email Body:
+            {plainTextBody}
+
+            Your response should be a string which can directly be deserialized when I pass it into JsonConvert.DeserializeObject() in C#.
+            If the IsAssessmentInvitation field is false, the rest of the fields shoudl be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'";
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+
+            Console.WriteLine("Start of Json||" + completion + "||End of Json");
+            try
+            {
+                int startIndex = completion.IndexOf('{');
+                int endIndex = completion.LastIndexOf('}');
+                string jsonString = completion.Substring(startIndex, endIndex - startIndex + 1);
+                Console.WriteLine($"Json string: {jsonString}");
+                AssessmentAIResponse? response = JsonConvert.DeserializeObject<AssessmentAIResponse>(jsonString);
+                Console.WriteLine(response.IsAssessmentInvitation);
+                if (response != null){
+                    predictedAssessments.Add(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            }
+            if (predictedAssessments.Count() != 0)
+            {
+                List<Assessment> newAssessments;
+                    newAssessments = predictedAssessments
+                    .Where(pa => pa.IsAssessmentInvitation)
+                    .Select(pa => {
+                        DateTime parsedDateTime;
+                        DateTime newDate = DateTime.TryParse(pa.AssessmentDate, out parsedDateTime) ? parsedDateTime : DateTime.MinValue; 
+                        return new Assessment {
+                            status = newDate <= DateTime.Now ? AssessmentStatus.Pending : AssessmentStatus.Scheduled,
+                            type = pa.Type.HasValue ? pa.Type.Value : AssessmentType.Online_Technical_Interview,
+                            date =  newDate,
+                            todoScheduled = false,
+                            taskId = null,
+                            customDescription = pa.CustomDescription
+                            };
+                    })
+                    .GroupBy(pa => pa.date)
+                    .SelectMany(g => g.Key == DateTime.MinValue ? g : g.Take(1))
+                    .ToList();
+
+                if (newAssessments.Count() != 0)
+                {
+                    timeline.assessments.AddRange(newAssessments);
+                    timeline.assessments.Sort((a1, a2) => a1.date.CompareTo(a2.date));
+                    fillingAssessmentsTimeline = -1;
+                    fillingAssessments = false;
+                    StateHasChanged();
+
+                    int index = timelines.FindIndex(tl => tl.timelineID == timeline.timelineID);
+                    var response = await backendApiService.addAssessments(newAssessments, Username, timeline.timelineID);
+                    if (response)
+                    {
+                        var newTimeline = await backendApiService.getUserTimelineAsync(Username, timeline.timelineID);
+                        if (index != -1)
+                        {
+                            newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
+                            timelines[index] = newTimeline;
+                            StateHasChanged();
+                        }
+                    }
+
+                }
+
+            }
+            fillingAssessmentsTimeline = -1;
+            fillingAssessments = false;
+
+    }
+
+
+    ///////////////////////////////////////
+    /////////    AI stuff      ///////////
     ///////////////////////////////////////
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
