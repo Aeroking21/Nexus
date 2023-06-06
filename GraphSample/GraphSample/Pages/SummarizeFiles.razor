@@ -46,7 +46,7 @@
 
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Choose File
+                SmartScribe
             </button>
             <ul class="dropdown-menu">
                 <li class="dropdown-item"> <InputFile OnChange="@LoadFile" /> </li>
@@ -206,13 +206,18 @@
     // Extracts all the text from file
     private async Task<string> ExtractAllTextAsync(IBrowserFile file)
     {
-        using var memoryStream = new MemoryStream();
-        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
         var document = new GcPdfDocument();
-        document.Load(memoryStream);
-        var text = document.GetText();
+        var text = string.Empty;
+
+        using (var stream = file.OpenReadStream(maxFileSize))
+        {
+            document.Load(stream);
+            text = document.GetText();
+        }
+
         return text;
     }
+
 
     private async Task SummarizeFile()
     {
@@ -226,7 +231,8 @@
 
             // Read the content of the file
             var file = loadedFile[0];
-            content = await ExtractAllTextAsync(file);
+            var stream = file.OpenReadStream(maxFileSize);
+            content = ExtractTextFromStream(stream);
 
             Console.WriteLine("Extracted text");
         }
