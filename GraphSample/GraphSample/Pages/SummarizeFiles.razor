@@ -78,39 +78,41 @@
             <p>Uploading...</p>
         }
 
-        
-
-        <div class="textbox">
-
-            @if (!string.IsNullOrEmpty(summary))
-            {
+        @if (!string.IsNullOrEmpty(summary))
+        {
+            <div class="textbox">
                 <h3>Summary:</h3>
                 <p>@summary</p>
-            }
+            </div>
+        }
             
-            else if (isSummarizing)
-            {
+        else if (isSummarizing)
+        {
+            <div class="textbox">
                 <p>Summarizing...</p>
                 <FluentProgressRing></FluentProgressRing>
-            }
-
-            @if (noSummary)
-            {
-                <p>No summary to write to OneNote yet...</p>
-            }
-
-
-            @if (isWriting)
-            {
+            </div>
+        }
+        
+        else if (isWriting)
+        {
+            <div class="textbox">
                 <p>Writing to OneNote...</p>
+                <FluentProgressRing></FluentProgressRing>
                 <h3>Summary:</h3>
                 <p>@summary</p>
-            }
+            </div>
+        }
 
-        </div>
+        @if (noSummary)
+        {
+            <div class="textbox">
+                <p>No summary to write to OneNote yet...</p>
+            </div>
+        }
 
 
-
+        
 
     </Authorized>
 
@@ -492,7 +494,7 @@
 
     private async Task WriteToOneNote()
     {
-        if (summary == null)
+        if (summary == "")
         {
             summary = "Hello World";
             //noSummary = true;
@@ -532,14 +534,15 @@
         string pageTitle = $"Summary of {fileName}";
 
         // Create the HTML body content
-        string htmlContent =  "<!DOCTYPE html>" +
-                              "<html>" +
-                              "<head>" +
-                              "<title>" + pageTitle + "</title>" +
-                              "</head>" +
-                              "<body>" +
-                              "<p>" + summary + "</p>" +
-                              "</body>" +
+        string htmlContent =  "<!DOCTYPE html>\n" +
+                              "<html>\n" +
+                              "    <head>\n" +
+                              "         <title>" + pageTitle + "</title>\n" +
+                              "         <meta name=\"" + pageTitle + $"\" content=\"{DateTime.Now.ToString("yyyy-MM-dd")}T{DateTime.Now.ToString("HH:mm:ss")}Z\" />\n" +
+                              "     </head>\n" +
+                              "     <body>\n" +
+                              "         <p>" + summary + "</p>\n" +
+                              "     </body>\n" +
                               "</html>";
 
         // Convert the HTML string to a byte array using UTF-8 encoding
@@ -551,7 +554,7 @@
                 Title = pageTitle,
                 Content = contentBytes
             };
-        Console.WriteLine(page);
+        Console.WriteLine(htmlContent);
         var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
             .Pages
             .PostAsync(page, requestConfiguration =>
@@ -562,7 +565,4 @@
 
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
     }
-
-
-
 }
