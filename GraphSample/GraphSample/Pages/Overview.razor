@@ -9,11 +9,10 @@
 
 <style>
     .container{
-        height: 100vh;
-        width: 100% !important;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 1rem;
-        padding: 1px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        padding-bottom: 15px;
     }
 
     .chat-bot{
@@ -668,15 +667,14 @@
         {
             activeid = "Teams";
             var initTeam = await graphClient.Teams[idArray[1]].GetAsync();
-            Console.WriteLine(initTeam.DisplayName);
             currentTeam = initTeam;
         }
         StateHasChanged();
     }
 
-    /*
-    * GET MAIL EVENTS
-    */
+/*
+* GET MAIL EVENTS
+*/
 
     /* MAIL LIST */
     private IList<Message> myMessages = new List<Message>();
@@ -685,6 +683,8 @@
     public async Task getMail(string addresses)
     {
         graphClient = clientFactory.GetAuthenticatedClient();
+
+        var result = await graphClient.Me.MailFolders.GetAsync();
 
         var mailPage = await graphClient.Me
             .MailFolders["Inbox"]
@@ -699,6 +699,7 @@
                 config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
                 //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
+
         /*
         * Set to non-async variable. Can then be accessed in html.
         */
@@ -711,9 +712,9 @@
         await graphClient.Me.Messages[email.Id].DeleteAsync();
     }
 
-    /*
-    * GET TEAM EVENTS
-    */
+/*
+* GET TEAM EVENTS
+*/
 
     /* TEAMS LIST */
     private IList<Team> myTeams = new List<Team>();
@@ -726,9 +727,9 @@
         myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-    /*
-    * GET CHANNEL EVENTS
-    */
+/*
+* GET CHANNEL EVENTS
+*/
 
     /* CHANNEL LIST */
     private IList<Channel> myChannels = new List<Channel>();
@@ -741,9 +742,10 @@
         myChannels = channelPage?.Value ?? new List<Channel>();
     }
 
-    /*
-    * GET ALL CHANNEL CHATS
-    */
+/*
+* GET ALL CHANNEL CHATS
+*/
+
     public class messageBlock
     {
         public ChatMessage? mainMessage { get; set; }
@@ -778,9 +780,9 @@
         StateHasChanged();
     }
 
-    /*
-    * GET PERSONAL CHATS
-    */
+/*
+* GET PERSONAL CHATS
+*/
 
     /* CHAT LIST */
     private IList<Chat> myChats = new List<Chat>();
@@ -793,14 +795,14 @@
     //    myChats = chatPage?.Value ?? new List<Chat>();
     //}
 
-    /*
-    * GET PERSONAL CHAT REPLIES
-    */
+/*
+* GET PERSONAL CHAT REPLIES
+*/
 
 
-    /*
-    * GET CALENDAR EVENTS
-    */
+/*
+* GET CALENDAR EVENTS
+*/
 
     /* EVENTS LIST */
     private IList<Event> myEvents = new List<Event>();
@@ -842,9 +844,9 @@
         myEvents = eventPage?.Value ?? new List<Event>();
     }
 
-    /*
-    * NEW GROUP ADDED - UPDATE ASYNC
-    */
+/*
+* NEW GROUP ADDED - UPDATE ASYNC
+*/
 
     async void UpdateGroup(ChangeEventArgs args)
     {
@@ -899,16 +901,16 @@
         return iso8601DateTime;
     }
 
-    /*
-    * HANDLE WHICH TAB IS BEING PRESENTED
-    */
+/*
+* HANDLE WHICH TAB IS BEING PRESENTED
+*/
     string? activeid;
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    /*
-    * SHOW THE DETAILS OF THE CURRENT ITEM
-    */
+/*
+* SHOW THE DETAILS OF THE CURRENT ITEM
+*/
     private Message currentEmail { get; set; } = null;
     private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
 
@@ -921,10 +923,10 @@
     private Chat currentChat { get; set; } = null;
     private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
 
-    /*
-    * ALL INPUT BOXES TO CREATE GROUPS
-    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-    */
+/*
+* ALL INPUT BOXES TO CREATE GROUPS
+* GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+*/
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -1009,10 +1011,10 @@
         }
     }
 
-    /*
-    * CREATE LOCAL CLASS TO STORE GROUPS.
-    * ALSO SEND TO API MONGO DB
-    */
+/*
+* CREATE LOCAL CLASS TO STORE GROUPS.
+* ALSO SEND TO API MONGO DB
+*/
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -1033,9 +1035,9 @@
         }
     }
 
-    /*
-    * REPLY TO EMAILS
-    */
+/*
+* REPLY TO EMAILS
+*/
     string? emailContent;
     private bool emailReply { get; set; } = false;
     private void replyToEmail(bool change) { emailReply = change; }
@@ -1072,9 +1074,9 @@
         emailReply = false;
     }
 
-    /*
-    * Create new channel message
-    */
+/*
+* Create new channel message
+*/
     string? newChannelMessageContent;
     private bool newChannelMessageBool { get; set; } = false;
     private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
