@@ -44,7 +44,13 @@
             <p>@message</p>
         </div>
     </div>
-    <button class="btn btn-primary" @onclick="GetCalenders">Get Calendars</button>
+    <!-- input a list of attendes, seperate them using ; symbol -->
+    <div class="row">
+        <div class="col-4">
+            <label>Attendees</label>
+            <input type="text" class="form-control" placeholder="attendees" @bind="@attendees" />
+        </div>
+    </div>
     <button class="btn btn-primary" @onclick="GetFreeSchedule">Get Free Schedule</button>
     <button class="btn btn-primary" @onclick="FindMeetingTimes">Find Meeting Times</button>
 
@@ -56,6 +62,7 @@
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private GraphServiceClient? graphClient;
+    string attendees = string.Empty;
     
     [Inject]
     protected IAccessTokenProvider? AccessTokenProvider { get; set; }
@@ -63,7 +70,6 @@
     string message;
     public List<string> messages = new List<string>();
     private static HttpClient Http = new HttpClient();
-    List<string> options = new List<string>() { "Create a Timetable", "Add In a Todo", "Schedule A Meeting" };
 
 
     protected override async Task OnInitializedAsync()
@@ -84,35 +90,23 @@
         graphClient = clientFactory.GetAuthenticatedClient();          
 
     }
-
     public async Task FindMeetingTimes(){
+        var attendeesArray = attendees.Split(';')
+                                   .Select(email => email.Trim())
+                                   .ToList();
+
         var requestBody = new Microsoft.Graph.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
         {
-        Attendees = new List<AttendeeBase>
-        {
-            new AttendeeBase
-            {
-                Type = AttendeeType.Required,
-                EmailAddress = new EmailAddress
+            Attendees = attendeesArray.Select(email => new AttendeeBase
                 {
-                    Name = "Alex Wilbur",
-                    Address = "alexw@contoso.onmicrosoft.com",
-                },
-            },
-        },
-        LocationConstraint = new LocationConstraint
-        {
-            IsRequired = false,
-            SuggestLocation = false,
-            Locations = new List<LocationConstraintItem>
-            {
-                new LocationConstraintItem
-                {
-                    ResolveAvailability = false,
-                    DisplayName = "Conf room Hood",
-                },
-            },
-        },
+                    Type = AttendeeType.Required,
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = email,
+                    },
+                }).ToList(),
+            
+
         TimeConstraint = new TimeConstraint
         {
             ActivityDomain = ActivityDomain.Work,
@@ -174,18 +168,4 @@
         });
     }
 
-    public async Task GetCalenders(){
-        Console.WriteLine("Get Calendars");
-        var result = await graphClient.Me.Calendars.GetAsync();
-        // if the result is okay, then write the result into the console
-        // convert the result into a string
-        var resultString = result.ToString();
-        // write the result into the console
-        // if result is null, then write that it is null
-        if (result == null)
-        {
-            Console.WriteLine("The result is null");
-        }
-        Console.WriteLine(resultString);
-    }
 }

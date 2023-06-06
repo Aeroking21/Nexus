@@ -1,11 +1,15 @@
 <style>
   .searchbar {
-    background-image: transparent;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
   }
 
-  .searchbar button input[type=submit] {
+  .searchbar button {
     background-color: #0078d4;
-    border: 1px solid rgba(190, 190, 190, 0);
+    border: none;
     border-radius: 3px;
     padding: 5px;
     margin: 5px;
@@ -13,17 +17,13 @@
   }
 
   .search-box {
-    width: fit-content;
-    height: fit-content;
-    background-image: transparent;
     position: relative;
-
   }
 
   .input-search {
     height: 50px;
     width: 50px;
-    border-style: none;
+    border: none;
     padding: 10px;
     font-size: 18px;
     letter-spacing: 2px;
@@ -37,7 +37,8 @@
   }
 
   .input-search::placeholder {
-    color: #5680E9 font-size: 18px;
+    color: #5680E9;
+    font-size: 18px;
     letter-spacing: 2px;
     font-weight: 100;
   }
@@ -45,7 +46,7 @@
   .btn-search {
     width: 50px;
     height: 50px;
-    border-style: none;
+    border: none;
     font-size: 20px;
     font-weight: bold;
     outline: none;
@@ -55,21 +56,15 @@
     right: 0px;
     color: black;
     background-color: #0078d4;
-    pointer-events: painted;
   }
 
-  .btn-search:focus~.input-search {
-    width: 300px;
-    border-radius: 0px;
-    background-color: transparent;
-    border-bottom: 1px solid #0078d4 transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
-  }
-
+  .btn-search:focus~.input-search,
   .input-search:focus {
     width: 300px;
-    border-radius: 0px;
+    border-radius: 0;
     background-color: transparent;
-    border-bottom: 1px solid #0078d4 transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
+    border-bottom: 1px solid #0078d4;
+    transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
   }
 </style>
 
@@ -77,20 +72,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 
 <!-- place the search bar on the top right, under the nav -->
-
-<div class="searchbar">
-    <span class="right-content">
-        <div class="search-box">
-              <button class="btn-search"><i class="fa fa-search" style="color:white;"></i></button>
-              <input type="text" class="input-search" placeholder="Type to Search...">
-         </div>
-      </span>
-
-  <div class="search-box">
-    <input type="text" class="input-search" placeholder="Search" />
-    <button class="btn-search" type="submit"><i class="fa fa-search"></i></button>
-  </div>
-
+<div class="navbar">
+  <!-- Add your navigation bar content here -->
 </div>
 
-
+<div class="searchbar">
+  <div class="search-box">
+    <button class="btn-search"><i class="fa fa-search" style="color:white;"></i></button>
+    <input type="text" class="input-search" placeholder="Type to Search...">
+  </div>
+</div>
