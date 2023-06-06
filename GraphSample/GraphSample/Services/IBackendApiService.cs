@@ -12,6 +12,7 @@ namespace GraphSample.Services
         public Task<bool> addEmail(string email, string username, int timelineID);
         public Task<bool> removeAssessment(Assessment assessment, string username, int timelineID);
         public Task<bool> addAssessment(Assessment assessment, string username, int timelineID);
+        public Task<bool> addAssessments(List<Assessment> assessments, string username, int timelineID);
         public Task<int> addTimeline(string username, TimelineBson newTimeLineBson);
         public Task<bool> removeTimeline(string username, int timelineID);
         public Task<bool> updateReadEmailsDict(string username, ReadEmailsBson readEmails);

@@ -93,7 +93,6 @@ namespace GraphSample.Services
             var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-email/{username}", selectedEmail);
 
             return response.IsSuccessStatusCode;
-
         }
 
         public async Task<bool> addEmails(List<string> emails, string username, int timelineID)
@@ -121,6 +120,16 @@ namespace GraphSample.Services
             var newAssessment = new AssessmentBson { assessment = assessment, timelineID = timelineID };
 
             var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-assessment/{username}", newAssessment);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
+        public async Task<bool> addAssessments(List<Assessment> assessments, string username, int timelineID)
+        {
+            var newAssessments = new AssessmentsBson { assessments = assessments, timelineID = timelineID };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/add-assessments/{username}", newAssessments);
 
             return response.IsSuccessStatusCode;
 
