@@ -9,6 +9,9 @@
 @using System.Text
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
+@using Microsoft.Graph.Models.ODataErrors;
+@using Microsoft.Kiota.Abstractions
+@using Microsoft.Kiota.Abstractions.Serialization
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
 
@@ -78,15 +81,9 @@
             <p>Uploading...</p>
         }
 
-        @if (!string.IsNullOrEmpty(summary))
-        {
-            <div class="textbox">
-                <h3>Summary:</h3>
-                <p>@summary</p>
-            </div>
-        }
+        
             
-        else if (isSummarizing)
+        @if (isSummarizing)
         {
             <div class="textbox">
                 <p>Summarizing...</p>
@@ -99,6 +96,14 @@
             <div class="textbox">
                 <p>Writing to OneNote...</p>
                 <FluentProgressRing></FluentProgressRing>
+                <h3>Summary:</h3>
+                <p>@summary</p>
+            </div>
+        }
+        
+        else if (!string.IsNullOrEmpty(summary))
+        {
+            <div class="textbox">
                 <h3>Summary:</h3>
                 <p>@summary</p>
             </div>
@@ -225,7 +230,7 @@
 
     private async Task SummarizeFile()
     {
-
+        summary = "";
         var content = "";
         isSummarizing = true; // Set the flag to indicate that summarization is in progress
 
@@ -292,6 +297,11 @@
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            //Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish2);
         }
 
         // Combine the individual summaries into an overall summary
@@ -562,21 +572,39 @@
         // Convert the HTML string to a byte array using UTF-8 encoding
         byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
         // create a new page in the section
-        var page = new OnenotePage
-        {
-            // set the title and include a textbox with the content of the summary
-            Title = pageTitle,
-            Content = contentBytes
-        };
-        Console.WriteLine(htmlContent);
-        var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
-            .Pages
-            .PostAsync(page, requestConfiguration =>
-            {
-                requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
-            });
+        //var page = new OnenotePage
+        //{
+        //     set the title and include a textbox with the content of the summary
+        //    Title = pageTitle,
+        //    Content = contentBytes
+        //};
+        //Console.WriteLine(htmlContent);
+        //var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
+        //    .Pages
+        //    .PostAsync(page, requestConfiguration =>
+        //    {
+        //        requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
+        //    });
         //var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
+        // Create multipart object with the relevant content
+        var multipartContent = new MultipartFormDataContent();
+        var htmlString = htmlContent;
+        var presentation = new StringContent(htmlString, Encoding.UTF8, "text/html");
+        multipartContent.Add(presentation, "Presentation");//needs a name
 
+        // We can add more httpcontent instance here if we wish to
+
+        // create a request information instance and make a request.
+        var requestInformation = graphClient.Me.Onenote.Sections[sectionId].Pages.ToGetRequestInformation();
+        requestInformation.Headers.Add("Content-Type", multipartContent.Headers.ContentType.ToString());
+        requestInformation.HttpMethod = Method.POST;
+        requestInformation.Content = await multipartContent.ReadAsStreamAsync();
+        var errorMapping = new Dictionary<string, ParsableFactory<IParsable>> {
+              {"4XX", ODataError.CreateFromDiscriminatorValue},
+              {"5XX", ODataError.CreateFromDiscriminatorValue},
+            };
+        var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
+        Console.WriteLine("Done");
     }
 }
