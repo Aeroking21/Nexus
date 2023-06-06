@@ -292,12 +292,12 @@
             var completion = completionsResponse.Value.Choices[0].Text;
             //Console.Write($"Completion: {completion}\n");
             summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
+            string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completionFinish}";
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
             var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
             var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
@@ -318,11 +318,16 @@
             var completion = completionsResponse.Value.Choices[0].Text;
             //Console.Write($"Completion: {completion}");
             summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            //Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish2);
         }
 
         //Break the loop if the overall summary exceeds 2500 characters
@@ -336,11 +341,16 @@
             var completion = completionsResponse.Value.Choices[0].Text;
             //Console.Write($"Completion: {completion}");
             summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            string finish = $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            //Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish2);
         }
 
         overallSummary = string.Join(" ", summaries);
