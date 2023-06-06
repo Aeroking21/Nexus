@@ -6,18 +6,18 @@
 
 <style>
 
-      .sidebar {
+    .sidebar {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background-color: #0078d4;
         padding: 10px 20px;
         color: white;
-        font-family: "Segoe UI", "SegoeUI", "Helvetica Neue", "Helvetica", Arial, sans-serif;
+        font-family: "sohne-var","Helvetica Neue","Arial",sans-serif;
         font-weight: 400;
         margin-left: 0;
         margin-right: 0;
-        
+        border-radius: 0.1rem;
     }
 
     .navbar-logo {
@@ -39,13 +39,15 @@
     .navbar-link {
         text-decoration: none;
         color: white;
-        margin-right: 20px;
+        margin-right: 15px;
+        margin-left: 15px;
         font-size: 1.3rem;
-        transition: color 0.3s ease-in-out;
+        transition: transform 0.2s ease-in-out;
     }
 
     .navbar-link:hover {
-        color: #81de1d;
+        color: white;
+        transform:scale(1.2);
     }
 
     .navbar-icon {
@@ -57,41 +59,44 @@
 <AuthorizeView>
     <Authorized>
 
-
-      <nav class="sidebar">
-    <a href="" class="navbar-logo">
-        <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" alt="Logo" />
-    </a>
-    <div class="navbar-links">
-        <a href="/overview/menu" class="navbar-link">
-            <span class="oi oi-cloud navbar-icon" aria-hidden="true"></span> Overview
-        </a>
-        <a href="/calendar" class="navbar-link">
-            <span class="oi oi-calendar navbar-icon" aria-hidden="true"></span> Calendar
-        </a>
-        <a href="/applicationtracker" class="navbar-link">
-            <span class="oi oi-clipboard navbar-icon" aria-hidden="true"></span> CareerTrack
-        </a>
-        <a href="/UniversalSearch" class="navbar-link">
-            <span class="oi oi-magnifying-glass navbar-icon" aria-hidden="true"></span> Search
-        </a>
-        <a href="/SummariseFiles" class="navbar-link">
-            <span class="oi oi-File navbar-icon" aria-hidden="true"></span> NotesPro
-        </a>
-    </div>
-    <div class="right-content-bar">
-            <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
-            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
-                <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
+        <nav class="sidebar">
+            <a href="" class="navbar-logo">
+                <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" alt="Logo" />
             </a>
-            <div class="dropdown-menu dropdown-menu-end">
-                <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
-                <p class="dropdown-item-text text-muted mb-0 white-text" >@context?.User?.GetUserGraphEmail()</p>
-                <div class="dropdown-divider"></div>
-                <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+            <div class="navbar-links">
+                <a href="/overview/menu" class="navbar-link">
+                    <span class="oi oi-cloud navbar-icon" aria-hidden="true"></span> Overview
+                </a>
+                <a href="/calendar" class="navbar-link">
+                    <span class="oi oi-calendar navbar-icon" aria-hidden="true"></span> Calendar
+                </a>
+                <a href="/applicationtracker" class="navbar-link">
+                    <span class="oi oi-clipboard navbar-icon" aria-hidden="true"></span> CareerTrack
+                </a>
+                <a href="/UniversalSearch" class="navbar-link">
+                    <span class="oi oi-magnifying-glass navbar-icon" aria-hidden="true"></span> Search
+                </a>
+                <a href="/SummariseFiles" class="navbar-link">
+                    <span class="oi oi-File navbar-icon" aria-hidden="true"></span> NotesPro
+                </a>
+                <a href="/AiTranscript" class="navbar-link">
+                    Bandwidth+
+                </a>
             </div>
-        </div>
-</nav>
+
+            <div class="right-content-bar">
+                <a style="color:white; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
+                <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
+                    <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
+                    <p class="dropdown-item-text text-muted mb-0 white-text">@context?.User?.GetUserGraphEmail()</p>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+                </div>
+            </div>
+        </nav>
         
     </Authorized>
     <NotAuthorized>
