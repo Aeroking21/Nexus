@@ -222,7 +222,7 @@
     public async Task<Stream> ConvertToStream(IBrowserFile file)
     {
         var memoryStream = new MemoryStream();
-        await file.OpenReadStream().CopyToAsync(memoryStream);
+        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
         memoryStream.Seek(0, SeekOrigin.Begin);
         return memoryStream;
     }
