@@ -272,6 +272,12 @@
        --tasks-title-padding: 0px;
     }
 
+    .welcome{
+        font-size: 2rem;
+        font-family: 'Segoe UI';
+        color: black;
+    }
+
 </style>
 
 <link rel="stylesheet"
@@ -284,21 +290,21 @@
             if (context?.User?.Identity?.Name.Length > 1){
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div style="color:black; font-size: 2rem;">Good Morning, @name!</div>
+            <div class="welcome">Good Morning, @name!</div>
         }
         else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18){
             var name = context?.User?.Identity?.Name;
             if (context?.User?.Identity?.Name.Length > 1){
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div style="color:black; font-size: 2rem;">Good Afternoon, @name!</div>
+            <div class="welcome">Good Afternoon, @name!</div>
         }
         else{
             var name = context?.User?.Identity?.Name;
             if (context?.User?.Identity?.Name.Length > 1){
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div style="color:black; font-size: 2rem;">Good Night, @name!</div>
+            <div class="welcome">Good Night, @name!</div>
         }
         
         <Dashbar />
