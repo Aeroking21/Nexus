@@ -470,8 +470,25 @@
         
         Console.Write($"Input: {prompt}\n");
 
+
+/*
+        CompletionsOptions options = new CompletionsOptions
+        {
+            Temperature = 0.1f, // Controls the randomness of the generated completion (0.0 - 1.0)
+            //Prompts = new[] { prompt },
+        };
+
+        foreach (var item in options.Prompts){
+            Console.WriteLine("HERE:");
+            Console.WriteLine(item);
+        }*/
+
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
         var completion = completionsResponse.Value.Choices[0].Text;
+        foreach (var item in completionsResponse.Value.Choices){
+            Console.WriteLine("HERE:");
+            Console.WriteLine(item.Text);
+        }
         reply = completion;
         Console.Write($"Completion: {completion}\n");
     }

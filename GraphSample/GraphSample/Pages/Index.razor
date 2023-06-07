@@ -237,7 +237,8 @@
         right: 20px;
         z-index: 9999;
     }
-      @* -----------------------------------smaller squares-------------------------------------------- *@
+    
+    @* -----------------------------------smaller squares-------------------------------------------- *@
     .square {
         width: 150px;
         height: 150px;
@@ -391,10 +392,10 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
         await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
-        await RerunToDo();
-        await RerunCal();
+        //await RerunToDo();
+        //await RerunCal();
         await RerunEmail();
-        await BeginTeams();
+        //await BeginTeams();
     }
 
     public async Task BeginToDos()
