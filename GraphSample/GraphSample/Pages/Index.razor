@@ -24,7 +24,10 @@
     }
 
     .grid-item {
-        background-color: #e1eaf5;
+        /*        background-color: #e1eaf5;*/
+        background: #00416A; /* fallback for old browsers */
+        background: -webkit-linear-gradient(to top, #E4E5E6, #00416A); /* Chrome 10-25, Safari 5.1-6 */
+        background: linear-gradient(to top, #E4E5E6, #00416A); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
         border-radius: 0.5rem;
         border: 1px solid black;
         padding: 20px;
@@ -235,9 +238,9 @@
 
     @* -------------------------------------------Chat Bot --------------------------------------------- *@
     .chat-bot{
-        position: sticky;
-        bottom: 20px;
-        right: 20px;
+        position: absolute;
+        bottom: -25px;
+        left: 4px;
         z-index: 9999;
     }
       @* -----------------------------------smaller squares-------------------------------------------- *@
@@ -277,13 +280,13 @@
     <Authorized>
         <div class="grid-container">
             <div class="grid-item">
-                <h4 style="color: #08396F; font-weight: bold;">To Do</h4>
+                <h4 style="color: white; font-weight: bold;">To Do</h4>
                 <div class="glass-container">
                     <mgt-todo></mgt-todo>
                 </div>
             </div>
             <div class="grid-item">
-                <h4 style="color: #08396F; font-weight: bold;">What have you missed?</h4>
+                <h4 style="color: white; font-weight: bold;">What have you missed?</h4>
                 @foreach (var mail in allMessages)
                 {
                     @if (mail.IsRead == false)
@@ -314,11 +317,11 @@
                 }
             </div>
             <div class="grid-item" href="https://localhost:7067/calendar">
-                <h4 style="color: #08396F; font-weight: bold;">Today</h4>
+                <h4 style="color: white; font-weight: bold;">Today</h4>
                 <mgt-agenda></mgt-agenda>
             </div>
             <div class="grid-item" href="https://localhost:7067/overview/menu">
-                <h4 style="color: #08396F; font-weight: bold;">Teams</h4>
+                <h4 style="color: white; font-weight: bold;">Teams</h4>
                 <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                     <template>
                         <div class="grid-container-v2">
