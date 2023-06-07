@@ -8,6 +8,8 @@
 @* @using Newtonsoft.Json; *@
 @using System.Security.Authentication
 @using TimeZoneConverter
+@using System;
+@using System.Linq;
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
@@ -49,10 +51,27 @@
         <div class="col-4">
             <label>Attendees</label>
             <input type="text" class="form-control" placeholder="attendees" @bind="@attendees" />
+            <label>Start Time </label>
+            <input type="text" class="form-control" placeholder="start time" @bind="@startTime" />
+            <label>End Time </label>
+            <input type="text" class="form-control" placeholder="end time" @bind="@endTime" />
         </div>
     </div>
     <button class="btn btn-primary" @onclick="GetFreeSchedule">Get Free Schedule</button>
     <button class="btn btn-primary" @onclick="FindMeetingTimes">Find Meeting Times</button>
+
+    <!-- display the meeting time suggestions here: -->
+    <div class="row">
+        <div class="col-5">
+            @if (meetingTimeSuggestions != null)
+            {
+                foreach (var suggestion in meetingTimeSuggestions)
+                {
+                    <p>@suggestion.MeetingTimeSlot.Start.DateTime</p>
+                }
+            }
+        </div>
+    </div>
 
     
 </div>
@@ -63,6 +82,9 @@
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private GraphServiceClient? graphClient;
     string attendees = string.Empty;
+    private DateTime startTime = new DateTime(DateTime.Today.Ticks);
+    private DateTime endTime = new DateTime(DateTime.Today.Ticks);
+    public List<MeetingTimeSuggestion>? meetingTimeSuggestions;
     
     [Inject]
     protected IAccessTokenProvider? AccessTokenProvider { get; set; }
@@ -70,13 +92,30 @@
     string message;
     public List<string> messages = new List<string>();
     private static HttpClient Http = new HttpClient();
+    
+    private string changeFormat(string inputtedFromUser){ // "2019-04-16T09:00:00",
+    //07/06/2023 16:00:00
+        string[] dateAndTime = inputtedFromUser.Split(' ');
+        string[] date = dateAndTime[0].Split('/');
+        string[] time = dateAndTime[1].Split(':');
+ 
+        string year = date[2];
+        string month = date[1];
+        string day = date[0];
+        string hour = time[0];
+        string minute = time[1];
+        string second = time[2];
 
+        string result = year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + second[0..2];
+        Console.WriteLine(result);
+        return result;
+    }
 
     protected override async Task OnInitializedAsync()
     {
            var tokenResult = await AccessTokenProvider.RequestAccessToken();
         if (tokenResult.TryGetToken(out var accessToken))
-        {
+        {   
             AccessToken = accessToken.Value;
         }
 
@@ -116,12 +155,12 @@
                 {
                     Start = new DateTimeTimeZone
                     {
-                        DateTime = "2019-04-16T09:00:00",
+                        DateTime = changeFormat(startTime.ToString()),
                         TimeZone = "Pacific Standard Time",
                     },
                     End = new DateTimeTimeZone
                     {
-                        DateTime = "2019-04-18T17:00:00",
+                        DateTime = changeFormat(endTime.ToString()),
                         TimeZone = "Pacific Standard Time",
                     },
                 },
@@ -136,19 +175,27 @@
     {
         requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
     });
+    Console.WriteLine(startTime.ToString());
+    Console.WriteLine(endTime.ToString());
+    Console.WriteLine(result.MeetingTimeSuggestions.ToList().Count);
+    meetingTimeSuggestions = result.MeetingTimeSuggestions;
+
     }
     
 
     public async Task GetFreeSchedule(){
         // Code snippets are only available for the latest version. Current version is 5.x
-
-
+        var attendeesArray = attendees.Split(';')
+                                   .Select(email => email.Trim())
+                                   .ToList();
+           
+        // create a new List<string> that sotes the email addresses of the attendees
+       
         var requestBody = new Microsoft.Graph.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
         {
             Schedules = new List<string>
             {
-                "adelev@contoso.onmicrosoft.com",
-                "meganb@contoso.onmicrosoft.com",
+                attendeesArray[0],
             },
             StartTime = new DateTimeTimeZone
             {
@@ -166,6 +213,30 @@
         {
             requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
         });
+
+        Console.WriteLine(result.Value);
+        foreach (var schedule in result.Value)
+{
+    Console.WriteLine("ScheduleId: " + schedule.ScheduleId);
+    Console.WriteLine("AvailabilityView: " + schedule.AvailabilityView);
+    Console.WriteLine("ScheduleItems:");
+    
+    foreach (var scheduleItem in schedule.ScheduleItems)
+    {
+        Console.WriteLine("  Status: " + scheduleItem.Status);
+        Console.WriteLine("  Start: " + scheduleItem.Start.DateTime);
+        Console.WriteLine("  End: " + scheduleItem.End.DateTime);
+        Console.WriteLine("  TimeZone: " + scheduleItem.Start.TimeZone);
+        Console.WriteLine();
+    }
+    
+    Console.WriteLine("Working Hours:");
+    Console.WriteLine("  StartTime: " + schedule.WorkingHours.StartTime);
+    Console.WriteLine("  EndTime: " + schedule.WorkingHours.EndTime);
+    Console.WriteLine("  TimeZone: " + schedule.WorkingHours.TimeZone.Name);
+    Console.WriteLine();
+}
+
     }
 
 }

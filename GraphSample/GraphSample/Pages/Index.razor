@@ -45,8 +45,6 @@
         height: 70%;
         background-color: transparent;
         height: calc(100% - 34px);
-
-
     }
 
     .grid-item::-webkit-scrollbar-thumb {
@@ -232,9 +230,9 @@
 
     @* -------------------------------------------Chat Bot --------------------------------------------- *@
     .chat-bot{
-        position: sticky;
+        position: fixed;
         bottom: 20px;
-        right: 20px;
+        right: 20px !important;
         z-index: 9999;
     }
       @* -----------------------------------smaller squares-------------------------------------------- *@
@@ -263,6 +261,14 @@
         font-weight: bold;
         font-size: 18px;
         text-align: center;
+    }
+
+    mgt-todo {
+    --tasks-new-button-background: #4385C7;
+       --tasks-background-color: white;
+       --background-color-sub1: none;
+       --tasks-header-padding: 0px;
+       --tasks-title-padding: 0px;
     }
 
 </style>
@@ -321,7 +327,7 @@
                     <template>
                         <div class="grid-container-v2">
                             <div data-for="team in value">
-                                <div class="team-circle" style="background: radial-gradient(#67C5FF, #0078d4);">
+                                <div class="team-circle" style="background: radial-gradient(#CCE0FF, #0078d4);">
                                     <a href="overview/teamid={{team.id}}">
                                         <h4>{{ team.displayName }}</h4>
                                     </a>
