@@ -264,7 +264,8 @@
         right: 20px !important;
         z-index: 9999;
     }
-      @* -----------------------------------smaller squares-------------------------------------------- *@
+    
+    @* -----------------------------------smaller squares-------------------------------------------- *@
     .square {
         width: 150px;
         height: 150px;
@@ -300,13 +301,41 @@
        --tasks-title-padding: 0px;
     }
 
+    .welcome{
+        font-size: 2rem;
+        font-family: 'Segoe UI';
+        color: black;
+    }
+
 </style>
 
 <link rel="stylesheet"
     href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 
 <AuthorizeView>
-    <Authorized>  
+    <Authorized>
+        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 12){
+            var name = context?.User?.Identity?.Name;
+            if (context?.User?.Identity?.Name.Length > 1){
+                name = context?.User?.Identity?.Name.Split(" ")[0];
+            }
+            <div class="welcome">Good Morning, @name!</div>
+        }
+        else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18){
+            var name = context?.User?.Identity?.Name;
+            if (context?.User?.Identity?.Name.Length > 1){
+                name = context?.User?.Identity?.Name.Split(" ")[0];
+            }
+            <div class="welcome">Good Afternoon, @name!</div>
+        }
+        else{
+            var name = context?.User?.Identity?.Name;
+            if (context?.User?.Identity?.Name.Length > 1){
+                name = context?.User?.Identity?.Name.Split(" ")[0];
+            }
+            <div class="welcome">Good Night, @name!</div>
+        }
+        
         <Dashbar />
         <div class="grid-container">
             <div class="grid-item">
@@ -426,10 +455,10 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
         await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
-        await RerunToDo();
-        await RerunCal();
+        //await RerunToDo();
+        //await RerunCal();
         await RerunEmail();
-        await BeginTeams();
+        //await BeginTeams();
     }
 
     public async Task BeginToDos()

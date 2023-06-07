@@ -71,7 +71,7 @@
                     </ul>
                     <div class="ms-auto">
                         <div class="navbar-text me-3">
-                            Welcome @context?.User?.Identity?.Name!
+                            @context?.User?.Identity?.Name
                         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
                             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
                         </a>
