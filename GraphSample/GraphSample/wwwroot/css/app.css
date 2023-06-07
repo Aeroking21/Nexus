@@ -2,14 +2,13 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     /* set background colour to this 0071c1 but transparent  */
 
-    background: #eaf2f8 !important;
+    background: #f0f5fa;
     /* the background sshould strech no repeat */
     background-repeat: no-repeat !important;
-
 }
 
 
@@ -31,7 +30,7 @@ a, .btn-link {
 }
 
 .btn-primary {
-    color: #fff;
+    color: #fff;å
     background-color: #1b6ec2;
     border-color: #1861ac;
 }

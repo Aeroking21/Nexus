@@ -17,46 +17,43 @@
 <style>
     .grid-container {
         display: grid;
-        grid-template-columns: 48% 48%;
-        grid-template-rows: 300px 300px;
-        gap: 20px;
-        padding-left: 20px;
+        grid-template-columns: 49% 49%;
+        grid-template-rows: 49% 49%;
+        gap: 2%;
+        max-height: 90vh;
     }
 
     .grid-item {
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
+        background-color: #e1eaf5;
+        border-radius: 0.5rem;
+        border: 1px solid black;
         padding: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        font-family: 'Pavanam', sans-serif;
         font-size: 30px;
         text-align: center;
         font-size: 1.1rem;
         height: 100%;
         width: 100%;
         overflow-y: auto;
-        margin-bottom: 0%;
         padding-right: 5px;
         position: relative;
     }
 
     .grid-item::-webkit-scrollbar {
-        width: 17px;
+        width: 8px;
         height: 70%;
         background-color: transparent;
         height: calc(100% - 34px);
 
-
     }
 
     .grid-item::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.7);
-        border-radius: 1.5rem;
+        background-color: rgba(0, 255, 255, 0.7);
+        border-radius: 0.25rem;
     }
 
-    .grid-item::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
 
     .grid-container .grid-item a {
         color: rgb(0, 0, 0);
@@ -193,7 +190,8 @@
         line-height: 1.4em;
     }
 
-    @*--------------------------------------------------------------------*@h1 {
+    @*--------------------------------------------------------------------*@
+    h1 {
         font-size: 55px !important;
         background: white;
         padding-left: 30px;
@@ -210,16 +208,21 @@
 
     @*------------------------------------------------Teams--------------------------------------------------*@
     .team-circle {
-        width: 100px;
+        width: 130px;
         height: 100px;
-        border-radius: 50%;
+        border-radius: 0.35rem;
         text-align: center;
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
         font-size: 14px;
         font-weight: bold;
         color: white;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(13.4px);
+        -webkit-backdrop-filter: blur(13.4px);
     }
 
     .grid-container-v2 {
@@ -254,12 +257,12 @@
 
     .icon {
         font-size: 40px;
-        color: #0078d4;
+        color: #08396F;
         margin-bottom: 10px;
     }
 
     .label {
-        color: #0078d4;
+        color: #08396F;
         font-weight: bold;
         font-size: 18px;
         text-align: center;
@@ -271,17 +274,16 @@
     href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 
 <AuthorizeView>
-    <Authorized>  
-        <Dashbar />
+    <Authorized>
         <div class="grid-container">
             <div class="grid-item">
-                <h4 style="color: #0078d4">To Do</h4>
+                <h4 style="color: #08396F; font-weight: bold;">To Do</h4>
                 <div class="glass-container">
                     <mgt-todo></mgt-todo>
                 </div>
             </div>
             <div class="grid-item">
-                <h4 style="color: #0078d4;">What have you missed?</h4>
+                <h4 style="color: #08396F; font-weight: bold;">What have you missed?</h4>
                 @foreach (var mail in allMessages)
                 {
                     @if (mail.IsRead == false)
@@ -312,36 +314,40 @@
                 }
             </div>
             <div class="grid-item" href="https://localhost:7067/calendar">
-                <h4 style="color: #0078d4;">Today</h4>
+                <h4 style="color: #08396F; font-weight: bold;">Today</h4>
                 <mgt-agenda></mgt-agenda>
             </div>
             <div class="grid-item" href="https://localhost:7067/overview/menu">
-                <h4 style="color:#0078d4;">Teams</h4>
+                <h4 style="color: #08396F; font-weight: bold;">Teams</h4>
                 <mgt-get resource="/me/joinedTeams" scopes="TeamSettings.ReadWrite.All,Directory.ReadWrite.All">
                     <template>
                         <div class="grid-container-v2">
                             <div data-for="team in value">
-                                <div class="team-circle" style="background: radial-gradient(#67C5FF, #0078d4);">
+                                <div class="team-circle">
                                     <a href="overview/teamid={{team.id}}">
-                                        <h4>{{ team.displayName }}</h4>
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Teams" />
+                                        <h5>{{ team.displayName }}</h5>
                                     </a>
                                 </div>
                             </div>
                         </div>
 
-                        </template>
-                    </mgt-get>
-                </div>                
-            </div>  
-            <div class="chat-bot">
-                <Chat />
+                    </template>
+                </mgt-get>
             </div>
-        </Authorized>
-        <NotAuthorized>
-            <SignIn />
-        </NotAuthorized>
-        
-    </AuthorizeView>
+        </div>
+        <div class="chat-bot">
+            <Chat />
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <SignIn />
+    </NotAuthorized>
+
+</AuthorizeView>
 
 
 
