@@ -419,6 +419,32 @@ public class JobApplicantsController : ControllerBase
         }
     }
 
+    [Route("update-assessments/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> UpdateAssesments([FromRoute] string username, [FromBody] AssessmentsBson assessmentsBson)
+    {
+        var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
+
+        var timelineFilter = Builders<ApplicationTimeline>.Filter.Eq(at => at.timelineID, assessmentsBson.timelineID);
+
+        try
+        {
+            var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", assessmentsBson.timelineID)
+        );
+
+            var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.assessments", assessmentsBson.assessments);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
 
 
@@ -472,6 +498,112 @@ public class JobApplicantsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+
+    [Route("update-assessment-type/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> UpdateAssesmentType([FromRoute] string username, [FromBody] AssessmentBson assessmentBson)
+    {
+        var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
+
+        var timelineFilter = Builders<ApplicationTimeline>.Filter.Eq(at => at.timelineID, assessmentBson.timelineID);
+
+        //var update = Builders<JobApplicant>.Update.PullFilter("ApplicationTimelines.$.AssociatedEmailAddresses", Builders<string>.Filter.Where(e => e == email.EmailAddress));
+        List<Assessment> assessments = new();
+        var applicant = _collection.Find(userFilter).ToList();
+        var timelines = applicant[0].applicationTimelines;
+        foreach (ApplicationTimeline timeline in timelines)
+        {
+            if (timeline.timelineID == assessmentBson.timelineID)
+            {
+                assessments = timeline.assessments;
+                break;
+            }
+        }
+        try
+        {
+
+            if (assessments.Count != 0)
+            {
+                for(int i = 0; i < assessments.Count(); i++)
+                {
+                    if (assessments[i].date == assessmentBson.assessment.date)
+                    {
+                        assessments[i].type = assessmentBson.assessment.type;
+                        assessments[i].customDescription = assessmentBson.assessment.customDescription;
+                    }
+                }
+                var filter = Builders<JobApplicant>.Filter.And(
+                Builders<JobApplicant>.Filter.Eq("username", username),
+                Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", assessmentBson.timelineID)
+            );
+
+                var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.assessments", assessments);
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+                return Ok();
+            }
+
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+
+    [Route("update-assessment-date/{username}")]
+    [HttpPost]
+    public async Task<IActionResult> UpdateAssesmentDate([FromRoute] string username, [FromBody] DatesBson datesBson)
+    {
+        var userFilter = Builders<JobApplicant>.Filter.Eq(j => j.username, username);
+
+        var timelineFilter = Builders<ApplicationTimeline>.Filter.Eq(at => at.timelineID, datesBson.timelineID);
+
+        //var update = Builders<JobApplicant>.Update.PullFilter("ApplicationTimelines.$.AssociatedEmailAddresses", Builders<string>.Filter.Where(e => e == email.EmailAddress));
+        List<Assessment> assessments = new();
+        var applicant = _collection.Find(userFilter).ToList();
+        var timelines = applicant[0].applicationTimelines;
+        foreach (ApplicationTimeline timeline in timelines)
+        {
+            if (timeline.timelineID == datesBson.timelineID)
+            {
+                assessments = timeline.assessments;
+                break;
+            }
+        }
+        try
+        {
+
+            if (assessments.Count != 0)
+            {
+                for(int i = 0; i < assessments.Count(); i++)
+                {
+                    if (assessments[i].date == datesBson.oldDate)
+                    {
+                        assessments[i].date = datesBson.newDate;
+                    }
+                }
+                var filter = Builders<JobApplicant>.Filter.And(
+                Builders<JobApplicant>.Filter.Eq("username", username),
+                Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", datesBson.timelineID)
+            );
+
+                var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.assessments", assessments);
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+                return Ok();
+            }
+
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
     [Route("update-assessment-todo/{username}/{status}")]
     [HttpPost]

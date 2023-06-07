@@ -185,16 +185,16 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td width="15% !important"> 
+                                                    <td width="15% !important; display: table;"> 
                                                         @if (!fillingAssessments || (timeline.timelineID != fillingAssessmentsTimeline))
                                                         {
                                                             <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span>
                                                         }
                                                         else
                                                         {
-                                                            <span style="overflow-x: hidden; max-height: 75px !important;">
-                                                            <FluentProgressRing style="width: 100%; height: 100%;"></FluentProgressRing> 
-                                                            </span>
+                                                            <div style="height: 75px !important; display: flex; justify-content: center; align-items: center;">
+                                                            <FluentProgressRing style="width:35px; height: 35px !important; margin-top: 20; margin-bottom: 20;"></FluentProgressRing> 
+                                                            </div>
                                                         }
                                                     </td>
                                                 </tr>
@@ -218,9 +218,25 @@
                                                                     var assessment = timeline.assessments[j];
                                                                 <div class="pane @("status" + assessment.status)">
                                                                     <div class="assessment-line">
-                                                                        <div class="assessment-type-container">
+                                                                        @* <div class="assessment-type-container">
                                                                             @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
-                                                                        </div>
+                                                                        </div> *@
+                                                                        <select class="status-select" @bind="assessment.type" @oninput="(e) => HandleTypeChange(timeline, assessment, Enum.Parse<AssessmentType>(e.Value.ToString()))">
+                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
+
+                                                                            @foreach (AssessmentType option in Enum.GetValues(typeof(AssessmentType)))
+                                                                                {
+                                                                                @if ((option == AssessmentType.Custom) && (assessment.type == AssessmentType.Custom))
+                                                                                {
+                                                                                    <option value="@option">@assessment.customDescription</option> 
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <option value="@option">@option</option>
+                                                                                } 
+
+                                                                                }
+                                                                        </select>
                                                                         <span class="remove-assessment-button" @onclick="() => RemoveAssessment(assessment, timeline.timelineID)"><FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon></span>
                                                                     </div>
                                                                     <div>
@@ -235,7 +251,7 @@
                                                                         </select>
                                                                     </div>
                                                                     <div style="display: flex; width: 100%;">
-                                                                        <div>@assessment.date</div>
+                                                                        <button class = "update-date-button" @onclick="() => HandleDateChange(timeline, assessment)"> @assessment.date.ToString("dd/MM/yyyy HH:mm") </button>
                                                                         @if (assessment.type == AssessmentType.Online_Assessment)
                                                                             {
                                                                             @if (!assessment.todoScheduled)
@@ -270,9 +286,24 @@
 
                                                                 <div class="pane @("status" + assessment.status)" style="position: absolute; top: @((index)* 77.55)px">
                                                                     <div class="assessment-line">
-                                                                        <div class="assessment-type-container">
+                                                                        @* <div class="assessment-type-container">
                                                                             @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
-                                                                        </div>
+                                                                        </div> *@
+                                                                        <select class="status-select" @bind="assessment.type" @oninput="(e) => HandleTypeChange(timeline, assessment, Enum.Parse<AssessmentType>(e.Value.ToString()))">
+                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
+
+                                                                            @foreach (AssessmentType option in Enum.GetValues(typeof(AssessmentType)))
+                                                                                {
+                                                                                @if ((option == AssessmentType.Custom) && (assessment.type == AssessmentType.Custom) || false)
+                                                                                {
+                                                                                <option value="@option">@assessment.customDescription</option> 
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                <option value="@option">@option</option>
+                                                                                }
+                                                                                }
+                                                                        </select>
                                                                         <span class="remove-assessment-button" @onclick="() => RemoveAssessment(assessment, assessmentPair.Item1)"><FluentIcon Name="@FluentIcons.DismissSquare" Color="@Color.Error" Variant="@IconVariant.Filled"></FluentIcon></span>
                                                                     </div>
                                                                     <div>
@@ -287,7 +318,7 @@
                                                                         </select>
                                                                     </div>
                                                                     <div style="display: flex; width: 100%;">
-                                                                        <div>@assessment.date</div>
+                                                                         <button class = "update-date-button" @onclick="() => HandleDateChange(timeline, assessment)"> @assessment.date.ToString("dd/MM/yyyy HH:mm") </button> 
                                                                         @if (assessment.type == AssessmentType.Online_Assessment)
                                                                             {
                                                                             @if (!assessment.todoScheduled)
@@ -567,6 +598,7 @@
     .right-right-div {
         width: 80%;
         overflow-x: scroll;
+        overflow-y: hidden;
         border: 0px solid #ccc;
         border-radius: 3px;
         display: flex;
@@ -826,6 +858,22 @@
         margin-left: 20px;
     }
 
+    .update-date-button {
+        padding: 1px 2px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        background-color: transparent;
+        border: 1px solid #444444;
+        margin-left: 0px;
+    }
+    
+    .update-date-button:hover {
+       background-color: #1b6ec2;;
+       box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+       border: 1px solid  #1861ac;
+    }
+
 
     .add-timeline-button {
         padding: 5px 10px;
@@ -867,6 +915,7 @@
         border-collapse: collapse;
         background-color: white;
         min-width: 100%;
+        height: 100%;
         opacity: 1;
     }
 
@@ -890,6 +939,7 @@
 
     .status-select {
         background-color: transparent;
+        border-radius: 5px;
     }
 
     .flex-container {
@@ -921,7 +971,7 @@
         Calendar_Display,
     }
 
-    private List<IGrouping<DateTime, (int, Assessment)>>? sortedAssessments;
+    private List<IGrouping<DateTimeOffset, (int, Assessment)>>? sortedAssessments;
     private int emailsShowingTimeline;
     //private List<Message>? selectedAssociatedEmails;
     private List<Message> selectedAssociatedEmails;
@@ -1277,6 +1327,9 @@
 
     private async Task HandleStatusChange(ApplicationTimeline timeline, Assessment assessment, AssessmentStatus newStatus)
     {
+        int assessmentsIndex = timeline.assessments.FindIndex(a => a.date == assessment.date);
+        timeline.assessments[assessmentsIndex].status = newStatus;
+        StateHasChanged();
         var response = await backendApiService.updateAssessmentStatus(assessment, Username, timeline.timelineID, newStatus);
         if (response)
         {
@@ -1284,10 +1337,86 @@
             if (index != -1)
             {
                 var assessments = timelines[index].assessments;
-                int assessmentsIndex = assessments.FindIndex(a => a.date == assessment.date);
-                assessments[assessmentsIndex].status = newStatus;
+                int assessmentsIndex2 = assessments.FindIndex(a => a.date == assessment.date);
+                assessments[assessmentsIndex2].status = newStatus;
                 StateHasChanged();
             }
+        }
+
+    }
+
+    private async Task HandleTypeChange(ApplicationTimeline timeline, Assessment assessment, AssessmentType newType)
+    {
+        var oldType = assessment.type;
+        var oldDescription = assessment.customDescription;
+        string? customDescription = null;
+        int assessmentsIndex = timeline.assessments.FindIndex(a => a.date == assessment.date);
+        timeline.assessments[assessmentsIndex].type = newType;
+        StateHasChanged();
+        if (newType == AssessmentType.Custom)
+        {
+            var messageForm = ModalInputPopup.Show<AddCustomDescriptionPopup>();
+            var result = await messageForm.Result;
+
+            if (result.Confirmed)
+            {
+                customDescription = result?.Data?.ToString();
+            }
+        }
+        timeline.assessments[assessmentsIndex].customDescription = customDescription;
+        StateHasChanged();
+
+        var response = await backendApiService.updateAssessmentType(assessment, Username, timeline.timelineID, newType, customDescription);
+        if (response)
+        {
+                int assessmentsIndex2 = timeline.assessments.FindIndex(a => a.date == assessment.date);
+                timeline.assessments[assessmentsIndex2].type = newType;
+                timeline.assessments[assessmentsIndex2].customDescription = customDescription;
+                StateHasChanged();
+        }
+        else{
+                int assessmentsIndex2 = timeline.assessments.FindIndex(a => a.date == assessment.date);
+                timeline.assessments[assessmentsIndex2].type = oldType;
+                timeline.assessments[assessmentsIndex2].customDescription = oldDescription;
+                StateHasChanged();
+
+        }
+    }
+
+    private async Task HandleDateChange(ApplicationTimeline timeline, Assessment assessment)
+    {
+        var oldDate = assessment.date;
+        DateTimeOffset? newDate = null;
+        int assessmentsIndex = timeline.assessments.FindIndex(a => a.date == assessment.date);
+
+        var messageForm = ModalInputPopup.Show<UpdateDatePopup>();
+        var result = await messageForm.Result;
+
+        if (result.Confirmed)
+        {
+            newDate = result.Data as DateTimeOffset?;
+        }
+
+        if(newDate == null){
+            return; 
+        }
+
+        timeline.assessments[assessmentsIndex].date = newDate.Value;
+        timeline.assessments.Sort((a1, a2) => a1.date.CompareTo(a2.date));
+        HandleDisplayChange();
+        StateHasChanged();
+
+        //var response = await backendApiService.updateAssessmentDate(Username, timeline.timelineID, oldDate, newDate.Value);
+        var response = await backendApiService.updateAssessments(timeline.assessments, Username, timeline.timelineID);
+        int assessmentsIndex2 = -1;
+        if (!response)
+        {
+                assessmentsIndex2 = timeline.assessments.FindIndex(a => a.date == newDate);
+                timeline.assessments[assessmentsIndex2].date = oldDate;
+                timeline.assessments.Sort((a1, a2) => a1.date.CompareTo(a2.date));
+                HandleDisplayChange();
+                StateHasChanged();
+
         }
 
     }
@@ -1323,7 +1452,7 @@
         }
     }
 
-    private async Task SendToDo(Assessment assessment, string company, string role, DateTime dueDate, int timelineID)
+    private async Task SendToDo(Assessment assessment, string company, string role, DateTimeOffset dueDate, int timelineID)
     {
         assessment.todoScheduled = true;
 
@@ -1770,14 +1899,14 @@
     ///////////////////////////////////////
     //////   Calendar view    /////////////
     ///////////////////////////////////////
-    public List<IGrouping<DateTime, (int, Assessment)>>? GetSortedAssessments()
+    public List<IGrouping<DateTimeOffset, (int, Assessment)>>? GetSortedAssessments()
     {
         List<(int, Assessment)>? flattenedTimelines = timelines?
             .SelectMany(timeline => timeline.assessments
             .Select(a => (timeline.timelineID, a)))
             .ToList();
 
-        var sortedAssessments = flattenedTimelines?.GroupBy(a => a.Item2.date.Date).OrderBy(ag => ag.Key).ToList();
+        var sortedAssessments = flattenedTimelines?.GroupBy(a => new DateTimeOffset(a.Item2.date.Date, TimeSpan.Zero)).OrderBy(ag => ag.Key).ToList();
 
         return sortedAssessments;
     }
@@ -1805,7 +1934,177 @@
     ///////////////////////////////////////
 
 
+    public bool AppendAssessment(ApplicationTimeline timeline, Assessment newAssessment)
+    {
+        //Console.WriteLine($"newTime::::::::: {newAssessment.date}");
+        if ((timeline.assessments.Count() == 0))
+        {
+            timeline.assessments.Add(newAssessment);
+            return true;
+        }
+
+        if (newAssessment.date == DateTimeOffset.MinValue)
+        {
+            timeline.assessments.Insert(0, newAssessment);
+            return true;
+        }
+
+        for(int i = 0; i < timeline.assessments.Count(); i++)
+        {
+            var currentAssessment = timeline.assessments[i];
+            if (newAssessment.date < currentAssessment.date){
+                timeline.assessments.Insert(i, newAssessment);
+                return true;
+            }
+            else if (newAssessment.date == currentAssessment.date)
+            {
+                return false;
+            }
+            else if (i == (timeline.assessments.Count() - 1)){
+                timeline.assessments.Add(newAssessment);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
     public async Task AutofillAssessments(ApplicationTimeline timeline)
+    {
+
+        fillingAssessments = true;
+        fillingAssessmentsTimeline = timeline.timelineID;
+        List<string> allAssociatedEmailStrings = new();
+        List<Message>? fetchedEmails = new();
+        
+        if (timeline.associatedEmailAddresses.Count() == 0)
+        {
+            selectedAssociatedEmails = new List<Message>();
+            StateHasChanged();
+            return;
+        }
+
+        foreach (var email in timeline.associatedEmailAddresses)
+        {
+            allAssociatedEmailStrings.Add(email);
+        }
+
+        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
+        var filter = string.Join(" or ", emailFilters);
+
+        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.Filter = filter;
+            requestConfiguration.QueryParameters.Top = 999;
+        });
+
+        fetchedEmails = result?.Value;
+        //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
+        if (fetchedEmails != null)
+        {
+            selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
+        }
+
+        emailsShowing = false;
+        string prompt;
+        List<AssessmentAIResponse> predictedAssessments = new();
+        bool assessmentsUpdated = false;
+
+       foreach(var email in selectedAssociatedEmails){
+            //var body = new MarkupString(email.Body.Content);
+            string plainTextBody = Regex.Replace(email.Body.Content, "<.*?>", "");
+            //Console.WriteLine($"Body || {plainTextBody} || End of body");
+            if(plainTextBody.Count() < 10)
+            {
+                continue;
+            }
+
+            prompt = $@"Please analyze the given email body and determine if it is an invitation to a job application assessment/interview. Fill in the fields of a JSON object with the following structure: {{'IsAssessmentInvitation': 'bool', 'Type': 'AssessmentType', 'Status': 'AssessmentStatus', 'AssessmentDate': 'DateTime', 'CustomDescription': 'string'}}.
+
+            AssessmentType: Online_HR_Interview, In_Person_HR_Interview, Online_Technical_Interview, In_Person_Technical_Interview, Online_Assessment, Manager_Interview, Custom
+            AssessmentStatus: Scheduled, Passed, Pending, Failed
+            IsAssessmentInvitation: true, false
+            AssessmentDate: DateTime (with format 'yyyy-MM-dd HH:mm:ss')
+            CustomDescription: string
+
+            Email Body:
+            {plainTextBody}
+
+            Your response should be a string which can directly be deserialized when I pass it into JsonConvert.DeserializeObject() in C#.
+            If the IsAssessmentInvitation field is false, the rest of the fields shoudl be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'";
+
+            //Console.WriteLine("Start of Json||" + completion + "||End of Json");
+            try
+            {
+                var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+                var completion = completionsResponse.Value.Choices[0].Text;
+                int startIndex = completion.IndexOf('{');
+                int endIndex = completion.LastIndexOf('}');
+                string jsonString = completion.Substring(startIndex, endIndex - startIndex + 1);
+                AssessmentAIResponse? AIResponse = JsonConvert.DeserializeObject<AssessmentAIResponse>(jsonString);
+                if (AIResponse != null)
+                {
+                    if (AIResponse.IsAssessmentInvitation)
+                    {
+                        DateTimeOffset parsedDateTime;
+                        DateTimeOffset newDate = DateTimeOffset.TryParse(AIResponse.AssessmentDate, out parsedDateTime) ? parsedDateTime : DateTimeOffset.MinValue; 
+                        var newAssessment = new Assessment {
+                            status = newDate <= DateTimeOffset.Now ? AssessmentStatus.Pending : AssessmentStatus.Scheduled,
+                            type = AIResponse.Type.HasValue ? AIResponse.Type.Value : AssessmentType.Online_Technical_Interview,
+                            date =  newDate,
+                            todoScheduled = false,
+                            taskId = null,
+                            customDescription = AIResponse.CustomDescription
+                            };
+                            bool newAssessmentsUpdated = AppendAssessment(timeline, newAssessment); 
+                            if (newAssessmentsUpdated)
+                            {
+                                StateHasChanged();
+                                assessmentsUpdated = true;
+                            } 
+                    }
+                    
+                }
+            }
+            catch (Exception ex)
+                {
+                    Console.WriteLine("Message: ");
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+            foreach(var assessment in timeline.assessments)
+            {
+                Console.WriteLine(assessment.date);
+            }
+
+            if (assessmentsUpdated)
+                {
+                int index = timelines.FindIndex(tl => tl.timelineID == timeline.timelineID);
+                var response = await backendApiService.updateAssessments(timeline.assessments, Username, timeline.timelineID);
+                if (response)
+                    {
+                    var newTimeline = await backendApiService.getUserTimelineAsync(Username, timeline.timelineID);
+                    if (index != -1)
+                        {
+                            newTimeline.hasUnreadEmails = timelines[index].hasUnreadEmails;
+                            timelines[index] = newTimeline;
+                            StateHasChanged();
+                        }
+                    }
+                    Console.WriteLine("after backend");
+                    foreach(var assessment in timelines[index].assessments)
+                        {
+                            Console.WriteLine(assessment.date);
+                         }   
+                }
+            fillingAssessmentsTimeline = -1;
+            fillingAssessments = false;
+    }
+
+    public async Task AutofillAssessmentsV2(ApplicationTimeline timeline)
     {
 
         fillingAssessments = true;
@@ -1914,10 +2213,10 @@
                     newAssessments = predictedAssessments
                     .Where(pa => pa.IsAssessmentInvitation)
                     .Select(pa => {
-                        DateTime parsedDateTime;
-                        DateTime newDate = DateTime.TryParse(pa.AssessmentDate, out parsedDateTime) ? parsedDateTime : DateTime.MinValue; 
+                        DateTimeOffset parsedDateTime;
+                        DateTimeOffset newDate = DateTimeOffset.TryParse(pa.AssessmentDate, out parsedDateTime) ? parsedDateTime : DateTimeOffset.MinValue; 
                         return new Assessment {
-                            status = newDate <= DateTime.Now ? AssessmentStatus.Pending : AssessmentStatus.Scheduled,
+                            status = newDate <= DateTimeOffset.Now ? AssessmentStatus.Pending : AssessmentStatus.Scheduled,
                             type = pa.Type.HasValue ? pa.Type.Value : AssessmentType.Online_Technical_Interview,
                             date =  newDate,
                             todoScheduled = false,
@@ -1926,7 +2225,7 @@
                             };
                     })
                     .GroupBy(pa => pa.date)
-                    .SelectMany(g => g.Key == DateTime.MinValue ? g : g.Take(1))
+                    .SelectMany(g => g.Key == DateTimeOffset.MinValue ? g : g.Take(1))
                     .ToList();
 
                 if (newAssessments.Count() != 0)
