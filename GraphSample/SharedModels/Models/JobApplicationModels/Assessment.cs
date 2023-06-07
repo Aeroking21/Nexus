@@ -7,7 +7,7 @@ namespace SharedModels.Models;
 public class Assessment
 {
     //[BsonElement("Date")]
-    public DateTime date { get; set; }
+    public DateTimeOffset date { get; set; }
 
     //[BsonElement("Type")]
     public AssessmentType type { get; set; }
@@ -21,5 +21,10 @@ public class Assessment
     public bool todoScheduled { get; set; } = false;
 
     public string? taskId { get; set; }
+
+    public override string ToString()
+    {
+        return $"date: {date}, type: {type}, status: {status}, customDescription: {customDescription}, todoScheduled: {todoScheduled}, taskId: {taskId}";
+    }
 }
 
