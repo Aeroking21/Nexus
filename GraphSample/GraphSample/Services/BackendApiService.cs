@@ -135,11 +135,57 @@ namespace GraphSample.Services
 
         }
 
+        public async Task<bool> updateAssessments(List<Assessment> assessments, string username, int timelineID)
+        {
+            var updatedAssessments = new AssessmentsBson { assessments = assessments, timelineID = timelineID };
+
+            Console.WriteLine("In backend API funciton");
+            foreach(var assessment in updatedAssessments.assessments){
+                Console.WriteLine(assessment.date);
+            }
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessments/{username}", updatedAssessments);
+
+            return response.IsSuccessStatusCode;
+
+        }
+
         public async Task<bool> updateAssessmentStatus(Assessment assessment, string username, int timelineID, AssessmentStatus newStatus)
         {
             var  newAssessment = new AssessmentBson { assessment = assessment, timelineID =  timelineID};
 
             var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessment-status/{username}/{newStatus}", newAssessment);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> updateAssessmentType(Assessment assessment, string username, int timelineID, AssessmentType newType, string? customDescription)
+        {
+            Assessment newAssessment = new Assessment{
+                date = assessment.date,
+                status = assessment.status,
+                taskId = assessment.taskId,
+                todoScheduled = assessment.todoScheduled,
+                type = newType,
+                customDescription = customDescription
+            };
+
+            var  newAssessmentBson = new AssessmentBson { assessment = newAssessment, timelineID =  timelineID};
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessment-type/{username}", newAssessmentBson);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> updateAssessmentDate(string username, int timelineID, DateTimeOffset oldDate, DateTimeOffset newDate)
+        {
+            
+            var  datesBson = new DatesBson { 
+                oldDate = oldDate,
+                newDate = newDate,
+                timelineID =  timelineID
+                };
+
+            var response = await httpClient.PostAsJsonAsync($"https://localhost:7023/api/JobApplicants/update-assessment-date/{username}/", datesBson);
 
             return response.IsSuccessStatusCode;
         }
