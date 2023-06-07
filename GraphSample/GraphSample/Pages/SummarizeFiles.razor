@@ -9,6 +9,9 @@
 @using System.Text
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
+@using Microsoft.Graph.Models.ODataErrors;
+@using Microsoft.Kiota.Abstractions
+@using Microsoft.Kiota.Abstractions.Serialization
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
 
@@ -46,10 +49,10 @@
 
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Choose File
+                SmartScribe
             </button>
             <ul class="dropdown-menu">
-                <li class="dropdown-item"> <InputFile OnChange="@LoadFile" /> </li>
+                <li class="dropdown-item">Upload PDF File <InputFile OnChange="@LoadFile" /></li>
                 <li class="dropdown-item" @onclick="OnOpen"> Upload from OneDrive </li>
 
             </ul>
@@ -79,38 +82,42 @@
         }
 
         
-
-        <div class="textbox">
-
-            @if (!string.IsNullOrEmpty(summary))
-            {
-                <h3>Summary:</h3>
-                <p>@summary</p>
-            }
             
-            else if (isSummarizing)
-            {
+        @if (isSummarizing)
+        {
+            <div class="textbox">
                 <p>Summarizing...</p>
                 <FluentProgressRing></FluentProgressRing>
-            }
-
-            @if (noSummary)
-            {
-                <p>No summary to write to OneNote yet...</p>
-            }
-
-
-            @if (isWriting)
-            {
+            </div>
+        }
+        
+        else if (isWriting)
+        {
+            <div class="textbox">
                 <p>Writing to OneNote...</p>
+                <FluentProgressRing></FluentProgressRing>
                 <h3>Summary:</h3>
                 <p>@summary</p>
-            }
+            </div>
+        }
+        
+        else if (!string.IsNullOrEmpty(summary))
+        {
+            <div class="textbox">
+                <h3>Summary:</h3>
+                <p>@summary</p>
+            </div>
+        }
 
-        </div>
+        @if (noSummary)
+        {
+            <div class="textbox">
+                <p>No summary to write to OneNote yet...</p>
+            </div>
+        }
 
 
-
+        
 
     </Authorized>
 
@@ -212,9 +219,18 @@
         return text;
     }
 
+    public async Task<Stream> ConvertToStream(IBrowserFile file)
+    {
+        var memoryStream = new MemoryStream();
+        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return memoryStream;
+    }
+
+
     private async Task SummarizeFile()
     {
-
+        summary = "";
         var content = "";
         isSummarizing = true; // Set the flag to indicate that summarization is in progress
 
@@ -224,7 +240,8 @@
 
             // Read the content of the file
             var file = loadedFile[0];
-            content = await ExtractAllTextAsync(file);
+            Stream stream = await ConvertToStream(file);
+            content = ExtractTextFromStream(stream);
 
             Console.WriteLine("Extracted text");
         }
@@ -243,6 +260,7 @@
 
             Console.WriteLine("Got text response");
         }
+
 
         await SummarizeText(content);
 
@@ -267,25 +285,30 @@
         // Perform summarization for each chunk
         foreach (var chunk in chunks)
         {
-            string prompt = $"Summarize the following slides in a professional and business like manner and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
+            string prompt = $"Summarize the following text in a professional and business like manner and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
             //Console.Write($"Input: {prompt}\n");
 
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
             //Console.Write($"Completion: {completion}\n");
             summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{chunk}\n\nGave summary:\n\n{completion}";
+            string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            //Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish2);
         }
 
         // Combine the individual summaries into an overall summary
         overallSummary = string.Join(" ", summaries);
 
         //Break the loop if the overall summary exceeds 2500 characters
-        if (overallSummary.Length >= 2500)
+        if (overallSummary.Length >= 5000)
         {
             summaries.Clear();
 
@@ -295,11 +318,16 @@
             var completion = completionsResponse.Value.Choices[0].Text;
             //Console.Write($"Completion: {completion}");
             summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            //Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish2);
         }
 
         //Break the loop if the overall summary exceeds 2500 characters
@@ -313,11 +341,16 @@
             var completion = completionsResponse.Value.Choices[0].Text;
             //Console.Write($"Completion: {completion}");
             summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{overallSummary}\n\nGave summary:\n\n{completion}";
+            string finish = $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
             var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
             var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
             //Console.Write($"Completion: {completionFinish}\n");
             summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            //Console.Write($"Completion: {completionFinish}\n");
+            summaries.Add(completionFinish2);
         }
 
         overallSummary = string.Join(" ", summaries);
@@ -360,14 +393,17 @@
         if (IsPDF(input))
         {
             text = ExtractTextFromPDF(input);
+            Console.WriteLine("Is PDF");
         }
         else if (IsWordDocument(input))
         {
             text = ExtractTextFromWord(input);
+            Console.WriteLine("Is Word");
         }
         else if (IsPowerPointDocument(input))
         {
             text = ExtractTextFromPowerPoint(input);
+            Console.WriteLine("Is PPT");
         }
 
         return text;
@@ -492,7 +528,7 @@
 
     private async Task WriteToOneNote()
     {
-        if (summary == null)
+        if (summary == "")
         {
             summary = "Hello World";
             //noSummary = true;
@@ -532,26 +568,53 @@
         string pageTitle = $"Summary of {fileName}";
 
         // Create the HTML body content
-        string htmlContent = $"\n<!DOCTYPE html>\n<html>\n<head>\n<title>{pageTitle}</title>\n</head>\n<body>\n<p>{summary}</p>\n</body>\n</html>";
+        string htmlContent =  "<!DOCTYPE html>\n" +
+                              "<html>\n" +
+                              "    <head>\n" +
+                              "         <title>" + pageTitle + "</title>\n" +
+                              "         <meta name=\"" + pageTitle + $"\" content=\"{DateTime.Now.ToString("yyyy-MM-dd")}T{DateTime.Now.ToString("HH:mm:ss")}Z\" />\n" +
+                              "     </head>\n" +
+                              "     <body>\n" +
+                              "         <p>" + summary + "</p>\n" +
+                              "     </body>\n" +
+                              "</html>";
 
         // Convert the HTML string to a byte array using UTF-8 encoding
         byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
         // create a new page in the section
-        var page = new OnenotePage
-            {
-                Content = contentBytes
-            };
-        var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
-            .Pages
-            .PostAsync(page, requestConfiguration =>
-                {
-                    requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
-                });
+        //var page = new OnenotePage
+        //{
+        //     set the title and include a textbox with the content of the summary
+        //    Title = pageTitle,
+        //    Content = contentBytes
+        //};
+        //Console.WriteLine(htmlContent);
+        //var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
+        //    .Pages
+        //    .PostAsync(page, requestConfiguration =>
+        //    {
+        //        requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
+        //    });
         //var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
+        // Create multipart object with the relevant content
+        var multipartContent = new MultipartFormDataContent();
+        var htmlString = htmlContent;
+        var presentation = new StringContent(htmlString, Encoding.UTF8, "text/html");
+        multipartContent.Add(presentation, "Presentation");//needs a name
 
+        // We can add more httpcontent instance here if we wish to
+
+        // create a request information instance and make a request.
+        var requestInformation = graphClient.Me.Onenote.Sections[sectionId].Pages.ToGetRequestInformation();
+        requestInformation.Headers.Add("Content-Type", multipartContent.Headers.ContentType.ToString());
+        requestInformation.HttpMethod = Method.POST;
+        requestInformation.Content = await multipartContent.ReadAsStreamAsync();
+        var errorMapping = new Dictionary<string, ParsableFactory<IParsable>> {
+              {"4XX", ODataError.CreateFromDiscriminatorValue},
+              {"5XX", ODataError.CreateFromDiscriminatorValue},
+            };
+        var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
+        Console.WriteLine("Done");
     }
-
-
-
 }

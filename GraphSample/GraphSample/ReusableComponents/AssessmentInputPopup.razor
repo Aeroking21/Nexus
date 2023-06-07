@@ -12,7 +12,7 @@
         <label for="type">Type</label>
         <div>
             <select id="type" @bind="_form.type">
-                <option value="">Select an option</option>
+                <option value="">Select Type</option>
                 @foreach (var option in Enum.GetValues(typeof(AssessmentType)))
                 {
                     <option value="@option">@option</option>
@@ -24,7 +24,7 @@
         <label for="status">Status</label>
         <div>
             <select id="status" @bind="_form.status">
-                <option value="">Select an option</option>
+                <option value="">Select Status</option>
                 @foreach (var option in Enum.GetValues(typeof(AssessmentStatus)))
                 {
                     <option value="@option">@option</option>
@@ -42,7 +42,7 @@
 
         [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
 
-        protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter the assessment details");
+        protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter The Assessment Details");
 
         private async Task SubmitForm()
         {
