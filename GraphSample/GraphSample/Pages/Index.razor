@@ -278,7 +278,29 @@
     href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 
 <AuthorizeView>
-    <Authorized>  
+    <Authorized>
+        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 12){
+            var name = context?.User?.Identity?.Name;
+            if (context?.User?.Identity?.Name.Length > 1){
+                name = context?.User?.Identity?.Name.Split(" ")[0];
+            }
+            <div style="color:black; font-size: 2rem;">Good Morning, @name!</div>
+        }
+        else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18){
+            var name = context?.User?.Identity?.Name;
+            if (context?.User?.Identity?.Name.Length > 1){
+                name = context?.User?.Identity?.Name.Split(" ")[0];
+            }
+            <div style="color:black; font-size: 2rem;">Good Afternoon, @name!</div>
+        }
+        else{
+            var name = context?.User?.Identity?.Name;
+            if (context?.User?.Identity?.Name.Length > 1){
+                name = context?.User?.Identity?.Name.Split(" ")[0];
+            }
+            <div style="color:black; font-size: 2rem;">Good Night, @name!</div>
+        }
+        
         <Dashbar />
         <div class="grid-container">
             <div class="grid-item">
