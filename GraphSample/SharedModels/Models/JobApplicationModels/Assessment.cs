@@ -7,7 +7,7 @@ namespace SharedModels.Models;
 public class Assessment
 {
     //[BsonElement("Date")]
-    public DateTime date { get; set; }
+    public DateTimeOffset date { get; set; }
 
     //[BsonElement("Type")]
     public AssessmentType type { get; set; }
