@@ -123,7 +123,7 @@
 
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-
+                <div class="top-bar"><span class="oi oi-x" aria-hidden="true" @onclick="OnCloseModalRefButtonClick"></span></div>
                 <div class="outer">
                     <div class="chatbox">
 
@@ -238,6 +238,7 @@
             MyFluentDialog!.Hide();
         }
     }
+    private void OnCloseModalRefButtonClick() => MyFluentDialog!.Hide();
 
     protected override async Task OnInitializedAsync()
     {
@@ -452,7 +453,7 @@
         //string agenda = "Wake up, make my bed and eat breakfast";
         //string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
 
-        string prompt = "Given the following prompt respond as if you are Donald Trump and be extremely belittling, dismissive and rude: " + input;
+        string prompt = "Given this question respond in a chatgpt like manner and don't take up a real human persona: " + input;
         
         Console.Write($"Input: {prompt}\n");
 

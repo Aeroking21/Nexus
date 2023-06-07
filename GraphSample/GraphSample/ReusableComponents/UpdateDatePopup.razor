@@ -1,0 +1,34 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using SharedModels.Models
+
+
+<div>
+    <EditForm Model="_form" OnValidSubmit="SubmitForm">
+        <InputDate Type="InputDateType.DateTimeLocal"
+                   @bind-Value="_form.date" />
+        <button type="submit">Submit</button>
+        <button @onclick="Cancel">Cancel</button>
+    </EditForm>
+</div>
+
+@code {
+    public Form _form = new();
+
+        [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
+
+        protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter New Date");
+
+        private async Task SubmitForm()
+        {
+            await BlazoredAssessmentModal.CloseAsync(ModalResult.Ok(_form.date));
+        }
+
+        private async Task Cancel() {
+            await BlazoredAssessmentModal.CancelAsync();
+            }
+
+        public class Form{
+            public DateTimeOffset? date { get; set; } = null;
+        }
+
+    }
