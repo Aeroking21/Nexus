@@ -22,15 +22,15 @@
 
 <style>
 
-    .container{
+    .containerFiles {
         background-color: rgba(255, 255, 255, 0.3);
         border-radius: 10px;
         padding: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        height: 100vh;
-        width: 100vw;
-        
+        height: 86vh;
+        width: 96vw;
+   
     }
 
     .dropdown-content {
@@ -57,79 +57,85 @@
 <AuthorizeView>
 
     <Authorized>
-        <div class=container>
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                SmartScribe
-            </button>
-            <ul class="dropdown-menu">
-                <li class="dropdown-item">Upload PDF File <InputFile OnChange="@LoadFile" /></li>
-                <li class="dropdown-item" @onclick="OnOpen"> Upload from OneDrive </li>
+        <div class="containerFiles">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    SmartScribe
+                </button>
+                <ul class="dropdown-menu">
 
-            </ul>
-        </div>
+                    <li class="dropdown-item">
+                        <div>
+                            <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
+                            <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" />
+                        </div>
+                    </li>
+                    <li class="dropdown-item" @onclick="OnOpen"> Upload from OneDrive </li>
 
-        <div>
-            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                <div class="dropdown-content">
+                </ul>
+            </div>
 
-                    @foreach (var file in data_response)
-                    {
-                        string npath = path + file.Id;
-                        <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id)"></mgt-file>
-                    }
+            <div class="hello">
+                <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+                    <div class="dropdown-content">
 
+                        @foreach (var file in data_response)
+                        {
+                            string npath = path + file.Id;
+                            <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id)"></mgt-file>
+                        }
+
+                    </div>
+
+                </FluentDialog>
+            </div>
+
+            <button class="btn btn-success" @onclick="SummarizeFile"> Summarize </button>
+            <button class="btn btn-warning" @onclick="WriteToOneNote"> Write To OneNote </button>
+
+            @if (isLoading)
+            {
+                <p>Uploading...</p>
+            }
+
+
+
+            @if (isSummarizing)
+            {
+                <div class="textbox">
+                    <p>Summarizing...</p>
+                    <FluentProgressRing></FluentProgressRing>
                 </div>
+            }
 
-            </FluentDialog>
-        </div>
+            else if (isWriting)
+            {
+                <div class="textbox">
+                    <p>Writing to OneNote...</p>
+                    <FluentProgressRing></FluentProgressRing>
+                    <h3>Summary:</h3>
+                    <p>@summary</p>
+                </div>
+            }
 
-        <button class="btn btn-success" @onclick="SummarizeFile"> Summarize </button>
-        <button class="btn btn-warning" @onclick="WriteToOneNote"> Write To OneNote </button>
+            else if (!string.IsNullOrEmpty(summary))
+            {
+                <div class="textbox">
+                    <h3>Summary:</h3>
+                    <p>@summary</p>
+                </div>
+            }
 
-        @if (isLoading)
-        {
-            <p>Uploading...</p>
-        }
-
-        
-            
-        @if (isSummarizing)
-        {
-            <div class="textbox">
-                <p>Summarizing...</p>
-                <FluentProgressRing></FluentProgressRing>
-            </div>
-        }
-        
-        else if (isWriting)
-        {
-            <div class="textbox">
-                <p>Writing to OneNote...</p>
-                <FluentProgressRing></FluentProgressRing>
-                <h3>Summary:</h3>
-                <p>@summary</p>
-            </div>
-        }
-        
-        else if (!string.IsNullOrEmpty(summary))
-        {
-            <div class="textbox">
-                <h3>Summary:</h3>
-                <p>@summary</p>
-            </div>
-        }
-
-        @if (noSummary)
-        {
-            <div class="textbox">
-                <p>No summary to write to OneNote yet...</p>
-            </div>
-        }
+            @if (noSummary)
+            {
+                <div class="textbox">
+                    <p>No summary to write to OneNote yet...</p>
+                </div>
+            }
 
         </div>
 
-        
+
 
     </Authorized>
 
