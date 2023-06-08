@@ -4,39 +4,54 @@
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
 <style>
- 
-    .navbar-links {
-        display: flex;
-        align-items: center;
-    }
 
-    .nav-link{
-        color: white;
-        font-size: 1.1rem;
-    }
-    .navbar-link {
+    .nav-link {
         text-decoration: none;
-        color: white !important;
+        color: #08396F;
         margin-right: 20px;
-        font-size: 1.3rem;
-        transition: color 0.3s ease-in-out;
+        font-size: 1.2rem;
+        transition: color 0.1s ease-in-out;
     }
 
-    .navbar-link:hover {
-        color: green;
+        .nav-link:hover {
+            color: #81de1d;
+            transform: scale(1.2);
+        }
+
+    .navbar-ui {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        font-family: 'Alata', sans-serif;
+        font-weight: 400;
+        border-radius: 0.5rem;
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 
-    .navbar-icon {
-        margin-right: 5px;
+    .navbar-brand img {
+        width: 80px;
+        height: 50px;
     }
+
+    .welcome {
+        font-size: 1.5rem;
+        font-family: 'Pavanam', sans-serif;
+        color: black;
+    }
+
 </style>
 
 <AuthorizeView>
     <Authorized>
-        <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0078d4;">
+        <nav class="navbar navbar-expand-lg navbar-ui">
             <div class="container">
                 <a class="navbar-brand" href="#">
-                    <img src="img/binder_RGB_logotype_white_transparent_1135x512.png" alt="Logo" width="100">
+                    <img src="img/nexus.png" alt="Logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -45,36 +60,36 @@
                     <ul class="navbar-nav">
                         <li class="nav-item">
                             <a class="nav-link" href="/overview/menu">
-                                <span class="oi oi-cloud navbar-icon" aria-hidden="true"></span> Overview
+                                Overview
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/calendar">
-                                <span class="oi oi-calendar navbar-icon" aria-hidden="true"></span> Calendar
+                                Calendar
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/applicationtracker">
-                                <span class="oi oi-clipboard navbar-icon" aria-hidden="true"></span> CareerTrack
+                                CareerTrack
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/UniversalSearch">
-                                <span class="oi oi-magnifying-glass navbar-icon" aria-hidden="true"></span> Search
+                                Search
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/SummariseFiles">
-                                <span class="oi oi-File navbar-icon" aria-hidden="true"></span> NotesPro
+                                NotesPro
                             </a>
                         </li>
                     </ul>
                     <div class="ms-auto">
                         <div class="navbar-text me-3">
                             @context?.User?.Identity?.Name
-                        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
-                            <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
-                        </a>
+                            <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
+                                <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
+                            </a>
                         </div>
                         <div class="dropdown-menu dropdown-menu-end">
                             <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
