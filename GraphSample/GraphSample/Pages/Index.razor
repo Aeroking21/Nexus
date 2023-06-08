@@ -22,6 +22,7 @@
         gap: 20px;
         padding-left: 20px;
     }
+
     @@media (max-width: 767px) {
         .grid-container {
             grid-template-columns: 1fr; /* Display a single column on screens up to 767px */
@@ -36,7 +37,6 @@
         padding: 20px;
         backdrop-filter: blur(10px);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        font-size: 30px;
         text-align: center;
         font-size: 1.1rem;
         height: 100%;
@@ -45,10 +45,11 @@
         margin-bottom: 0%;
         padding-right: 5px;
         position: relative;
+        font-family: 'Pavanam', sans-serif;
     }
 
     .grid-item::-webkit-scrollbar {
-        width: 17px;
+        width: 8px;
         height: 70%;
         background-color: transparent;
         height: calc(100% - 34px);
@@ -160,9 +161,12 @@
     }
 
 
+    h4 {
+        font-weight: bold;
+    }
 
-
-    @*-----------------------Email--------------------------------------*@.email {
+    @*-----------------------Email--------------------------------------*@
+    .email {
         padding: 10px;
         margin: 8px 4px;
         text-align: left;
@@ -198,7 +202,9 @@
         line-height: 1.4em;
     }
 
-    @*--------------------------------------------------------------------*@h1 {
+    @*--------------------------------------------------------------------*@
+
+    h1 {
         font-size: 55px !important;
         background: white;
         padding-left: 30px;
@@ -215,16 +221,21 @@
 
     @*------------------------------------------------Teams--------------------------------------------------*@
     .team-circle {
-        width: 100px;
+        width: 130px;
         height: 100px;
-        border-radius: 50%;
+        border-radius: 0.35rem;
         text-align: center;
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
         font-size: 14px;
         font-weight: bold;
         color: white;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(13.4px);
+        -webkit-backdrop-filter: blur(13.4px);
     }
 
     .grid-container-v2 {
@@ -301,10 +312,13 @@
        --tasks-title-padding: 0px;
     }
 
-    .welcome{
-        font-size: 2rem;
-        font-family: 'Segoe UI';
+    .welcome {
+        font-size: 1.4rem;
+        font-family: 'Pavanam', sans-serif;
         color: black;
+        position: relative;
+        left: 20px !important;
+        top: 0px !important;
     }
 
 </style>
@@ -314,28 +328,34 @@
 
 <AuthorizeView>
     <Authorized>
-        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 12){
+        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 12)
+        {
             var name = context?.User?.Identity?.Name;
-            if (context?.User?.Identity?.Name.Length > 1){
+            if (context?.User?.Identity?.Name.Length > 1)
+            {
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div class="welcome">Good Morning, @name!</div>
+            <div class="welcome"> Good Morning, @name </div>
         }
-        else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18){
+        else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18)
+        {
             var name = context?.User?.Identity?.Name;
-            if (context?.User?.Identity?.Name.Length > 1){
+            if (context?.User?.Identity?.Name.Length > 1)
+            {
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div class="welcome">Good Afternoon, @name!</div>
+            <div class="welcome"> Good Afternoon, @name </div>
         }
-        else{
+        else
+        {
             var name = context?.User?.Identity?.Name;
-            if (context?.User?.Identity?.Name.Length > 1){
+            if (context?.User?.Identity?.Name.Length > 1)
+            {
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div class="welcome">Good Night, @name!</div>
+            <div class="welcome"> Good Evening, @name </div>
         }
-        
+
         <Dashbar />
         <div class="grid-container">
             <div class="grid-item">
@@ -385,27 +405,34 @@
                     <template>
                         <div class="grid-container-v2">
                             <div data-for="team in value">
-                                <div class="team-circle" style="background: radial-gradient(#CCE0FF, #0078d4);">
+                                <div class="team-circle">
                                     <a href="overview/teamid={{team.id}}">
-                                        <h4>{{ team.displayName }}</h4>
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Teams" />
+                                        <h5>{{ team.displayName }}</h5>
                                     </a>
                                 </div>
                             </div>
                         </div>
 
-                        </template>
-                    </mgt-get>
-                </div>                
-            </div>  
-            <div class="chat-bot">
-                <Chat />
+                    </template>
+                </mgt-get>
             </div>
-        </Authorized>
-        <NotAuthorized>
-            <SignIn />
-        </NotAuthorized>
-        
-    </AuthorizeView>
+        </div>
+        <div class="chat-bot">
+            <Chat />
+        </div>
+
+        <br />
+
+    </Authorized>
+    <NotAuthorized>
+        <SignIn />
+    </NotAuthorized>
+
+</AuthorizeView>
 
 
 
