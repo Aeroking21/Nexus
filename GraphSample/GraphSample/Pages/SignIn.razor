@@ -1,4 +1,10 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
 
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
 <style>
 .log-in-screen {
     justify-content: center;
@@ -69,10 +75,8 @@
            
             <div class="row">
               <div class="col-12">
-                <div class="log-in-button d-flex gap-2 gap-sm-3 justify-content-center">
-                  <a href="authentication/login" class="btn btn-lg btn-outline-danger p-3 lh-1">
-                   Log in
-                  </a>
+                <div class="right-content-bar">
+                    <button @onclick="Login" style="color:white;">Log in</button>
                 </div>
               </div>
             </div>
@@ -86,3 +90,33 @@
 </div>
 
 
+
+@code {
+    private bool isInTeams = false;
+
+    private async Task Login()
+    {
+        isInTeams = false;
+        // Call the JavaScript function and get the result
+        var result = await JSRuntime.InvokeAsync<dynamic>("getAccessToken", isInTeams);
+
+        // Retrieve the token and inTeamsTrue value from the result
+        var token = result.token;
+        isInTeams = result.isInTeams;
+
+        if (isInTeams)
+        {
+             Navigation.NavigateTo("authentication/login?token=" + token);
+        }
+        else
+        {
+            Navigation.NavigateTo("authentication/login");
+        }
+    }
+
+    private async Task BeginLogout(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+}
