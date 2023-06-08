@@ -1,10 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.AspNetCore.Components
 @using Microsoft.JSInterop
 
-@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
+
 <style>
 
     .nav-link {
@@ -112,30 +115,11 @@
 </AuthorizeView>
 
 @code{
-    private bool inTeams = false;
-
-    private async Task Login()
-    {
-        // Call the JavaScript function and get the result
-        var result = await JSRuntime.InvokeAsync<dynamic>("getAccessToken", inTeams);
-
-        // Retrieve the token and inTeamsTrue value from the result
-        var token = result.token;
-        inTeams = result.inTeamsTrue;
-
-        if (inTeams)
-        {
-            Navigation.NavigateTo("authentication/login?token=" + token);
-        }
-        else
-        {
-            Navigation.NavigateTo("authentication/login");
-        }
-    }
-
     private async Task BeginLogout(MouseEventArgs args)
     {
         await SignOutManager.SetSignOutState();
         Navigation.NavigateToLogout("authentication/logout");
     }
+
+
 }
