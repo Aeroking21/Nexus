@@ -112,20 +112,21 @@
 </AuthorizeView>
 
 @code{
-    private bool inTeams = false;
+    private bool isInTeams = false;
 
     private async Task Login()
     {
+        isInTeams = false;
         // Call the JavaScript function and get the result
-        var result = await JSRuntime.InvokeAsync<dynamic>("getAccessToken", inTeams);
+        var result = await JSRuntime.InvokeAsync<dynamic>("getAccessToken", isInTeams);
 
         // Retrieve the token and inTeamsTrue value from the result
         var token = result.token;
-        inTeams = result.inTeamsTrue;
+        isInTeams = result.isInTeams;
 
-        if (inTeams)
+        if (isInTeams)
         {
-            Navigation.NavigateTo("authentication/login?token=" + token);
+            // Navigation.NavigateTo("authentication/login?token=" + token);
         }
         else
         {
