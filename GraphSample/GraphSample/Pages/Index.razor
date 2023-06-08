@@ -314,14 +314,14 @@
 
 <AuthorizeView>
     <Authorized>
-        @if (DateTime.Now.Hour >= 6 && DateTime.Now.Hour < 12){
+        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 12){
             var name = context?.User?.Identity?.Name;
             if (context?.User?.Identity?.Name.Length > 1){
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
             <div class="welcome">Good Morning, @name!</div>
         }
-        else if (DateTime.Now.Hour >= 12 && DateTime.Now.Hour < 18){
+        else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18){
             var name = context?.User?.Identity?.Name;
             if (context?.User?.Identity?.Name.Length > 1){
                 name = context?.User?.Identity?.Name.Split(" ")[0];
@@ -333,7 +333,7 @@
             if (context?.User?.Identity?.Name.Length > 1){
                 name = context?.User?.Identity?.Name.Split(" ")[0];
             }
-            <div class="welcome">Good Evening, @name!</div>
+            <div class="welcome">Good Night, @name!</div>
         }
         
         <Dashbar />
@@ -385,7 +385,7 @@
                     <template>
                         <div class="grid-container-v2">
                             <div data-for="team in value">
-                                <div class="team-circle" style="background: radial-gradient(#6cb5ee, #0078d4);">
+                                <div class="team-circle" style="background: radial-gradient(#CCE0FF, #0078d4);">
                                     <a href="overview/teamid={{team.id}}">
                                         <h4>{{ team.displayName }}</h4>
                                     </a>
