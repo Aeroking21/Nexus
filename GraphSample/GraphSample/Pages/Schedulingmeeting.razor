@@ -5,7 +5,6 @@
 @using Azure
 @using Azure.AI.OpenAI
 @using System.Text
-@* @using Newtonsoft.Json; *@
 @using System.Security.Authentication
 @using TimeZoneConverter
 @using System;
@@ -16,36 +15,15 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 
+
 <style>
-        .container{
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
-        border-radius: 0.7rem;
-        position: absolute;
-        left: 0;
-        right: 0;
-        padding-bottom: 15px;
-        padding-top: 15px;
-        
-    }
+
 </style>
 
 
 <div class="container">
-    <div class="row">
-        <div class="col-1">
-            <h1>Meeting</h1>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-2">
-            <p>Here you can schedule a meeting with your team</p>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-3">
-            <p>@message</p>
-        </div>
-    </div>
+    <h1>Meeting</h1>
+    <p>Here you can schedule a meeting with your team</p>
     <!-- input a list of attendes, seperate them using ; symbol -->
     <div class="row">
         <div class="col-4">
@@ -71,9 +49,32 @@
                 }
             }
         </div>
+    </div>  
+      @* display the gettingFreeSchedule results here in a table *@
+    <div class="row">
+        <div class="col-5">
+            @if (gettingFreeSchedule != null)
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Attendee</th>
+                            <th scope="col">Availability</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var attendee in gettingFreeSchedule)
+                        {
+                            <tr>
+                                <td>@attendee[0]</td>
+                                <td>@attendee[1]</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
     </div>
-
-    
 </div>
 
 @code{
@@ -85,29 +86,25 @@
     private DateTime startTime = new DateTime(DateTime.Today.Ticks);
     private DateTime endTime = new DateTime(DateTime.Today.Ticks);
     public List<MeetingTimeSuggestion>? meetingTimeSuggestions;
+    public List<List<string>> gettingFreeSchedule = new List<List<string>>();
     
     [Inject]
     protected IAccessTokenProvider? AccessTokenProvider { get; set; }
     protected string? AccessToken { get; private set; }
-    string message;
     public List<string> messages = new List<string>();
     private static HttpClient Http = new HttpClient();
     
     private string changeFormat(string inputtedFromUser){ // "2019-04-16T09:00:00",
-    //07/06/2023 16:00:00
         string[] dateAndTime = inputtedFromUser.Split(' ');
         string[] date = dateAndTime[0].Split('/');
         string[] time = dateAndTime[1].Split(':');
- 
         string year = date[2];
         string month = date[1];
         string day = date[0];
         string hour = time[0];
         string minute = time[1];
         string second = time[2];
-
         string result = year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + second[0..2];
-        Console.WriteLine(result);
         return result;
     }
 
@@ -124,8 +121,6 @@
             throw new AuthenticationException(
                 "Unable to access authentication state");
         }
-
-        //user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();          
 
     }
@@ -171,14 +166,14 @@
         ReturnSuggestionReasons = true,
         MinimumAttendeePercentage = 100,
     };
-    var result = await graphClient.Me.FindMeetingTimes.PostAsync(requestBody, (requestConfiguration) =>
-    {
-        requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
-    });
-    Console.WriteLine(startTime.ToString());
-    Console.WriteLine(endTime.ToString());
-    Console.WriteLine(result.MeetingTimeSuggestions.ToList().Count);
-    meetingTimeSuggestions = result.MeetingTimeSuggestions;
+        var result = await graphClient.Me.FindMeetingTimes.PostAsync(requestBody, (requestConfiguration) =>
+        {
+            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+        });
+        Console.WriteLine(startTime.ToString());
+        Console.WriteLine(endTime.ToString());
+        Console.WriteLine(result.MeetingTimeSuggestions.ToList().Count);
+        meetingTimeSuggestions = result.MeetingTimeSuggestions;
 
     }
     
@@ -199,12 +194,12 @@
             },
             StartTime = new DateTimeTimeZone
             {
-                DateTime = "2019-03-15T09:00:00",
+                DateTime = changeFormat(startTime.ToString()),
                 TimeZone = "Pacific Standard Time",
             },
             EndTime = new DateTimeTimeZone
             {
-                DateTime = "2019-03-15T18:00:00",
+                DateTime = changeFormat(endTime.ToString()),
                 TimeZone = "Pacific Standard Time",
             },
             AvailabilityViewInterval = 60,
@@ -214,29 +209,41 @@
             requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
         });
 
-        Console.WriteLine(result.Value);
+        @* foreach (var schedule in result.Value)
+        {
+            Console.WriteLine("ScheduleId: " + schedule.ScheduleId);
+            Console.WriteLine("AvailabilityView: " + schedule.AvailabilityView);
+            Console.WriteLine("ScheduleItems:");
+            
+            foreach (var scheduleItem in schedule.ScheduleItems)
+            {
+                Console.WriteLine("  Status: " + scheduleItem.Status);
+                Console.WriteLine("  Start: " + scheduleItem.Start.DateTime);
+                Console.WriteLine("  End: " + scheduleItem.End.DateTime);
+                Console.WriteLine("  TimeZone: " + scheduleItem.Start.TimeZone);
+                Console.WriteLine();
+            }
+            
+            Console.WriteLine("Working Hours:");
+            Console.WriteLine("  StartTime: " + schedule.WorkingHours.StartTime);
+            Console.WriteLine("  EndTime: " + schedule.WorkingHours.EndTime);
+            Console.WriteLine("  TimeZone: " + schedule.WorkingHours.TimeZone.Name);
+            Console.WriteLine();
+        }
+        *@
         foreach (var schedule in result.Value)
-{
-    Console.WriteLine("ScheduleId: " + schedule.ScheduleId);
-    Console.WriteLine("AvailabilityView: " + schedule.AvailabilityView);
-    Console.WriteLine("ScheduleItems:");
-    
-    foreach (var scheduleItem in schedule.ScheduleItems)
-    {
-        Console.WriteLine("  Status: " + scheduleItem.Status);
-        Console.WriteLine("  Start: " + scheduleItem.Start.DateTime);
-        Console.WriteLine("  End: " + scheduleItem.End.DateTime);
-        Console.WriteLine("  TimeZone: " + scheduleItem.Start.TimeZone);
-        Console.WriteLine();
-    }
-    
-    Console.WriteLine("Working Hours:");
-    Console.WriteLine("  StartTime: " + schedule.WorkingHours.StartTime);
-    Console.WriteLine("  EndTime: " + schedule.WorkingHours.EndTime);
-    Console.WriteLine("  TimeZone: " + schedule.WorkingHours.TimeZone.Name);
-    Console.WriteLine();
-}
+        {
+            foreach (var scheduleItem in schedule.ScheduleItems){
+                gettingFreeSchedule.Add(new List<string>(){scheduleItem.Start.DateTime.ToString(), scheduleItem.End.DateTime.ToString()});
+            }
+
+        }
+        foreach (var item in gettingFreeSchedule){
+            Console.WriteLine(item[0]);
+            Console.WriteLine(item[1]);
+        }
 
     }
-
+       
 }
+
