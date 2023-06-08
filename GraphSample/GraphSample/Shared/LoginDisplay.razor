@@ -1,6 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
 
+@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
 <style>
@@ -89,12 +91,33 @@
     </Authorized>
     <NotAuthorized>
         <div class="right-content-bar">
-            <a href="authentication/login" style="color:white;">Log in</a>
+            <button @onclick="Login" style="color:white;">Log in</button>
         </div>
     </NotAuthorized>
 </AuthorizeView>
 
 @code{
+    private bool inTeams = false;
+
+    private async Task Login()
+    {
+        // Call the JavaScript function and get the result
+        var result = await JSRuntime.InvokeAsync<dynamic>("getAccessToken", inTeams);
+
+        // Retrieve the token and inTeamsTrue value from the result
+        var token = result.token;
+        inTeams = result.inTeamsTrue;
+
+        if (inTeams)
+        {
+            Navigation.NavigateTo("authentication/login?token=" + token);
+        }
+        else
+        {
+            Navigation.NavigateTo("authentication/login");
+        }
+    }
+
     private async Task BeginLogout(MouseEventArgs args)
     {
         await SignOutManager.SetSignOutState();
