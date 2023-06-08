@@ -63,7 +63,13 @@
                     SmartScribe
                 </button>
                 <ul class="dropdown-menu">
-                    <li class="dropdown-item">Upload File <InputFile OnChange="@LoadFile" /></li>
+
+                    <li class="dropdown-item">
+                        <div>
+                            <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
+                            <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" />
+                        </div>
+                    </li>
                     <li class="dropdown-item" @onclick="OnOpen"> Upload from OneDrive </li>
 
                 </ul>
