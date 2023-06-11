@@ -149,11 +149,19 @@
 
         var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
 
+        foreach(var met in meetingInfo.Value)
+        {
+            Console.WriteLine(":: " + met.Subject);
+        }
 
         Console.WriteLine(transcripts2.Value[0].Id);
         Console.WriteLine(transcripts2.Value[0].CreatedDateTime);
 
-        var content = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.GetAsync();
+        Console.WriteLine(me.Id);
+        Console.WriteLine(meetingInfo.Value[0].Id);
+        Console.WriteLine(transcripts2.Value[0].Id);
+
+        //var content = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.GetAsync();
 
         //Console.WriteLine(content);
     }
