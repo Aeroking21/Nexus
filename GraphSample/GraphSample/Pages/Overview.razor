@@ -22,12 +22,15 @@
         z-index: 9999;
     }
 </style>
+
 <div class="container">
 <AuthorizeView>
     <Authorized>
+        <link href="https://cdn.jsdelivr.net/npm/@@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+
         @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" /> *@
         @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
-        
+
         @* To get the id out of the link *@
 
         <div class="groupSec">
@@ -102,39 +105,54 @@
                                 <div class="emailSelect">
                                     @foreach (var mail in myMessages)
                                     {
-                                        <FluentCard @onclick="() => ToggleMail(mail)">
-                                            <div class="emailSelectBox">
-                                                <div class="emailData">
-                                                    <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
-                                                    <p class="subject">@mail?.Subject</p>
-                                                    <p class="content">@mail?.Body?.Content</p>
-                                                </div>
-                                                <div class="timing">@mail?.ReceivedDateTime</div>
-                                                <button class="deleteButton" @onclick="()=> deleteMail(mail)">Delete</button>
+                                        <div class="emailGap"></div>
+                                        <div class="emailSelectBox" @onclick="() => ToggleMail(mail)">
+                                            <div class="emailData">
+                                                <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
+                                                <p class="subject">@mail?.Subject</p>
+                                                <p class="content">@mail?.Body?.Content</p>
                                             </div>
-                                        </FluentCard>
+
+
+                                            <div class="emailRight">
+                                                <div class="emailRightData">
+                                                    <div class="timing">3:30PM</div>
+                                                    @if (@mail?.IsRead == false) { <span class="dotOn">&nbsp;</span> }
+                                                    else                         { <span class="dotOff">&nbsp;</span>}
+                                                </div>
+
+                                                <div class="emailInteraction">
+                                                    <button class="btn btn-delete">
+                                                        <span class="mdi mdi-delete mdi-16px"></span>
+                                                        <span class="mdi mdi-delete-empty mdi-16px"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     }
                                 </div>
                             </div>
                             <div class="emailDisplay">
-                                <div class="heading">
-                                    <p class="subject">@currentEmail?.Subject</p>
-                                    <p class="sender">@currentEmail?.Sender?.EmailAddress?.Name</p>
-                                    <p class="recipient">@currentEmail?.ToRecipients</p>
-                                </div>
-                                <div class="content">@currentEmail?.Body?.Content</div>
-
-                                <div class="emailReply" hidden="@(!emailReply)">
-                                    <button @onclick="() => replyToEmail(false)">CLOSE</button>
+                                <div class="emailDisplayContent">
                                     <div class="heading">
-                                        <p class="subject">Re: @currentEmail?.Subject</p>
-                                        <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
-                                        <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
+                                        <p class="subject">@currentEmail?.Subject</p>
+                                        <p class="sender">@currentEmail?.Sender?.EmailAddress?.Name</p>
+                                        <p class="recipient">@currentEmail?.ToRecipients</p>
                                     </div>
-                                    <div class="emailResponseContent">
-                                        <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                                    <div class="body">@currentEmail?.Body?.Content</div>
+
+                                    <div class="emailReply" hidden="@(!emailReply)">
+                                        <button @onclick="() => replyToEmail(false)">CLOSE</button>
+                                        <div class="heading">
+                                            <p class="subject">Re: @currentEmail?.Subject</p>
+                                            <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                            <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
+                                        </div>
+                                        <div class="emailResponseContent">
+                                            <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                                        </div>
+                                        <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
                                     </div>
-                                    <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
                                 </div>
                             </div>
                             <div class="mailInteract">
@@ -318,80 +336,182 @@
                 display: flex;
             }
 
-                .emailBar {
-                    width: 20%;
-                    overflow-y: scroll;
+            .emailBar {
+                height: 100%;
+                width: 25%;
+                overflow-y: scroll;
+            }
+
+            .emailSelect {
+            }
+
+            .emailSelectBox {
+                padding: 5px;
+                display: flex;
+                border-radius: 10px;
+                border: 1px solid #cdd4d4;
+                background: #ffffff;
+            }
+
+                .emailSelectBox:hover {
+                    border-radius: 10px;
+                    box-shadow: 0 0 3px rgba(33,33,33,.2);
                 }
 
-                    .emailSelect {
-                    }
+            .emailData {
+                width: 70%;
+            }
 
-                        .emailSelectBox {
-                            padding: 5px;
-                            display: flex;
-                        }
-
-                            .emailData {
-                                width: 90%;
-                            }
-
-                                .emailData .sender {
-                                    padding-right: 10px;
-                                    margin-bottom: 0;
-                                    font-size: large;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    max-width: 90%;
-                                }
-
-                                .emailData .subject {
-                                    padding: 0;
-                                    margin-bottom: 0;
-                                    font-size: small;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    max-width: 90%;
-                                }
-
-                                .emailData .content {
-                                    padding: 0;
-                                    margin-bottom: 0;
-                                    font-size: small;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    max-width: 90%;
-                                }
-
-                            .emailSelectBox .timing {
-                                width: 10%;
-                            }
-
-                .emailDisplay {
-                    width: 60%;
-                    overflow-y: scroll;
-                    padding-left: 25px;
+                .emailData .sender {
+                    padding-right: 10px;
+                    margin-bottom: 0;
+                    font-size: large;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 90%;
                 }
 
-                    .emailDisplay .heading {
+                .emailData .subject {
+                    padding: 0;
+                    margin-bottom: 0;
+                    font-size: small;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 90%;
+                }
+
+                .emailData .content {
+                    padding: 0;
+                    margin-bottom: 0;
+                    font-size: small;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 90%;
+                }
+
+
+            .emailRight {
+                width: 30%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .emailRight .emailRightData {
+                display: flex;
+                width: 100%;
+                justify-content:space-between;
+            }
+
+                .emailRightData .timing {
+                }
+
+                .emailRightData .dotOn {
+                    height: 25px;
+                    width: 25px;
+                    background-color: #ADD8E6;
+                    border: 1px solid #cdd4d4;
+                    border-radius: 50%;
+                }
+
+                .emailRightData .dotOff {
+                    width: 10%;
+                    height: 25px;
+                    width: 25px;
+                    border: 1px solid #cdd4d4;
+                    background-color: white;
+                    border-radius: 50%;
+                }
+
+            .emailRight .emailInteraction {
+                display: flex;
+            }
+
+
+            $delete-red: red;
+
+            .btn {
+                display: flex;
+                align-items: center;
+                background: none;
+                border: 1px solid lighten(gray, 24%);
+                height: 48px;
+                letter-spacing: .25px;
+                border-radius: 24px;
+                cursor: pointer;
+
+                &:focus {
+                    outline: none;
+                }
+
+                .mdi {
+                    margin-right: 8px;
+                }
+            }
+
+            .btn-delete {
+                font-size: 16px;
+                color: red;
+
+                >.mdi-delete-empty {
+                    display: none;
+                }
+
+                &:hover {
+                    background-color: lighten(red, 48%);
+                    >.mdi-delete-empty {
+                        display: block;
                     }
-                        
-                        .heading .subject {
-                            overflow-wrap: break-all;
-                        }
 
-                        .heading .sender {
-                        }
-
-                        .heading .recipient {
-                        }
-
-                    .emailDisplay .content {
-                        width: 100%;
-                        word-wrap: break-word;
+                    > .mdi-delete {
+                        display: none;
                     }
+                }
+
+                &:focus {
+                    box-shadow: 0 0 0 4px lighten(red, 40%);
+                }
+            }
+
+            .emailGap {
+                padding-bottom: 5px;
+                opacity: 0;
+            }
+
+            .emailDisplay {
+                width: 60%;
+                overflow-y: scroll;
+                padding-left: 25px;
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+
+            .emailDisplayContent {
+                background: #ffffff;
+                border-radius: 10px;
+                border: 1px solid #cdd4d4;
+                height: 100%;
+            }
+
+            .emailDisplay .heading {
+            }
+
+                .emailDisplay .heading .subject {
+                    overflow-wrap: break-all;
+                }
+
+                .emailDisplay .heading .sender {
+                }
+
+                .emailDisplay .heading .recipient {
+                }
+
+            .emailDisplay .body {
+                width: 100%;
+                word-wrap: break-word;
+            }
 
             /*
              * TEAMS
@@ -402,89 +522,91 @@
                 height: 70vh;
             }
 
-                .teamsBar {
-                    width: 20%;
-                    overflow-y: scroll;
-                }
+            .teamsBar {
+                width: 20%;
+                overflow-y: scroll;
+            }
 
-                    .teamsSelect {
-                        width: 100%;
-                    }
+            .teamsSelect {
+                width: 100%;
+            }
 
-                        .teamChatIntial {
-                            width: 100%;
-                            padding: 5px;
-                        }
+            .teamChatIntial {
+                width: 100%;
+                padding: 5px;
+            }
 
-                            .teamName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
+            .teamName {
+                width: 90%;
+                padding-bottom: 5px;
+                font-size: large;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 90%;
+            }
 
-                .channelBar {
-                    width: 20%;
-                    overflow-y: scroll;
-                }
-                    .channelSelect {
-                        width: 100%;
-                    }
+            .channelBar {
+                width: 20%;
+                overflow-y: scroll;
+            }
 
-                        .channelSelectBox {
-                            width: 100%;
-                            padding: 5px;
-                        }
+            .channelSelect {
+                width: 100%;
+            }
 
-                            .channelName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
+            .channelSelectBox {
+                width: 100%;
+                padding: 5px;
+            }
 
-                .teamChatBar {
-                    width: 60%;
-                    overflow-y: scroll;
-                    display: flex;
-                    flex-direction: column-reverse;
-                }
-                    .teamChatSelect {
-                        width: 100%;
-                    }
+            .channelName {
+                width: 90%;
+                padding-bottom: 5px;
+                font-size: large;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 90%;
+            }
 
-                        .teamChatInital {
-                            width: 100%;
-                            padding: 5px;
-                            padding-top: 20px;
-                        }
+            .teamChatBar {
+                width: 60%;
+                overflow-y: scroll;
+                display: flex;
+                flex-direction: column-reverse;
+            }
 
-                            .teamChatName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
+            .teamChatSelect {
+                width: 100%;
+            }
 
-                            .teamChatContent {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                max-width: 90%;
-                            }
+            .teamChatInital {
+                width: 100%;
+                padding: 5px;
+                padding-top: 20px;
+            }
 
-                        .teamReplySection {
-                            width: 70%;
-                            align-items
-                        }
+            .teamChatName {
+                width: 90%;
+                padding-bottom: 5px;
+                font-size: large;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 90%;
+            }
+
+            .teamChatContent {
+                width: 90%;
+                padding-bottom: 5px;
+                max-width: 90%;
+            }
+
+            .teamReplySection {
+                width: 70%;
+                align-items
+            }
 
             /* Split page into 2 */
             /* Control the left side */
@@ -567,16 +689,24 @@
                 justify-content: space-between;
             }
 
-            .calDateTime .begin {
-                padding: 0;
-                font-size: small;
-                margin-bottom: 0;
-                margin-top: 27px;
-            }
+                .calDateTime .begin {
+                    padding: 0;
+                    font-size: small;
+                    margin-bottom: 0;
+                    margin-top: 27px;
+                }
 
-            .calDateTime .fin {
-                padding: 0;
-                font-size: small;
+                .calDateTime .fin {
+                    padding: 0;
+                    font-size: small;
+                }
+
+            .calendarSection {
+                width: 10%
+                height: 70vh;
+                flex-direction: column;
+                display: flex;
+                overflow-y: scroll;
             }
         </style>
 
@@ -593,7 +723,6 @@
     <Chat />
 </div>
 @code{
-
     [Parameter]
     public string ids{ get; set; }
 
@@ -672,9 +801,9 @@
         StateHasChanged();
     }
 
-/*
-* GET MAIL EVENTS
-*/
+    /*
+    * GET MAIL EVENTS
+    */
 
     /* MAIL LIST */
     private IList<Message> myMessages = new List<Message>();
@@ -696,7 +825,7 @@
 
                 if (addresses != "All") { config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + addresses; }
 
-                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
+                config.QueryParameters.Select = new string[] { "subject", "sender", "body", "isRead" };
                 //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
 
@@ -712,9 +841,9 @@
         await graphClient.Me.Messages[email.Id].DeleteAsync();
     }
 
-/*
-* GET TEAM EVENTS
-*/
+    /*
+    * GET TEAM EVENTS
+    */
 
     /* TEAMS LIST */
     private IList<Team> myTeams = new List<Team>();
@@ -727,9 +856,9 @@
         myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-/*
-* GET CHANNEL EVENTS
-*/
+    /*
+    * GET CHANNEL EVENTS
+    */
 
     /* CHANNEL LIST */
     private IList<Channel> myChannels = new List<Channel>();
@@ -742,9 +871,9 @@
         myChannels = channelPage?.Value ?? new List<Channel>();
     }
 
-/*
-* GET ALL CHANNEL CHATS
-*/
+    /*
+    * GET ALL CHANNEL CHATS
+    */
 
     public class messageBlock
     {
@@ -780,9 +909,9 @@
         StateHasChanged();
     }
 
-/*
-* GET PERSONAL CHATS
-*/
+    /*
+    * GET PERSONAL CHATS
+    */
 
     /* CHAT LIST */
     private IList<Chat> myChats = new List<Chat>();
@@ -795,14 +924,14 @@
     //    myChats = chatPage?.Value ?? new List<Chat>();
     //}
 
-/*
-* GET PERSONAL CHAT REPLIES
-*/
+    /*
+    * GET PERSONAL CHAT REPLIES
+    */
 
 
-/*
-* GET CALENDAR EVENTS
-*/
+    /*
+    * GET CALENDAR EVENTS
+    */
 
     /* EVENTS LIST */
     private IList<Event> myEvents = new List<Event>();
@@ -844,9 +973,9 @@
         myEvents = eventPage?.Value ?? new List<Event>();
     }
 
-/*
-* NEW GROUP ADDED - UPDATE ASYNC
-*/
+    /*
+    * NEW GROUP ADDED - UPDATE ASYNC
+    */
 
     async void UpdateGroup(ChangeEventArgs args)
     {
@@ -901,16 +1030,16 @@
         return iso8601DateTime;
     }
 
-/*
-* HANDLE WHICH TAB IS BEING PRESENTED
-*/
+    /*
+    * HANDLE WHICH TAB IS BEING PRESENTED
+    */
     string? activeid;
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-/*
-* SHOW THE DETAILS OF THE CURRENT ITEM
-*/
+    /*
+    * SHOW THE DETAILS OF THE CURRENT ITEM
+    */
     private Message currentEmail { get; set; } = null;
     private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
 
@@ -923,10 +1052,10 @@
     private Chat currentChat { get; set; } = null;
     private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
 
-/*
-* ALL INPUT BOXES TO CREATE GROUPS
-* GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-*/
+    /*
+    * ALL INPUT BOXES TO CREATE GROUPS
+    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+    */
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -1011,10 +1140,10 @@
         }
     }
 
-/*
-* CREATE LOCAL CLASS TO STORE GROUPS.
-* ALSO SEND TO API MONGO DB
-*/
+    /*
+    * CREATE LOCAL CLASS TO STORE GROUPS.
+    * ALSO SEND TO API MONGO DB
+    */
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -1035,9 +1164,9 @@
         }
     }
 
-/*
-* REPLY TO EMAILS
-*/
+    /*
+    * REPLY TO EMAILS
+    */
     string? emailContent;
     private bool emailReply { get; set; } = false;
     private void replyToEmail(bool change) { emailReply = change; }
@@ -1074,9 +1203,9 @@
         emailReply = false;
     }
 
-/*
-* Create new channel message
-*/
+    /*
+    * Create new channel message
+    */
     string? newChannelMessageContent;
     private bool newChannelMessageBool { get; set; } = false;
     private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
