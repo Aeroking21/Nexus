@@ -107,7 +107,7 @@
                                                 </div>
 
                                                 <div class="emailInteraction">
-                                                    <button class="btn btn-delete">
+                                                    <button class="btn btn-delete" @onclick="() => deleteMail(mail)">
                                                         <span class="mdi mdi-delete mdi-16px"></span>
                                                         <span class="mdi mdi-delete-empty mdi-16px"></span>
                                                     </button>
@@ -118,32 +118,35 @@
                                 </div>
                             </div>
                             <div class="emailDisplay">
-                                <div class="emailDisplayContent">
-                                    <div class="heading">
-                                        <p class="subject">@currentEmail?.Subject</p>
-                                        <p class="sender">From: @currentEmail?.Sender?.EmailAddress?.Name</p>
-                                        <p class="recipient">To: @currentEmail?.ToRecipients?[0].EmailAddress?.Address</p>
-                                    </div>
-                                    <div class="content">
-                                        <div class="body">@currentEmail?.Body?.Content</div>
-                                    </div>
-
-                                    <div class="mailInteract">
-                                        <button @onclick="() => replyToEmail(true)">Reply</button>
-                                    </div>
-                                    <div class="emailReply" hidden="@(!emailReply)">
-                                        <button @onclick="() => replyToEmail(false)">CLOSE</button>
+                                @if (currentEmail != null)
+                                {
+                                    <div class="emailDisplayContent">
                                         <div class="heading">
-                                            <p class="subject">Re: @currentEmail?.Subject</p>
-                                            <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
-                                            <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
+                                            <p class="subject">@currentEmail?.Subject</p>
+                                            <p class="sender">From: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                            <p class="recipient">To: @currentEmail?.ToRecipients?[0].EmailAddress?.Address</p>
                                         </div>
-                                        <div class="emailResponseContent">
-                                            <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                                        <div class="content">
+                                            <div class="body">@currentEmail?.Body?.Content</div>
                                         </div>
-                                        <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
+
+                                        <div class="mailInteract">
+                                            <button @onclick="() => replyToEmail(true)">Reply</button>
+                                        </div>
+                                        <div class="emailReply" hidden="@(!emailReply)">
+                                            <button @onclick="() => replyToEmail(false)">CLOSE</button>
+                                            <div class="heading">
+                                                <p class="subject">Re: @currentEmail?.Subject</p>
+                                                <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                                <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
+                                            </div>
+                                            <div class="emailResponseContent">
+                                                <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                                            </div>
+                                            <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
+                                        </div>
                                     </div>
-                                </div>
+                                }
                             </div>
                         </div>
 
@@ -417,6 +420,11 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         await graphClient.Me.Messages[email.Id].DeleteAsync();
+
+        if(email == currentEmail) { currentEmail = null; }
+
+        await getMail("All");
+        StateHasChanged();
     }
 
     /*
@@ -619,7 +627,23 @@
     * SHOW THE DETAILS OF THE CURRENT ITEM
     */
     private Message currentEmail { get; set; } = null;
-    private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
+    private async void ToggleMail(Message email)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        currentEmail = (currentEmail == email) ? null : email;
+
+        if(currentEmail?.IsRead == false)
+        {
+            var requestBody = new Message
+            {
+                IsRead = true,
+            };
+            await graphClient.Me.Messages[currentEmail.Id].PatchAsync(requestBody);
+        }
+        await getMail("All");
+        StateHasChanged();
+    }
 
     private Team currentTeam { get; set; } = null;
     private async void ToggleTeam(Team teamsChat) { currentTeam = (currentTeam == teamsChat) ? null : teamsChat; await getChannels(); StateHasChanged(); }
@@ -803,7 +827,6 @@
         StateHasChanged();
         newChannelMessageContent = String.Empty;
         newChannelMessageBool = false;
-
     }
 
 
