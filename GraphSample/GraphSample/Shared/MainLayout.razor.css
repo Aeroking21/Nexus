@@ -5,6 +5,10 @@
 }
 
 
+.content {
+    width: 100%;
+}
+
 .outerSearch {
     max-width: 60vw;
     width: 25vw;

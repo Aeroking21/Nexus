@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-﻿@page "/Search"
+@page "/Search"
 @using Microsoft.Graph
-=======
-﻿@using Microsoft.Graph
->>>>>>> f63cf84 (Search in Navbar)
 @using Microsoft.Graph.Models
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
@@ -22,19 +18,19 @@
         padding-bottom: 1%;
     }
 
-    .dropdown-content div {
-        width: 98%;
-        margin-top: 1%;
-        margin-top: 1%;
-        margin-left: 1%;
-        box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
-        border-radius: 0.25rem;
-        height: 80px;
-    }
+        .dropdown-content div {
+            width: 98%;
+            margin-top: 1%;
+            margin-top: 1%;
+            margin-left: 1%;
+            box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+            border-radius: 0.25rem;
+            height: 80px;
+        }
 
-    .dropdown-content div:hover {
-        box-shadow: rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
-    }
+            .dropdown-content div:hover {
+                box-shadow: rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
+            }
 
     .dropdown-content2 {
         max-height: 100%;
@@ -42,7 +38,6 @@
         width: 60%;
         max-width: 100%;
         background: white;
-        border: 3px solid red;
     }
 
 
@@ -60,34 +55,18 @@
         margin-top: 25%;
     }
 
-<<<<<<< HEAD
-
-    .ProgressRing {
-        display: none;
-        width: 10%;
-        height: 10%;
-        margin-left: 45%;
-        margin-top: 25%;
-    }
-
-=======
->>>>>>> f63cf84 (Search in Navbar)
 </style>
 
 <AuthorizeView>
     <Authorized>
 
-        <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" >
+        <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" @onmouseleave="MouseOut" >
 
             <input class="form-control search" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
             <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
 
-<<<<<<< HEAD
-            <div class="dropdown-content" style="@DropDownStyle" @onfocusout="HandleOutsideClick">
-=======
-                    <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
->>>>>>> f63cf84 (Search in Navbar)
+            <div class="dropdown-content" style="@DropDownStyle">
 
                 @if (data_response.Count == 0)
                 {
@@ -188,36 +167,24 @@
 
     protected void HandleInputFocus()
     {
-<<<<<<< HEAD
         InputStyle = "width:100%;";
-=======
-        if (firstRender && MyFluentDialog != null)
-        {
-            MyFluentDialog!.Hide();
-        }
-
->>>>>>> f63cf84 (Search in Navbar)
     }
 
-    protected void HandleOutsideClick()
+    //protected void HandleOutsideClick()
+    //{
+    //    InputStyle = "";
+    //    //data_response.Clear();
+    //    ToggleDropdown(false);
+    //}
+
+    protected void MouseOut()
     {
+        Console.WriteLine("mouse outside");
         InputStyle = "";
-        //data_response.Clear();
+        data_response.Clear();
         ToggleDropdown(false);
     }
 
-<<<<<<< HEAD
-=======
-    private void OnDismiss(DialogEventArgs args)
-    {
-        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
-        {
-            MyFluentDialog!.Hide();
-        }
-    }
-
-
->>>>>>> f63cf84 (Search in Navbar)
     protected void ToggleDropdown(bool visibility)
     {
         if (visibility)
@@ -275,6 +242,7 @@
             ProgressStyle = "display: none;";
         }
     }
+
 
     protected async Task CallApiAsync(string searchTerm)
     {
@@ -390,7 +358,7 @@
                     string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                     data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
-                    Console.WriteLine(" found in outlook");
+                    Console.WriteLine(" found in teams");
                 }
 
             }
@@ -422,7 +390,7 @@
                     string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                     data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
-                    Console.WriteLine(" found in Teams");
+                    Console.WriteLine(" found in outlook");
                 }
             }
 
@@ -468,4 +436,3 @@
 
     }
 }
-
