@@ -77,7 +77,7 @@
                     <div class="@((emailsShowing) ? "restricted-left-div" : "left-div")">
                         @if (displayMode == DisplayMode.Calendar_Display)
                         {
-                            <div class="calendar-date" style="height: 52px; position: sticky; top: 0px;">
+                            <div class="calendar-date" style="height: 52px;">
                             </div>
                         }
                         <table class="left-table">
@@ -130,7 +130,7 @@
                                 <div class="right-left-div">
                                     @if (displayMode == DisplayMode.Calendar_Display)
                                     {
-                                    <div class="calendar-date" style="height: 52px; position: sticky; top: 0px;">
+                                    <div class="calendar-date" style="height: 52px;">
                                     </div>
                                     }
                                     <table class="left-table">
@@ -301,6 +301,12 @@
                                     </table>
                                     }
                                     else{
+                                        @* @foreach (var assessmentGroup in sortedAssessments)
+                                        {
+                                            <div class="calendar-date" style="position: sticky; top: 0px;">
+                                                @assessmentGroup.Key.ToString("dd/MM/yyyy")
+                                            </div> 
+                                        } *@
                                         <div class="calendar-div">
                                         @foreach (var assessmentGroup in sortedAssessments)
                                         {
