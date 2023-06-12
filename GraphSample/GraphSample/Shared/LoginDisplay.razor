@@ -8,7 +8,7 @@
     .nav-link {
         text-decoration: none;
         color: #08396F;
-        margin-right: 20px;
+        margin-right: 10px;
         font-size: 1.2rem;
         transition: color 0.1s ease-in-out;
     }
@@ -36,12 +36,6 @@
     .navbar-brand img {
         width: 80px;
         height: 50px;
-    }
-
-    .welcome {
-        font-size: 1.5rem;
-        font-family: 'Pavanam', sans-serif;
-        color: black;
     }
 
 </style>
@@ -74,20 +68,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/UniversalSearch">
-                                Search
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="/SummariseFiles">
                                 NotesPro
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" >
-                                
-                            </a>
+                            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
                         </li>
 
                     </ul>
@@ -123,3 +110,6 @@
         Navigation.NavigateToLogout("authentication/logout");
     }
 }
+
+@*TODO
+1. Try placing the Universal search bar here and integrate into navbar*@
