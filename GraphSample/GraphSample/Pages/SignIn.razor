@@ -4,8 +4,6 @@
 @using Microsoft.TeamsFx
 @using Microsoft.Graph
 
-@inject TeamsFx teamsfx
-@inject TeamsUserCredential teamsUserCredential
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
@@ -116,7 +114,7 @@
                 {
                     // The "teams" query parameter is present, indicating that the app is running within Microsoft Teams
                     isTeams = true;
-                    var user = await teamsUserCredential.GetUserInfoAsync();
+                    Navigation.NavigateTo("authentication/login");
                 }
                 else
                 {
