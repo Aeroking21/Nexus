@@ -289,7 +289,7 @@
             await graphClient.Me
                 .Events
                 .PostAsync(newEvent);   
-            await graphClient.Me.Calendar.Events.GetAsync();
+            events = await getEvents();
             Console.WriteLine(userTimeZone.ToString());
         }
         catch (Exception ex)
@@ -301,8 +301,16 @@
     public async Task<List<Event>> getEvents()
     {
         graphClient = clientFactory.GetAuthenticatedClient();
-        var eventPage = await graphClient.Me.Calendar.Events.GetAsync();
+        var eventPage = await graphClient.Me
+            .Calendar.Events
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+                config.QueryParameters.Select = new [] { "subject", "organizer", "start", "end" };
+            });
         events = eventPage?.Value ?? new List<Event>();
+        await LoadCalendar();
+        getEventsOfSelectedDay(selectedDay.Date.ToString());
         return events.ToList();
     }
 
