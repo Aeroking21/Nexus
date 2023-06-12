@@ -1,4 +1,5 @@
-﻿@using Microsoft.Graph
+﻿@page "/Search"
+@using Microsoft.Graph
 @using Microsoft.Graph.Models
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
@@ -17,24 +18,26 @@
         padding-bottom: 1%;
     }
 
-    .dropdown-content div {
-        width: 98%;
-        margin-top: 1%;
-        margin-top: 1%;
-        margin-left: 1%;
-        box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
-        border-radius: 0.25rem;
-        height: 80px;
-    }
+        .dropdown-content div {
+            width: 98%;
+            margin-top: 1%;
+            margin-top: 1%;
+            margin-left: 1%;
+            box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+            border-radius: 0.25rem;
+            height: 80px;
+        }
 
-    .dropdown-content div:hover {
-        box-shadow: rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
-    }
+            .dropdown-content div:hover {
+                box-shadow: rgba(6, 24, 44, 0.4) 0px 0px 0px 2px, rgba(6, 24, 44, 0.65) 0px 4px 6px -1px, rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
+            }
 
     .dropdown-content2 {
         max-height: 100%;
         overflow: scroll;
         max-width: 100%;
+        border: 2px solid green;
+        background: white;
     }
 
 
@@ -52,78 +55,73 @@
         margin-top: 25%;
     }
 
+    .dropdown-content2:focus {
+        backdrop-filter: blur(45px);
+    }
+
 </style>
 
 <AuthorizeView>
     <Authorized>
 
-        <div>
-            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                <div class="dropdown-content2">
-
-                    <FluentSearch @bind-Value="searchValue" class="search" @oninput="HandleInput" @onkeypress="HandleKeyPress">
-
-                    </FluentSearch>
-
-                    <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
-
-                    <div class="dropdown-content" style="@DropDownStyle">
-
-                        @if (data_response.Count == 0)
-                        {
-                            <div> Nothing Found </div>
-                        }
-
-                        else
-                        {
-                            @foreach (var data in data_response)
-                            {
-                                <a href="@data.Url" target="_blank">
-                                    <div>
-                                        @if (data.App == "Outlook")
-                                        {
-                                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
-                                                 width="32"
-                                                 height="32"
-                                                 alt="Outlook" />
-                                        }
-                                        else if (data.App == "Teams")
-                                        {
-                                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
-                                                 width="32"
-                                                 height="32"
-                                                 alt="Teams" />
-                                        }
-                                        else
-                                        {
-                                            <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
-                                                 width="32"
-                                                 height="32"
-                                                 alt="OneDrive" />
-                                        }
-
-                                        @data.Sender
-                                        @data.Title
-
-                                    </div>
+        <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" @onfocusout="HandleOutsideClick">
 
 
-                                </a>
-
-                            }
-                        }
+            <input class="form-control search" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
 
-                    </div>
+            <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
 
-                </div>
+            <div class="dropdown-content" style="@DropDownStyle">
 
-            </FluentDialog>
+                @if (data_response.Count == 0)
+                {
+                    <div> Nothing Found </div>
+                }
 
-            <i class="fa fa-search fa-xl fa-fade" @onclick="OnOpen"></i>
+                else
+                {
+                    @foreach (var data in data_response)
+                    {
+                        <a href="@data.Url" target="_blank">
+                            <div>
+                                @if (data.App == "Outlook")
+                                {
+                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                                         width="32"
+                                         height="32"
+                                         alt="Outlook" />
+                                }
+                                else if (data.App == "Teams")
+                                {
+                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                         width="32"
+                                         height="32"
+                                         alt="Teams" />
+                                }
+                                else
+                                {
+                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                                         width="32"
+                                         height="32"
+                                         alt="OneDrive" />
+                                }
+
+                                @data.Sender
+                                @data.Title
+
+                            </div>
+
+
+                        </a>
+
+                    }
+                }
+
+
+            </div>
 
         </div>
-
 
     </Authorized>
 
@@ -142,36 +140,47 @@
     protected string DropDownStyle = string.Empty;
     protected string ProgressStyle = "display: none;";
     protected bool isSearching = false;
-    private FluentDialog? MyFluentDialog;
-    public bool Modal = true;
+    protected string InputStyle = string.Empty;
+    //private FluentDialog? MyFluentDialog;
+    //public bool Modal = true;
     private GraphServiceClient? graphClient;
     private List<Author> data_response = new List<Author>();
 
 
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender && MyFluentDialog != null)
-        {
-            MyFluentDialog!.Hide();
-        }
+    //protected override void OnAfterRender(bool firstRender)
+    //{
+    //    if (firstRender && MyFluentDialog != null)
+    //    {
+    //        MyFluentDialog!.Hide();
+    //    }
 
+    //}
+
+
+    //private void OnOpen()
+    //{
+    //    MyFluentDialog!.Show();
+
+    //}
+
+    //private void OnDismiss(DialogEventArgs args)
+    //{
+    //    if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+    //    {
+    //        MyFluentDialog!.Hide();
+    //    }
+    //}
+
+    protected void HandleInputFocus()
+    {
+        InputStyle = "width:50vw; border:2px dashed yellow;";
     }
 
-
-    private void OnOpen()
+    protected void HandleOutsideClick()
     {
-        MyFluentDialog!.Show();
-
+        InputStyle = "";
+        data_response.Clear();
     }
-
-    private void OnDismiss(DialogEventArgs args)
-    {
-        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
-        {
-            MyFluentDialog!.Hide();
-        }
-    }
-
 
     protected void ToggleDropdown(bool visibility)
     {
@@ -248,11 +257,11 @@
         var requestBodyMail = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-        {
+            {
                 new SearchRequest
                 {
                     EntityTypes = new List<EntityType?>
-                {
+                    {
                         EntityType.Message,
                     },
                     Query = new SearchQuery
@@ -270,11 +279,11 @@
         var requestBodyTeams = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-        {
+            {
                 new SearchRequest
                 {
                     EntityTypes = new List<EntityType?>
-                {
+                    {
                         EntityType.ChatMessage,
                     },
                     Query = new SearchQuery
@@ -292,11 +301,11 @@
         var requestBodyDrive = new Microsoft.Graph.Search.Query.QueryPostRequestBody
         {
             Requests = new List<SearchRequest>
-        {
+            {
                 new SearchRequest
                 {
                     EntityTypes = new List<EntityType?>
-                {
+                    {
                         EntityType.DriveItem,
                     },
                     Query = new SearchQuery
@@ -314,7 +323,6 @@
 
         var batchRequestContent = new BatchRequestContent(graphClient);
 
-        //var result = await graphClient.Search.Query.PostAsync(requestBody);
         var team = graphClient.Search.Query.ToPostRequestInformation(requestBodyTeams);
         var mail = graphClient.Search.Query.ToPostRequestInformation(requestBodyMail);
         var drive = graphClient.Search.Query.ToPostRequestInformation(requestBodyDrive);
