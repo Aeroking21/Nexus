@@ -16,7 +16,13 @@
 
         [CascadingParameter] BlazoredModalInstance BlazoredAssessmentModal { get; set; } = default!;
 
-        protected override void OnInitialized() => BlazoredAssessmentModal.SetTitle("Enter New Date");
+        [Parameter] public DateTimeOffset oldDate { get; set; }
+
+        protected override void OnInitialized()
+        {
+            _form.date = oldDate;
+            BlazoredAssessmentModal.SetTitle("Enter New Date");
+        }
 
         private async Task SubmitForm()
         {
