@@ -7,28 +7,14 @@
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
-<style>
-    .container{
-        position: relative;
-        left: 0;
-        right: 0;
-        padding-bottom: 15px;
-    }
 
-    .chat-bot{
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-    }
-</style>
 <div class="container">
 <AuthorizeView>
     <Authorized>
-        @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" /> *@
-        @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
-        
-        @* To get the id out of the link *@
+        <link href="https://cdn.jsdelivr.net/npm/@@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+        <link href="GraphSample.styles.css" rel="stylesheet">
+        <link href="Overview.razor.css" rel="stylesheet">
+        <link rel="stylesheet" href="~/@(nameof(GraphSample)).styles.css" />
 
         <div class="groupSec">
             <div class="seeGroups">
@@ -102,44 +88,74 @@
                                 <div class="emailSelect">
                                     @foreach (var mail in myMessages)
                                     {
-                                        <FluentCard @onclick="() => ToggleMail(mail)">
-                                            <div class="emailSelectBox">
-                                                <div class="emailData">
-                                                    <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
-                                                    <p class="subject">@mail?.Subject</p>
-                                                    <p class="content">@mail?.Body?.Content</p>
-                                                </div>
-                                                <div class="timing">@mail?.ReceivedDateTime</div>
-                                                <button class="deleteButton" @onclick="()=> deleteMail(mail)">Delete</button>
+                                        <div class="emailGap"></div>
+                                        <div class="emailSelectBox" @onclick="() => ToggleMail(mail)">
+                                            <div class="emailData">
+                                                <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
+                                                <p class="subject">@mail?.Subject</p>
+                                                <p class="content">@mail?.Body?.Content</p>
                                             </div>
-                                        </FluentCard>
+
+
+                                            <div class="emailRight">
+                                                <div class="emailRightData">
+                                                    <div class="timing">3:30PM</div>
+                                                    @if (@mail?.IsRead == false)
+                                                    {<span class="dotOn">&nbsp;</span> }
+                                                    else
+                                                    { <span class="dotOff">&nbsp;</span>}
+                                                </div>
+
+                                                <div class="emailInteraction">
+                                                    <button class="btn btn-delete" @onclick="() => deleteMail(mail)">
+                                                        <span class="mdi mdi-delete mdi-16px"></span>
+                                                        <span class="mdi mdi-delete-empty mdi-16px"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     }
                                 </div>
                             </div>
                             <div class="emailDisplay">
-                                <div class="heading">
-                                    <p class="subject">@currentEmail?.Subject</p>
-                                    <p class="sender">@currentEmail?.Sender?.EmailAddress?.Name</p>
-                                    <p class="recipient">@currentEmail?.ToRecipients</p>
-                                </div>
-                                <div class="content">@currentEmail?.Body?.Content</div>
+                                @if (currentEmail != null)
+                                {
+                                    <div class="emailDisplayContent">
+                                        <div class="heading">
+                                            <div class="ccDetails">
+                                                <p class="subject">@currentEmail?.Subject</p>
+                                                <p class="sender">From: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                                <p class="recipient">To: @currentEmail?.ToRecipients?[0].EmailAddress?.Address</p>
+                                            </div>
+                                            <div class="emailInteraction">
+                                                <button class="btn btn-delete" @onclick="() => deleteMail(currentEmail)">
+                                                    <span class="mdi mdi-delete mdi-16px"></span>
+                                                    <span class="mdi mdi-delete-empty mdi-16px"></span>
+                                                </button>
+                                                <button class="sendbtn sentbtn" @onclick="() => replyToEmail(true)">
+                                                    <span class="mdi mdi-reply-outline mdi-16px"></span>
+                                                    <span class="mdi mdi-reply mdi-16px"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="content">
+                                            <div class="body">@currentEmail?.Body?.Content</div>
+                                        </div>
 
-                                <div class="emailReply" hidden="@(!emailReply)">
-                                    <button @onclick="() => replyToEmail(false)">CLOSE</button>
-                                    <div class="heading">
-                                        <p class="subject">Re: @currentEmail?.Subject</p>
-                                        <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
-                                        <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
+                                        <div class="emailReply" hidden="@(!emailReply)">
+                                            <button @onclick="() => replyToEmail(false)">CLOSE</button>
+                                            <div class="heading">
+                                                <p class="subject">Re: @currentEmail?.Subject</p>
+                                                <p class="sender">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                                <p class="recipient">From: @currentEmail?.ToRecipients?[0].EmailAddress?.Name</p>
+                                            </div>
+                                            <div class="emailResponseContent">
+                                                <FluentTextArea @bind-Value=emailContent></FluentTextArea>
+                                            </div>
+                                            <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
+                                        </div>
                                     </div>
-                                    <div class="emailResponseContent">
-                                        <FluentTextArea @bind-Value=emailContent></FluentTextArea>
-                                    </div>
-                                    <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
-                                </div>
-                            </div>
-                            <div class="mailInteract">
-                                <button @onclick="() => replyToEmail(true)">Reply</button>
-
+                                }
                             </div>
                         </div>
 
@@ -283,302 +299,6 @@
             </div>
         </div>
 
-        <style>
-            /*
-             *Generic
-             */
-            ul {
-                list-style-type: none;
-            }
-
-            .mainContent {
-                display: flex;
-            }
-
-            /*
-             * Group settings
-             */
-            .groupSec {
-                display: flex;
-            }
-
-            .groupSettings {
-                display: flex;
-            }
-
-            .addGroup {
-                display: flex;
-            }
-
-            /*
-             * EMAILS
-             */
-            .mailPage {
-                height: 70vh;
-                display: flex;
-            }
-
-                .emailBar {
-                    width: 20%;
-                    overflow-y: scroll;
-                }
-
-                    .emailSelect {
-                    }
-
-                        .emailSelectBox {
-                            padding: 5px;
-                            display: flex;
-                        }
-
-                            .emailData {
-                                width: 90%;
-                            }
-
-                                .emailData .sender {
-                                    padding-right: 10px;
-                                    margin-bottom: 0;
-                                    font-size: large;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    max-width: 90%;
-                                }
-
-                                .emailData .subject {
-                                    padding: 0;
-                                    margin-bottom: 0;
-                                    font-size: small;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    max-width: 90%;
-                                }
-
-                                .emailData .content {
-                                    padding: 0;
-                                    margin-bottom: 0;
-                                    font-size: small;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    max-width: 90%;
-                                }
-
-                            .emailSelectBox .timing {
-                                width: 10%;
-                            }
-
-                .emailDisplay {
-                    width: 60%;
-                    overflow-y: scroll;
-                    padding-left: 25px;
-                }
-
-                    .emailDisplay .heading {
-                    }
-                        
-                        .heading .subject {
-                            overflow-wrap: break-all;
-                        }
-
-                        .heading .sender {
-                        }
-
-                        .heading .recipient {
-                        }
-
-                    .emailDisplay .content {
-                        width: 100%;
-                        word-wrap: break-word;
-                    }
-
-            /*
-             * TEAMS
-             */
-
-            .teamsPage {
-                display: flex;
-                height: 70vh;
-            }
-
-                .teamsBar {
-                    width: 20%;
-                    overflow-y: scroll;
-                }
-
-                    .teamsSelect {
-                        width: 100%;
-                    }
-
-                        .teamChatIntial {
-                            width: 100%;
-                            padding: 5px;
-                        }
-
-                            .teamName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
-
-                .channelBar {
-                    width: 20%;
-                    overflow-y: scroll;
-                }
-                    .channelSelect {
-                        width: 100%;
-                    }
-
-                        .channelSelectBox {
-                            width: 100%;
-                            padding: 5px;
-                        }
-
-                            .channelName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
-
-                .teamChatBar {
-                    width: 60%;
-                    overflow-y: scroll;
-                    display: flex;
-                    flex-direction: column-reverse;
-                }
-                    .teamChatSelect {
-                        width: 100%;
-                    }
-
-                        .teamChatInital {
-                            width: 100%;
-                            padding: 5px;
-                            padding-top: 20px;
-                        }
-
-                            .teamChatName {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                font-size: large;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 90%;
-                            }
-
-                            .teamChatContent {
-                                width: 90%;
-                                padding-bottom: 5px;
-                                max-width: 90%;
-                            }
-
-                        .teamReplySection {
-                            width: 70%;
-                            align-items
-                        }
-
-            /* Split page into 2 */
-            /* Control the left side */
-            .row {
-                display: flex;
-            }
-
-            .splitleft {
-                max-width: 33.3%;
-            }
-
-            .splitright {
-                max-width: 66.6%;
-            }
-
-            /*
-             * TEAMS
-            */
-
-            .teamSec {
-                max-height: 78vh;
-                overflow-y: scroll;
-            }
-
-            .teamEntryBox {
-                display: flex;
-                padding-bottom: 5px;
-                padding-top: 5px;
-            }
-
-            .teamEntryData {
-                flex: 100%;
-            }
-
-                .teamEntryData .subject {
-                    padding: 0;
-                    padding-right: 10px;
-                    margin-bottom: 0;
-                    font-size: large;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    max-width: 300px;
-                }
-
-            /*
-             * CALENDAR
-            */
-
-            .calSec {
-                max-height: 78vh;
-                overflow-y: scroll;
-            }
-
-            .calEntryBox {
-                display: flex;
-                justify-content: space-between;
-                padding-top: 50px;
-            }
-
-            .calEntryData .subject {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: large;
-            }
-
-            .calEntryData .organizer {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
-            }
-
-            .calEntryData .content {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
-            }
-
-            .calDateTime {
-                justify-content: space-between;
-            }
-
-            .calDateTime .begin {
-                padding: 0;
-                font-size: small;
-                margin-bottom: 0;
-                margin-top: 27px;
-            }
-
-            .calDateTime .fin {
-                padding: 0;
-                font-size: small;
-            }
-        </style>
 
     </Authorized>
 
@@ -593,7 +313,6 @@
     <Chat />
 </div>
 @code{
-
     [Parameter]
     public string ids{ get; set; }
 
@@ -637,7 +356,7 @@
         _timer.Enabled = true;
     }
 
-    public void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
+    public async void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
     {
         if (counter > 0)
         {
@@ -648,6 +367,7 @@
             _timer.Enabled = false;
         }
 
+        await getMail("All");
         StateHasChanged();
     }
 
@@ -672,9 +392,9 @@
         StateHasChanged();
     }
 
-/*
-* GET MAIL EVENTS
-*/
+    /*
+    * GET MAIL EVENTS
+    */
 
     /* MAIL LIST */
     private IList<Message> myMessages = new List<Message>();
@@ -696,7 +416,7 @@
 
                 if (addresses != "All") { config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + addresses; }
 
-                config.QueryParameters.Select = new string[] { "subject", "sender", "body" };
+                config.QueryParameters.Select = new string[] { "subject", "sender", "body", "isRead" };
                 //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
 
@@ -710,11 +430,16 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         await graphClient.Me.Messages[email.Id].DeleteAsync();
+
+        if(email == currentEmail) { currentEmail = null; }
+
+        await getMail("All");
+        StateHasChanged();
     }
 
-/*
-* GET TEAM EVENTS
-*/
+    /*
+    * GET TEAM EVENTS
+    */
 
     /* TEAMS LIST */
     private IList<Team> myTeams = new List<Team>();
@@ -727,9 +452,9 @@
         myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-/*
-* GET CHANNEL EVENTS
-*/
+    /*
+    * GET CHANNEL EVENTS
+    */
 
     /* CHANNEL LIST */
     private IList<Channel> myChannels = new List<Channel>();
@@ -742,9 +467,9 @@
         myChannels = channelPage?.Value ?? new List<Channel>();
     }
 
-/*
-* GET ALL CHANNEL CHATS
-*/
+    /*
+    * GET ALL CHANNEL CHATS
+    */
 
     public class messageBlock
     {
@@ -780,9 +505,9 @@
         StateHasChanged();
     }
 
-/*
-* GET PERSONAL CHATS
-*/
+    /*
+    * GET PERSONAL CHATS
+    */
 
     /* CHAT LIST */
     private IList<Chat> myChats = new List<Chat>();
@@ -795,14 +520,14 @@
     //    myChats = chatPage?.Value ?? new List<Chat>();
     //}
 
-/*
-* GET PERSONAL CHAT REPLIES
-*/
+    /*
+    * GET PERSONAL CHAT REPLIES
+    */
 
 
-/*
-* GET CALENDAR EVENTS
-*/
+    /*
+    * GET CALENDAR EVENTS
+    */
 
     /* EVENTS LIST */
     private IList<Event> myEvents = new List<Event>();
@@ -844,9 +569,9 @@
         myEvents = eventPage?.Value ?? new List<Event>();
     }
 
-/*
-* NEW GROUP ADDED - UPDATE ASYNC
-*/
+    /*
+    * NEW GROUP ADDED - UPDATE ASYNC
+    */
 
     async void UpdateGroup(ChangeEventArgs args)
     {
@@ -901,18 +626,34 @@
         return iso8601DateTime;
     }
 
-/*
-* HANDLE WHICH TAB IS BEING PRESENTED
-*/
+    /*
+    * HANDLE WHICH TAB IS BEING PRESENTED
+    */
     string? activeid;
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-/*
-* SHOW THE DETAILS OF THE CURRENT ITEM
-*/
+    /*
+    * SHOW THE DETAILS OF THE CURRENT ITEM
+    */
     private Message currentEmail { get; set; } = null;
-    private void ToggleMail(Message email) { currentEmail = (currentEmail == email) ? null : email; }
+    private async void ToggleMail(Message email)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        currentEmail = (currentEmail == email) ? null : email;
+
+        if(currentEmail?.IsRead == false)
+        {
+            var requestBody = new Message
+            {
+                IsRead = true,
+            };
+            await graphClient.Me.Messages[currentEmail.Id].PatchAsync(requestBody);
+            await getMail("All");
+            StateHasChanged();
+        }
+    }
 
     private Team currentTeam { get; set; } = null;
     private async void ToggleTeam(Team teamsChat) { currentTeam = (currentTeam == teamsChat) ? null : teamsChat; await getChannels(); StateHasChanged(); }
@@ -923,10 +664,10 @@
     private Chat currentChat { get; set; } = null;
     private void ToggleChat(Chat chat) { currentChat = (currentChat == chat) ? null : chat; }
 
-/*
-* ALL INPUT BOXES TO CREATE GROUPS
-* GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-*/
+    /*
+    * ALL INPUT BOXES TO CREATE GROUPS
+    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+    */
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -1011,10 +752,10 @@
         }
     }
 
-/*
-* CREATE LOCAL CLASS TO STORE GROUPS.
-* ALSO SEND TO API MONGO DB
-*/
+    /*
+    * CREATE LOCAL CLASS TO STORE GROUPS.
+    * ALSO SEND TO API MONGO DB
+    */
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -1035,9 +776,9 @@
         }
     }
 
-/*
-* REPLY TO EMAILS
-*/
+    /*
+    * REPLY TO EMAILS
+    */
     string? emailContent;
     private bool emailReply { get; set; } = false;
     private void replyToEmail(bool change) { emailReply = change; }
@@ -1074,9 +815,9 @@
         emailReply = false;
     }
 
-/*
-* Create new channel message
-*/
+    /*
+    * Create new channel message
+    */
     string? newChannelMessageContent;
     private bool newChannelMessageBool { get; set; } = false;
     private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
@@ -1096,7 +837,6 @@
         StateHasChanged();
         newChannelMessageContent = String.Empty;
         newChannelMessageBool = false;
-
     }
 
 
