@@ -7,31 +7,14 @@
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
-<style>
-    .container{
-        position: relative;
-        left: 0;
-        right: 0;
-        padding-bottom: 15px;
-    }
-
-    .chat-bot{
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-    }
-</style>
 
 <div class="container">
 <AuthorizeView>
     <Authorized>
         <link href="https://cdn.jsdelivr.net/npm/@@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
-
-        @* <link href="{PROJECT_NAME}.styles.css" rel="stylesheet" /> *@
-        @* <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" /> *@
-
-        @* To get the id out of the link *@
+        <link href="GraphSample.styles.css" rel="stylesheet">
+        <link href="Overview.razor.css" rel="stylesheet">
+        <link rel="stylesheet" href="~/@(nameof(GraphSample)).styles.css" />
 
         <div class="groupSec">
             <div class="seeGroups">
@@ -117,8 +100,10 @@
                                             <div class="emailRight">
                                                 <div class="emailRightData">
                                                     <div class="timing">3:30PM</div>
-                                                    @if (@mail?.IsRead == false) { <span class="dotOn">&nbsp;</span> }
-                                                    else                         { <span class="dotOff">&nbsp;</span>}
+                                                    @if (@mail?.IsRead == false)
+                                                    {<span class="dotOn">&nbsp;</span> }
+                                                    else
+                                                    { <span class="dotOff">&nbsp;</span>}
                                                 </div>
 
                                                 <div class="emailInteraction">
@@ -136,11 +121,16 @@
                                 <div class="emailDisplayContent">
                                     <div class="heading">
                                         <p class="subject">@currentEmail?.Subject</p>
-                                        <p class="sender">@currentEmail?.Sender?.EmailAddress?.Name</p>
-                                        <p class="recipient">@currentEmail?.ToRecipients</p>
+                                        <p class="sender">From: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                        <p class="recipient">To: @currentEmail?.ToRecipients?[0].EmailAddress?.Address</p>
                                     </div>
-                                    <div class="body">@currentEmail?.Body?.Content</div>
+                                    <div class="content">
+                                        <div class="body">@currentEmail?.Body?.Content</div>
+                                    </div>
 
+                                    <div class="mailInteract">
+                                        <button @onclick="() => replyToEmail(true)">Reply</button>
+                                    </div>
                                     <div class="emailReply" hidden="@(!emailReply)">
                                         <button @onclick="() => replyToEmail(false)">CLOSE</button>
                                         <div class="heading">
@@ -154,10 +144,6 @@
                                         <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="mailInteract">
-                                <button @onclick="() => replyToEmail(true)">Reply</button>
-
                             </div>
                         </div>
 
@@ -301,414 +287,6 @@
             </div>
         </div>
 
-        <style>
-            /*
-             *Generic
-             */
-            ul {
-                list-style-type: none;
-            }
-
-            .mainContent {
-                display: flex;
-            }
-
-            /*
-             * Group settings
-             */
-            .groupSec {
-                display: flex;
-            }
-
-            .groupSettings {
-                display: flex;
-            }
-
-            .addGroup {
-                display: flex;
-            }
-
-            /*
-             * EMAILS
-             */
-            .mailPage {
-                height: 70vh;
-                display: flex;
-            }
-
-            .emailBar {
-                height: 100%;
-                width: 25%;
-                overflow-y: scroll;
-            }
-
-            .emailSelect {
-            }
-
-            .emailSelectBox {
-                padding: 5px;
-                display: flex;
-                border-radius: 10px;
-                border: 1px solid #cdd4d4;
-                background: #ffffff;
-            }
-
-                .emailSelectBox:hover {
-                    border-radius: 10px;
-                    box-shadow: 0 0 3px rgba(33,33,33,.2);
-                }
-
-            .emailData {
-                width: 70%;
-            }
-
-                .emailData .sender {
-                    padding-right: 10px;
-                    margin-bottom: 0;
-                    font-size: large;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    max-width: 90%;
-                }
-
-                .emailData .subject {
-                    padding: 0;
-                    margin-bottom: 0;
-                    font-size: small;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    max-width: 90%;
-                }
-
-                .emailData .content {
-                    padding: 0;
-                    margin-bottom: 0;
-                    font-size: small;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    max-width: 90%;
-                }
-
-
-            .emailRight {
-                width: 30%;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .emailRight .emailRightData {
-                display: flex;
-                width: 100%;
-                justify-content:space-between;
-            }
-
-                .emailRightData .timing {
-                }
-
-                .emailRightData .dotOn {
-                    height: 25px;
-                    width: 25px;
-                    background-color: #ADD8E6;
-                    border: 1px solid #cdd4d4;
-                    border-radius: 50%;
-                }
-
-                .emailRightData .dotOff {
-                    width: 10%;
-                    height: 25px;
-                    width: 25px;
-                    border: 1px solid #cdd4d4;
-                    background-color: white;
-                    border-radius: 50%;
-                }
-
-            .emailRight .emailInteraction {
-                display: flex;
-            }
-
-
-            $delete-red: red;
-
-            .btn {
-                display: flex;
-                align-items: center;
-                background: none;
-                border: 1px solid lighten(gray, 24%);
-                height: 48px;
-                letter-spacing: .25px;
-                border-radius: 24px;
-                cursor: pointer;
-
-                &:focus {
-                    outline: none;
-                }
-
-                .mdi {
-                    margin-right: 8px;
-                }
-            }
-
-            .btn-delete {
-                font-size: 16px;
-                color: red;
-
-                >.mdi-delete-empty {
-                    display: none;
-                }
-
-                &:hover {
-                    background-color: lighten(red, 48%);
-                    >.mdi-delete-empty {
-                        display: block;
-                    }
-
-                    > .mdi-delete {
-                        display: none;
-                    }
-                }
-
-                &:focus {
-                    box-shadow: 0 0 0 4px lighten(red, 40%);
-                }
-            }
-
-            .emailGap {
-                padding-bottom: 5px;
-                opacity: 0;
-            }
-
-            .emailDisplay {
-                width: 60%;
-                overflow-y: scroll;
-                padding-left: 25px;
-                padding-top: 5px;
-                padding-bottom: 5px;
-            }
-
-            .emailDisplayContent {
-                background: #ffffff;
-                border-radius: 10px;
-                border: 1px solid #cdd4d4;
-                height: 100%;
-            }
-
-            .emailDisplay .heading {
-            }
-
-                .emailDisplay .heading .subject {
-                    overflow-wrap: break-all;
-                }
-
-                .emailDisplay .heading .sender {
-                }
-
-                .emailDisplay .heading .recipient {
-                }
-
-            .emailDisplay .body {
-                width: 100%;
-                word-wrap: break-word;
-            }
-
-            /*
-             * TEAMS
-             */
-
-            .teamsPage {
-                display: flex;
-                height: 70vh;
-            }
-
-            .teamsBar {
-                width: 20%;
-                overflow-y: scroll;
-            }
-
-            .teamsSelect {
-                width: 100%;
-            }
-
-            .teamChatIntial {
-                width: 100%;
-                padding: 5px;
-            }
-
-            .teamName {
-                width: 90%;
-                padding-bottom: 5px;
-                font-size: large;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 90%;
-            }
-
-            .channelBar {
-                width: 20%;
-                overflow-y: scroll;
-            }
-
-            .channelSelect {
-                width: 100%;
-            }
-
-            .channelSelectBox {
-                width: 100%;
-                padding: 5px;
-            }
-
-            .channelName {
-                width: 90%;
-                padding-bottom: 5px;
-                font-size: large;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 90%;
-            }
-
-            .teamChatBar {
-                width: 60%;
-                overflow-y: scroll;
-                display: flex;
-                flex-direction: column-reverse;
-            }
-
-            .teamChatSelect {
-                width: 100%;
-            }
-
-            .teamChatInital {
-                width: 100%;
-                padding: 5px;
-                padding-top: 20px;
-            }
-
-            .teamChatName {
-                width: 90%;
-                padding-bottom: 5px;
-                font-size: large;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 90%;
-            }
-
-            .teamChatContent {
-                width: 90%;
-                padding-bottom: 5px;
-                max-width: 90%;
-            }
-
-            .teamReplySection {
-                width: 70%;
-                align-items
-            }
-
-            /* Split page into 2 */
-            /* Control the left side */
-            .row {
-                display: flex;
-            }
-
-            .splitleft {
-                max-width: 33.3%;
-            }
-
-            .splitright {
-                max-width: 66.6%;
-            }
-
-            /*
-             * TEAMS
-            */
-
-            .teamSec {
-                max-height: 78vh;
-                overflow-y: scroll;
-            }
-
-            .teamEntryBox {
-                display: flex;
-                padding-bottom: 5px;
-                padding-top: 5px;
-            }
-
-            .teamEntryData {
-                flex: 100%;
-            }
-
-                .teamEntryData .subject {
-                    padding: 0;
-                    padding-right: 10px;
-                    margin-bottom: 0;
-                    font-size: large;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    max-width: 300px;
-                }
-
-            /*
-             * CALENDAR
-            */
-
-            .calSec {
-                max-height: 78vh;
-                overflow-y: scroll;
-            }
-
-            .calEntryBox {
-                display: flex;
-                justify-content: space-between;
-                padding-top: 50px;
-            }
-
-            .calEntryData .subject {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: large;
-            }
-
-            .calEntryData .organizer {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
-            }
-
-            .calEntryData .content {
-                padding: 0;
-                margin-bottom: 0;
-                font-size: small;
-            }
-
-            .calDateTime {
-                justify-content: space-between;
-            }
-
-                .calDateTime .begin {
-                    padding: 0;
-                    font-size: small;
-                    margin-bottom: 0;
-                    margin-top: 27px;
-                }
-
-                .calDateTime .fin {
-                    padding: 0;
-                    font-size: small;
-                }
-
-            .calendarSection {
-                width: 10%
-                height: 70vh;
-                flex-direction: column;
-                display: flex;
-                overflow-y: scroll;
-            }
-        </style>
 
     </Authorized>
 
