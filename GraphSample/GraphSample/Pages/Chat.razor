@@ -100,8 +100,8 @@
 
     .logo-container {
         background-color: #0078d4;
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         border-radius: 25%;
         display: flex;
         justify-content: center;
@@ -113,13 +113,6 @@
         transform: scale(1.3);
     }
 
-    .logo-image {
-        width: 40px;
-        height: 40px;
-    }
-
-
-
 </style>
 
 <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css">
@@ -130,7 +123,7 @@
 
         <div>
             <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-
+                <div class="top-bar"><span class="oi oi-x" aria-hidden="true" @onclick="OnCloseModalRefButtonClick"></span></div>
                 <div class="outer">
                     <div class="chatbox">
 
@@ -177,8 +170,7 @@
 
             <div class="logo-container" @onclick="OnOpen">
                 @* use a chat icon here *@
-                <i class="ms-Icon ms-Icon--Chat" style="font-size: 50px; color: white;"></i>
-                @* <img src="img/openai-white-logomark.png" class="logo-image" /> *@
+                <i class="ms-Icon ms-Icon--Chat" aria-hidden="true" style="color:white; font-size: 35px;"></i>
             </div>
 
 
@@ -246,6 +238,7 @@
             MyFluentDialog!.Hide();
         }
     }
+    private void OnCloseModalRefButtonClick() => MyFluentDialog!.Hide();
 
     protected override async Task OnInitializedAsync()
     {
@@ -309,7 +302,7 @@
         if (Todo){
             Console.Write("Entered: " + temp);
             await ConvertTasks(temp);
-            reply = "Your To Do List has been created";
+            reply = "Your To Do List has been updated";
             Todo = false;
         }
         /* else if (Weather){
@@ -329,7 +322,7 @@
     {
         messages.Add("Create To Do List");
         StateHasChanged();
-        mesReply["Create To Do List"] = "Enter your plans for the day";
+        mesReply["Create To Do List"] = "Please enter your plans for the day";
         Todo = true;
         StateHasChanged();
     }
@@ -460,12 +453,29 @@
         //string agenda = "Wake up, make my bed and eat breakfast";
         //string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
 
-        string prompt = "Given the following prompt respond as if you are Donald Trump and be extremely belittling, dismissive and rude: " + input;
+        string prompt = "Given this question respond in a chatgpt like manner and don't take up a real human persona: " + input;
         
         Console.Write($"Input: {prompt}\n");
 
+
+/*
+        CompletionsOptions options = new CompletionsOptions
+        {
+            Temperature = 0.1f, // Controls the randomness of the generated completion (0.0 - 1.0)
+            //Prompts = new[] { prompt },
+        };
+
+        foreach (var item in options.Prompts){
+            Console.WriteLine("HERE:");
+            Console.WriteLine(item);
+        }*/
+
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
         var completion = completionsResponse.Value.Choices[0].Text;
+        foreach (var item in completionsResponse.Value.Choices){
+            Console.WriteLine("HERE:");
+            Console.WriteLine(item.Text);
+        }
         reply = completion;
         Console.Write($"Completion: {completion}\n");
     }
