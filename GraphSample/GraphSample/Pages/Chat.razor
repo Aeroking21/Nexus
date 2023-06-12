@@ -302,7 +302,7 @@
         if (Todo){
             Console.Write("Entered: " + temp);
             await ConvertTasks(temp);
-            reply = "Your To Do List has been created";
+            reply = "Your To Do List has been updated";
             Todo = false;
         }
         /* else if (Weather){
@@ -322,7 +322,7 @@
     {
         messages.Add("Create To Do List");
         StateHasChanged();
-        mesReply["Create To Do List"] = "Enter your plans for the day";
+        mesReply["Create To Do List"] = "Please enter your plans for the day";
         Todo = true;
         StateHasChanged();
     }
