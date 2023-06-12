@@ -55,9 +55,31 @@
                 </select>
             </span>
         </div>
+            @* @if(displayMode == DisplayMode.Calendar_Display)
+            {
+            <div class="calendar-header-container">
+                <div style="width: 36% !important; height: 100%;"></div> 
+                <div class="right-right-div" style="width: 64%; height=100%;">
+                @foreach (var assessmentGroup in sortedAssessments)
+                    {
+                    var timelineGroups = assessmentGroup.GroupBy(ag => ag.Item1);
+                    <div class="calendar-column" style="width: 300px;">
+                        <div class="calendar-date">
+                        @assessmentGroup.Key.ToString("dd/MM/yyyy")
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+            } *@
             <div class="outer-container">
                 <div class="@((emailsShowing) ? "restricted-inner-container" : "inner-container")">
                     <div class="@((emailsShowing) ? "restricted-left-div" : "left-div")">
+                        @if (displayMode == DisplayMode.Calendar_Display)
+                        {
+                            <div class="calendar-date" style="height: 52px; position: sticky; top: 0px;">
+                            </div>
+                        }
                         <table class="left-table">
                             <tbody>
                                 @foreach (var timeline in timelines)
@@ -106,6 +128,11 @@
                             {
                             <div class="right-inner-container">
                                 <div class="right-left-div">
+                                    @if (displayMode == DisplayMode.Calendar_Display)
+                                    {
+                                    <div class="calendar-date" style="height: 52px; position: sticky; top: 0px;">
+                                    </div>
+                                    }
                                     <table class="left-table">
                                         <tbody>
                                             @for (int i = 0; i < timelines.Count(); i++)
@@ -277,14 +304,20 @@
                                         <div class="calendar-div">
                                         @foreach (var assessmentGroup in sortedAssessments)
                                         {
+                                            var timelineGroups = assessmentGroup.GroupBy(ag => ag.Item1);
                                             <div class="calendar-column">
-                                                @foreach(var assessmentPair in assessmentGroup)
+                                                <div class="calendar-date" style="position: sticky; top: 0px;">
+                                                    @assessmentGroup.Key.ToString("dd/MM/yyyy")
+                                                </div>
+                                                @foreach(var timelineGroup in timelineGroups){
+                                                int index = timelines.FindIndex(tl => tl.timelineID == timelineGroup.Key);
+                                                <div class="calendar-panes" style="position: absolute; top: @(((index)* 77.55) + 52)px">
+                                                @foreach(var assessmentPair in timelineGroup)
                                                 {
                                                         var assessment = assessmentPair.Item2;
-                                                        int index = timelines.FindIndex(tl => tl.timelineID == assessmentPair.Item1);
                                                         var timeline = timelines[index];
 
-                                                                <div class="pane @("status" + assessment.status)" style="position: absolute; top: @((index)* 77.55)px">
+                                                                <div class="pane @("status" + assessment.status)">
                                                                     <div class="assessment-line">
                                                                         @* <div class="assessment-type-container">
                                                                             @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
@@ -333,6 +366,8 @@
                                                                     </div>
                                                                 </div>
                                                 }
+                                                </div>
+                                            }
                                             </div>
                                         }
                                         </div>
@@ -557,6 +592,13 @@
         width: 100%;
     }
 
+    .calendar-header-container {
+        display: flex;
+        align-items: center;
+        height: 50px;
+        width: 100%;
+    }
+
     .main-div {
         flex: 1;
     }
@@ -565,8 +607,6 @@
         width: 20%;
         border: 0px solid #ccc;
         border-radius: 0px;
-        display: flex;
-        flex-direction: column;
     }
 
     .restricted-left-div {
@@ -611,7 +651,6 @@
         height: 72vh !important;
     }
 
-
     .calendar-column {
         width: 300px !important;
         height: 100% !important;
@@ -626,6 +665,21 @@
         height: 100%;
         background-color: white;
         flex: 1;
+    }
+
+    .calendar-date {
+        width: 100%;
+        height: 50px;
+        border-bottom: 2px solid #656464;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .calendar-panes {
+        width: 300px !important;
+        height: 74px; 
+        overflow-y: scroll;
     }
 
     .emails-search-div {
@@ -1380,8 +1434,10 @@
         var oldDate = assessment.date;
         DateTimeOffset? newDate = null;
         int assessmentsIndex = timeline.assessments.FindIndex(a => a.date == assessment.date);
+        var parameters = new ModalParameters()
+            .Add(nameof(oldDate), oldDate);
 
-        var messageForm = ModalInputPopup.Show<UpdateDatePopup>();
+        var messageForm = ModalInputPopup.Show<UpdateDatePopup>("Passing Data", parameters);
         var result = await messageForm.Result;
 
         if (result.Confirmed)
@@ -1915,7 +1971,6 @@
         }
         StateHasChanged();
     }
-
     ///////////////////////////////////////
     //////   Calendar view    /////////////
     ///////////////////////////////////////
@@ -2176,7 +2231,7 @@
             {plainTextBody}
 
             Your response should be a string which can directly be deserialized when I pass it into JsonConvert.DeserializeObject() in C#.
-            If the IsAssessmentInvitation field is false, the rest of the fields shoudl be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'";
+            If the IsAssessmentInvitation field is false, the rest of the fields should be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'";
 
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
