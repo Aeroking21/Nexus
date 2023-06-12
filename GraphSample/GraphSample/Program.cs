@@ -18,6 +18,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 
 builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAccount>(options =>
 {
+    //options.ProviderOptions.LoginMode = "Redirect";
     var scopes = builder.Configuration.GetValue<string>("GraphScopes");
     if (string.IsNullOrEmpty(scopes))
     {
@@ -34,6 +35,7 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
 })
 .AddAccountClaimsPrincipalFactory<RemoteAuthenticationState, RemoteUserAccount, GraphUserAccountFactory>();
+
 
 builder.Services.AddScoped<GraphClientFactory>();
 builder.Services.AddScoped<IBackendApiService, BackendApiService>();
