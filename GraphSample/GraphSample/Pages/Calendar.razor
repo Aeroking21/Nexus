@@ -9,7 +9,21 @@
 <style>
     .row {
         margin: 20px;
+        display: flex;
+        flex-wrap: wrap;
     }
+
+    .column {
+        @* float: left; *@
+        width: 50%;
+    }
+    @@media (max-width: 768px) {
+        @* stack the columns on top of eachother *@
+        .column {
+            width: 100% !important;
+        }
+    }
+
 
     .calendar-table {
         width: 100%;
@@ -48,147 +62,162 @@
     }
 </style>
 
-
-    <AuthorizeView>
-        <Authorized>
-            <link rel="stylesheet"
-                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-            <div class="row">
-                <div class="col-3" 
-                    style="background-color: rgba(255, 255, 255, 0.3); border-radius: 10px;
-                            padding: 20px;
-                            backdrop-filter: blur(10px);
-                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);">
-                    <h2 style= "color: #0078d4 !important;"> Add Event </h2>
-                    <AddEvent />
+<AuthorizeView>
+    <Authorized>
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <div class="row">
+            @* <div class="column"> *@
+                <h2 style="color: #0078d4 !important;">Add Event</h2>
+                @* mt will dispay a form which the user can fill and use to add an event*@
+                <form>
+                    <div class="mb-3">
+                        <label for="subject">Subject</label>
+                        <input @bind="subject" id="subject" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="attendees">Attendees</label>
+                        <input @bind="attendees" id="attendees" class="form-control" />
+                    </div>
+                     <div class="row">
+                <div class="col">
+                    <div class="mb-3">
+                        <label for="start">Start</label>
+                        <input @bind="start" type="datetime-local" id="date" class="form-control" />
+                    </div>
                 </div>
-                <div class="col-9"
-                    style=" background-color: rgba(255, 255, 255, 0.3);
-                            border-radius: 10px;
-                            padding: 20px;
-                            backdrop-filter: blur(10px);
-                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);">
-
-                    @if (selectedDay.Date == DateTime.Now.Date){
-                        <h2 style="color: #0078d4 !important;">Events for today</h2>
-                    }
-                    else if (selectedDay.Date.ToString()[0..10] == "01/01/0001"){
-                        <h2 style="color: #0078d4 !important;"> Events </h2>
-                    }
-                    else{
-                        <h2 style="color: #0078d4 !important;">Events for @selectedDay.Date.ToString()[0..10]</h2>
-                    }
-
-                    <table class="table">
+                <div class="col">
+                    <div class="mb-3">
+                        <label for="end">End</label>
+                        <input @bind="end" type="datetime-local" id="end" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="body">Body</label>
+                <textarea @bind="body" id="body" class="form-control"></textarea>
+            </div>
+                </form>
+                         <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
+                
+       
+            @* </div> *@ 
+            <div class="column">
+                <div class="display-month">
+                    <h2 style="color: #0078d4;">@MonthToText() @year</h2>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+                        <button class="btn btn-primary" @onclick="Today">Today</button>
+                        <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+                    </div>
+                    <table class="calendar-table">
                         <thead>
                             <tr>
-                                <th>Organiser</th>
-                                <th>Subject</th>
-                                <th>Start Day</th>
-                                <th>End Day </th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
+                                <th>Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
                             </tr>
                         </thead>
                         <tbody>
-
-                            @if (getEventsOfSelectedDay(selectedDay).Count == 0)
+                            @for (int r = 0; r < rowsCount; r++)
                             {
                                 <tr>
-                                    <td colspan="4">No events for this day</td>
+                                    @foreach (var item in days.Skip(r * 7).Take(7))
+                                    {
+                                        if (item.Date == DateTime.Now.Date)
+                                        {
+                                            <td class="day text-white" style="background-color: #1b6ec2"
+                                            @onclick="() => getEventsOfSelectedDay(item)"><b>@DayTemplate(item)</b></td>
+                                        }
+                                        else
+                                        {
+                                            if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
+                                            {
+                                                <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)</td>
+                                            }
+                                            else
+                                            {
+                                                if (item.Date.ToString()[0..10] == selectedDay.Date.ToString()[0..10])
+                                                {
+                                                    <td class="day selected" @onclick="() => getEventsOfSelectedDay(item)">
+                                                        @DayTemplate(item)
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)</td>
+                                                }
+                                            }
+                                        }
+                                    }
                                 </tr>
-                            }
-                            else
-                            {
-                                @foreach (var e in getEventsOfSelectedDay(selectedDay))
-                                { // if number of events == 0
-
-                                    <tr class="event-row">
-                                        <td>@e?.Organizer?.EmailAddress?.Name</td>
-                                        <td>@e?.Subject</td>
-                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                        <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
-                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
-                                        <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
-                                        <i class="fa fa-trash-o" style="font-size:24px"
-                                        @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
-
-                                    </tr>
-                                }
                             }
                         </tbody>
                     </table>
                 </div>
-                <div class="row -4">
-                    <div class="display-month">
-                        <h2 style="color: #0078d4;">@MonthToText() @year</h2>
-                          <div class="d-flex justify-content-between">
-                            <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
-                            <button class="btn btn-primary" @onclick="Today">Today</button>
-                            <button class="btn btn-primary" @onclick="NextMonth">Next</button>
-
-                        </div>
-
-                        <table class="calendar-table">
-                            <!-- display the month and year  -->
-                            <thead>
-                                <tr>
-                                    <th>Sun</th>
-                                    <th>Mon</th>
-                                    <th>Tue</th>
-                                    <th>Wed</th>
-                                    <th>Thu</th>
-                                    <th>Fri</th>
-                                    <th>Sat</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-
-                                @for (int r = 0; r < rowsCount; r++)
-                                {
-                                    <tr>
-                                        @foreach (var item in days.Skip(r * 7).Take(7))
-                                        {
-                                            if (item.Date == DateTime.Now.Date)
-                                            {
-                                                <td class="day text-white" style="background-color: #1b6ec2"
-                                                @onclick="() => getEventsOfSelectedDay(item)"><b>@DayTemplate(item)</b></td>
-                                            }
-                                            else
-                                            {
-                                                if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
-                                                {
-                                                    <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)
-                                                    </td>
-                                                }
-                                                else{
-                                                if (item.Date.ToString()[0..10] == selectedDay.Date.ToString()[0..10])
-                                                {
-                                                        <td class="day selected" @onclick="() => getEventsOfSelectedDay(item)">
-                                                            @DayTemplate(item) </td>
-                                                }
-                                                    
-                                                if (item.Date.ToString()[0..10] != selectedDay.Date.ToString()[0..10])
-                                                {
-                                                    <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)
-                                                    </td>
-                                                }
-                                                }                                             
-                                            }
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
             </div>
-        </Authorized>
-        <NotAuthorized>
-            <RedirectToLogin />
-        </NotAuthorized>
-    </AuthorizeView>
+            <div class="column">
+                @if (selectedDay.Date == DateTime.Now.Date)
+                {
+                    <h2 style="color: #0078d4 !important;">Events for today</h2>
+                }
+                else if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
+                {
+                    
+                    <h2 style="color: #0078d4 !important;">Events</h2>
+                }
+                else
+                {
+                    <h2 style="color: #0078d4 !important;">Events for @selectedDay.Date.ToString()[0..10]</h2>
+                }
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Organizer</th>
+                            <th>Subject</th>
+                            <th>Start Day</th>
+                            <th>End Day</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (getEventsOfSelectedDay(selectedDay).Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4">No events for this day</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var e in getEventsOfSelectedDay(selectedDay))
+                            {
+                                <tr class="event-row">
+                                    <td>@e?.Organizer?.EmailAddress?.Name</td>
+                                    <td>@e?.Subject</td>
+                                    <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
+                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
+                                    <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
+                                    <i class="fa fa-trash-o" style="font-size:24px"
+                                    @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
 
@@ -212,11 +241,76 @@
     private string? dateTimeFormat;
     public CalendarDay selectedDay = new CalendarDay();
 
+    public string subject { get; set; } = "";
+    private string attendees { get; set; } = string.Empty;    
+    private DateTime start = new DateTime(DateTime.Today.Ticks);
+    private DateTime end = new DateTime(DateTime.Today.Ticks);
+    private string body = string.Empty;
+    private string userTimeZone = string.Empty;
+
+    public async Task AddEvent(){
+        @* use the form under the add event section to add a new wvwnt and that display that added event across the whole page, update the calendar with the add event *@
+        var newEvent = new Event
+        {
+            Subject = subject,
+            Body = new ItemBody
+            {
+                ContentType = BodyType.Text,
+                Content = body
+            },
+            Start = new DateTimeTimeZone
+            {
+                DateTime = start.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            End = new DateTimeTimeZone
+            {
+                DateTime = end.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            Attendees = new List<Attendee>()
+        };
+
+        var attendeesArray = attendees.Split(';');
+        foreach (var attendee in attendeesArray)
+        {
+            newEvent.Attendees.Add(new Attendee
+            {
+                EmailAddress = new EmailAddress
+                {
+                    Address = attendee.Trim()
+                },
+                Type = AttendeeType.Required
+            });
+        }
+
+        try
+        {   
+            await graphClient.Me
+                .Events
+                .PostAsync(newEvent);   
+            await graphClient.Me.Calendar.Events.GetAsync();
+            Console.WriteLine(userTimeZone.ToString());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+    
+    public async Task<List<Event>> getEvents()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var eventPage = await graphClient.Me.Calendar.Events.GetAsync();
+        events = eventPage?.Value ?? new List<Event>();
+        return events.ToList();
+    }
+
 
     [Parameter]
     public RenderFragment<CalendarDay> DayTemplate { get; set; } = DefaultDayTemplate;
     private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
-        {
+    {
         if (day.DayNumber != 0)
         {
             builder.OpenElement(1, "div"); // Create a container div for the day
@@ -228,26 +322,16 @@
             // Display the events for the day
             if (day.dayEvents != null)
             {
-                if (day.dayEvents.Count > 1)
+                if (day.dayEvents.Count > 0)
                 {
                     builder.OpenElement(4, "div"); // Create a div for ellipses
                     builder.AddContent(5, "...");
                     builder.CloseElement();
                 }
-                else
-                {
-                    foreach (var e in day.dayEvents)
-                    {
-                        builder.OpenElement(6, "div"); // Create a div for each event
-                        builder.AddContent(7, e.Subject);
-                        builder.CloseElement();
-                    }
-                }
             }
             builder.CloseElement(); // Close the container div
         }
     };
-
     public async Task<List<Event>> deleteItem(List<Event> e, Event item)
     {
         e.Remove(item);
@@ -269,7 +353,8 @@
         {
             if (((e.Start.DateTime).ToString()[0..10]).Split("-")[0] == ((day.Date).ToString()[0..10]).Split("/")[2] &&
             ((e.Start.DateTime).ToString()[0..10]).Split("-")[1] == ((day.Date).ToString()[0..10]).Split("/")[1] &&
-            ((e.Start.DateTime).ToString()[0..10]).Split("-")[2] == ((day.Date).ToString()[0..10]).Split("/")[0]){
+            ((e.Start.DateTime).ToString()[0..10]).Split("-")[2] == ((day.Date).ToString()[0..10]).Split("/")[0])
+            {
                 eventsOfDay.Add(e);
             }
         }
@@ -285,7 +370,7 @@
             case 3: return "March";
             case 4: return "April";
             case 5: return "May";
-            case 6:return "June";
+            case 6: return "June";
             case 7: return "July";
             case 8: return "August";
             case 9: return "September";
@@ -296,66 +381,64 @@
         }
     }
 
-  public async Task LoadCalendar()
-{
-    List<CalendarDay> GenerateEmptyDays(int numberOfEmptyDays)
+    public async Task LoadCalendar()
     {
-        return Enumerable.Range(0, numberOfEmptyDays)
+        List<CalendarDay> GenerateEmptyDays(int numberOfEmptyDays)
+        {
+            return Enumerable.Range(0, numberOfEmptyDays)
             .Select(_ => new CalendarDay { DayNumber = 0, IsEmpty = true })
             .ToList();
-    }
+        }
 
-    List<CalendarDay> GenerateMonthDays()
-    {
-        int numberOfDaysInMonth = DateTime.DaysInMonth(year, month);
+        List<CalendarDay> GenerateMonthDays()
+        {
+            int numberOfDaysInMonth = DateTime.DaysInMonth(year, month);
 
-        return Enumerable.Range(1, numberOfDaysInMonth)
+            return Enumerable.Range(1, numberOfDaysInMonth)
             .Select(day => new CalendarDay
-            {
-                DayNumber = day,
-                IsEmpty = false,
-                Date = new DateTime(year, month, day),
-                dayEvents = new List<Event>()
-            })
+                {
+                    DayNumber = day,
+                    IsEmpty = false,
+                    Date = new DateTime(year, month, day),
+                    dayEvents = new List<Event>()
+                })
             .ToList();
-    }
+        }
 
-    int CalculateNumberOfEmptyDays()
-    {
-        var firstDayDate = new DateTime(year, month, 1);
-        int weekDayNumber = (int)firstDayDate.DayOfWeek;
-        return weekDayNumber == 7 ? 0 : weekDayNumber;
-    }
+        int CalculateNumberOfEmptyDays()
+        {
+            var firstDayDate = new DateTime(year, month, 1);
+            int weekDayNumber = (int)firstDayDate.DayOfWeek;
+            return weekDayNumber == 7 ? 0 : weekDayNumber;
+        }
 
-    int CalculateRowsCount(int totalDays)
-    {
-        return totalDays % 7 == 0
+        int CalculateRowsCount(int totalDays)
+        {
+            return totalDays % 7 == 0
             ? totalDays / 7
             : Convert.ToInt32(totalDays / 7) + 1;
+        }
+
+        days = new List<CalendarDay>();
+
+        int numberOfEmptyDays = CalculateNumberOfEmptyDays();
+        days.AddRange(GenerateEmptyDays(numberOfEmptyDays));
+
+        days.AddRange(GenerateMonthDays());
+
+        rowsCount = CalculateRowsCount(days.Count);
+
+        foreach (var day in days)
+        {
+            day.dayEvents = getEventsofToday(day);
+        }
     }
-
-    days = new List<CalendarDay>();
-
-    int numberOfEmptyDays = CalculateNumberOfEmptyDays();
-    days.AddRange(GenerateEmptyDays(numberOfEmptyDays));
-
-    days.AddRange(GenerateMonthDays());
-
-    rowsCount = CalculateRowsCount(days.Count);
-
-    foreach (var day in days)
-    {
-        day.dayEvents = getEventsofToday(day);
-    }
-}
-
-
 
     public async Task NextMonth()
     {
         (int updatedMonth, int updatedYear) = month == 12
-            ? (1, year + 1)
-            : (month + 1, year);
+        ? (1, year + 1)
+        : (month + 1, year);
 
         month = updatedMonth;
         year = updatedYear;
@@ -365,12 +448,11 @@
         StateHasChanged();
     }
 
-
     public async Task PreviousMonth()
     {
         (int updatedMonth, int updatedYear) = month == 1
-            ? (12, year - 1)
-            : (month - 1, year);
+        ? (12, year - 1)
+        : (month - 1, year);
 
         month = updatedMonth;
         year = updatedYear;
@@ -378,8 +460,6 @@
         await LoadCalendar();
         StateHasChanged();
     }
-
-
     public async Task Today()
     {
         selectedDay.Date = DateTime.Now.Date;
@@ -397,10 +477,19 @@
             throw new AuthenticationException(
             "Unable to access authentication state");
         }
+        var user = (await authenticationStateTask).User;
+        userTimeZone = (await authenticationStateTask).User.GetUserGraphTimeZone() ?? "UTC";
         graphClient = clientFactory.GetAuthenticatedClient();
-        var eventPage = await graphClient.Me.Calendar.Events.GetAsync();
+        var dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+        var eventPage = await graphClient.Me
+            .Calendar.Events
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+                config.QueryParameters.Select = new [] { "subject", "organizer", "start", "end" };
+            });
+        @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
         events = eventPage?.Value ?? new List<Event>();
-        // for each day, if theres an event, add it to the dayEvents list
         await base.OnInitializedAsync();
         await LoadCalendar();
         StateHasChanged();
