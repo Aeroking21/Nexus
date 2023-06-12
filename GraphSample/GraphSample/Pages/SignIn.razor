@@ -1,3 +1,14 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
+@using Microsoft.TeamsFx
+@using Microsoft.Graph
+
+@inject TeamsFx teamsfx
+@inject TeamsUserCredential teamsUserCredential
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
 
 <style>
 .log-in-screen {
@@ -70,9 +81,9 @@
             <div class="row">
               <div class="col-12">
                 <div class="log-in-button d-flex gap-2 gap-sm-3 justify-content-center">
-                  <a href="authentication/login" class="btn btn-lg btn-outline-danger p-3 lh-1">
-                   Log in
-                  </a>
+                <a href="authentication/login" class="btn btn-lg btn-outline-danger p-3 lh-1">
+                    Log in
+                </a>
                 </div>
               </div>
             </div>
@@ -86,3 +97,34 @@
 </div>
 
 
+@code{
+    bool isTeams = true;
+
+    private async Task Login()
+    {
+        try
+        {
+            var uri = new Uri(Navigation.Uri);
+            var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+            var teams = queryParams.TryGetValue("teams", out var teamsValue) ? teamsValue.ToString() : null;
+            if (!string.IsNullOrEmpty(teams))
+            {
+                // The "teams" query parameter is present, indicating that the app is running within Microsoft Teams
+                isTeams = true;
+                var user = await teamsUserCredential.GetUserInfoAsync();
+            }
+            else
+            {
+                isTeams = false;
+                Navigation.NavigateTo("authentication/login");
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            isTeams = false;
+            Navigation.NavigateTo("authentication/login");
+        }
+    
+    }
+}
