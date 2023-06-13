@@ -2,10 +2,14 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    font-family: 'Segoe UI', sans-serif;
 }
 
-main {
-    flex: 1;
-}
 
+.outerSearch {
+    max-width: 60vw;
+    width: 25vw;
+    position: fixed;
+    top: 25px;
+    left: 50%;
+    z-index: 10000;
+}

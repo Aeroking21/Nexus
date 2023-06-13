@@ -51,12 +51,19 @@
         border-radius: 0.25rem;
     }
 
+    .chat-bot {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 </style>
 
 
 <AuthorizeView>
 
     <Authorized>
+ 
         <div class="containerFiles">
             <div class="dropdown">
                 <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -75,7 +82,7 @@
                 </ul>
             </div>
 
-            <div class="hello">
+            <div>
                 <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
                     <div class="dropdown-content">
 
@@ -144,6 +151,10 @@
     </NotAuthorized>
 
 </AuthorizeView>
+
+<div class="chat-bot">
+    <Chat />
+</div>
 
 @code{
 

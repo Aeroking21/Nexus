@@ -1,3 +1,4 @@
+@page "/Addevent"
 @using System.Security.Authentication
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
@@ -99,6 +100,7 @@
 
         // If the user provided attendees (semicolon-delimited
         // list of email addresses) add them
+        Console.WriteLine($"Attendees: {userTimeZone}");
         if (!string.IsNullOrEmpty(attendees))
         {
             var attendeeList = new List<Attendee>();

@@ -23,6 +23,7 @@
 
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.5" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="7.0.5" />
     <PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.3.0" />
     <PackageReference Include="Microsoft.Graph" Version="5.9.0" />
