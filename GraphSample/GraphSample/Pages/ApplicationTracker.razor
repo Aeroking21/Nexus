@@ -46,7 +46,7 @@
                         <option value="@criterion">@criterion.ToString().Replace("_", " ")</option>
                         }
                 </select>
-                <span>Select Dsiplay Mode:</span>
+                <span>Select Display Mode:</span>
                 <select @bind="displayMode" @oninput="(args) => { displayMode = Enum.Parse<DisplayMode>(args.Value.ToString()); HandleDisplayChange(); }"> 
                     @foreach (DisplayMode mode in Enum.GetValues(typeof(DisplayMode)))
                         {
@@ -82,10 +82,11 @@
                         }
                         <table class="left-table">
                             <tbody>
-                                @foreach (var timeline in timelines)
+                                @for (int i = 0; i < timelines.Count(); i ++)
                                     {
+                                    var timeline = timelines[i];
                                     <tr height="77px">
-                                        <td width="30%">
+                                        <td width="30%" class="@((timeline.archived == true) ? "archived" : "")">
                                             <div class="flex-container-v2">
                                                 <div class="button-row">
                                                 @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
@@ -98,30 +99,38 @@
                                                     }
                                                 </div>
                                                 <div class="button-row">
-                                                <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
-                                                @if (timeline.hasUnreadEmails)
-                                                    {
-                                                    <span class="timeline-icon">
-                                                        <FluentIcon Name="@FluentIcons.MailAllUnread" Color="@Color.Error" Variant="@IconVariant.Regular"></FluentIcon>
-                                                    </span>
-                                                    }
-                                                @if (timeline.alertLevel == 0)
-                                                    {
-                                                    <span class="timeline-icon" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Neutral"></FluentIcon></span>
-                                                    }
+                                                @if (!timeline.archived)
+                                                {
+                                                    <span class="remove-button" @onclick="() => UpdateArchivedStatus(timeline, true)"><FluentIcon Name="@FluentIcons.Archive" Color="@Color.Error"></FluentIcon></span>
+                                                    @if (timeline.hasUnreadEmails)
+                                                        {
+                                                        <span class="timeline-icon">
+                                                            <FluentIcon Name="@FluentIcons.MailAllUnread" Color="@Color.Error" Variant="@IconVariant.Regular"></FluentIcon>
+                                                        </span>
+                                                        }
+                                                    @if (timeline.alertLevel == 0)
+                                                        {
+                                                        <span class="timeline-icon" style="cursor: pointer;" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Neutral"></FluentIcon></span>
+                                                        }
+                                                    else
+                                                        {
+                                                        <span class="timeline-icon" style="cursor: pointer;" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Custom" Variant="@IconVariant.Filled" CustomColor="#ffff00"></FluentIcon></span>
+                                                        }
+                                                }
                                                 else
-                                                    {
-                                                    <span class="timeline-icon" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Custom" Variant="@IconVariant.Filled" CustomColor="#ffff00"></FluentIcon></span>
-                                                    }
+                                                {
+                                                    <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>  
+                                                    <span class="remove-button" @onclick="() => UpdateArchivedStatus(timeline, false)"><FluentIcon Name="@FluentIcons.ArchiveArrowBack" Color="@Color.Success"></FluentIcon></span>  
+                                                }
                                                 </div>
                                             </div>
                                         </td>
-                                        <td width="30%">
+                                        <td width="30%" class="@((timeline.archived == true) ? "archived" : "")">
                                             <div class="company-content">
                                                 <p>@timeline.company</p>
                                             </div>
                                         </td>
-                                        <td width="40%"><div class="role-content">@timeline.role</div></td>
+                                        <td width="40%" class="@((timeline.archived == true) ? "archived" : "")"><div class="role-content">@timeline.role</div></td>
                                     </tr>
                                     }
                             </tbody>
@@ -143,7 +152,7 @@
                                                 {
                                                     var timeline = timelines[i];
                                                 <tr height="5em">
-                                                    <td width="85%">
+                                                    <td width="85%" class="@((timeline.archived == true) ? "archived" : "")">
                                                         <div class="associated-emails-content">
                                                             @if (expandActions && (expandedActionsTimeline == timeline.timelineID))
                                                                 {
@@ -216,7 +225,7 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td width="15% !important; display: table;"> 
+                                                    <td width="15% !important; display: table;" class="@((timeline.archived == true) ? "archived" : "")"> 
                                                         @if (!fillingAssessments || (timeline.timelineID != fillingAssessmentsTimeline))
                                                         {
                                                             <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span>
@@ -247,7 +256,7 @@
                                                             @for (int j = 0; j < timeline.assessments.Count(); j++)
                                                                 {
                                                                     var assessment = timeline.assessments[j];
-                                                                <div class="pane @("status" + assessment.status)">
+                                                                <div class="pane @("status" + assessment.status + (timeline.archived ? "-archived" : ""))">
                                                                     <div class="assessment-line">
                                                                         @* <div class="assessment-type-container">
                                                                             @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
@@ -316,18 +325,17 @@
                                         {
                                             var timelineGroups = assessmentGroup.GroupBy(ag => ag.Item1);
                                             <div class="calendar-column">
-                                                <div class="calendar-date" style="position: sticky; top: 0px;">
+                                                <div class="calendar-date" style="position: sticky; top: 0px; font-size: 18px;">
                                                     @assessmentGroup.Key.ToString("ddd, dd MMM, yyyy")
                                                 </div>
                                                 @foreach(var timelineGroup in timelineGroups){
                                                 int index = timelines.FindIndex(tl => tl.timelineID == timelineGroup.Key);
+                                                var timeline = timelines[index];
                                                 <div class="calendar-panes" style="position: absolute; top: @(((index)* 77.55) + 52)px">
                                                 @foreach(var assessmentPair in timelineGroup)
                                                 {
                                                         var assessment = assessmentPair.Item2;
-                                                        var timeline = timelines[index];
-
-                                                                <div class="pane @("status" + assessment.status)">
+                                                                <div class="pane @("status" + assessment.status + (timeline.archived ? "-archived" : ""))">
                                                                     <div class="assessment-line">
                                                                         @* <div class="assessment-type-container">
                                                                             @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
@@ -454,7 +462,7 @@
                                             <FluentIcon Name="@FluentIcons.ArrowLeft" Color="@Color.Neutral" Variant="@IconVariant.Regular"></FluentIcon>
                                         </span>
                                         <span style="margin-left: 10px; width: 150px !important; max-height: 50px !important;"><b>From: </b>@selectedEmail.Sender?.EmailAddress?.Address</span>
-                                        <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 420px;"><b>Subject: </b>@selectedEmail.Subject</span>
+                                        <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 550px;"><b>Subject: </b>@selectedEmail.Subject</span>
                                         <span style="position: absolute; right: 120px;">@selectedEmail.ReceivedDateTime?.DateTime.ToString("ddd, dd MMM, yyyy HH:mm")</span>
                                     </div>
                                     <div class="right-emails-scrollable-div">
@@ -528,22 +536,59 @@
     }
 
         .pane.statusPending {
-            background-color: rgba(255, 255, 0, 0.5); /* Yellow semi-translucent color */
+            background-color: rgba(255, 255, 0, 0.5);
         }
 
+        .pane.statusPending-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            rgba(255, 255, 0, 0.3) 5px,
+                                            rgba(255, 255, 0, 0.3) 10px
+                                            ); 
+        }
 
         .pane.statusPassed {
-            background-color: rgba(0, 255, 0, 0.5); /* Green semi-translucent color */
+            background-color: rgba(0, 255, 0, 0.5);
         }
 
+        .pane.statusPassed-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            rgba(0, 255, 0, 0.3) 5px,
+                                            rgba(0, 255, 0, 0.3) 10px
+                                            ); 
+        }
 
         .pane.statusScheduled {
-            background-color: rgba(50, 50, 255, 0.5); /* Blue semi-translucent color */
+            background-color: rgba(50, 50, 255, 0.5);
         }
 
+        .pane.statusScheduled-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            rgba(50, 50, 255, 0.3) 5px,
+                                            rgba(50, 50, 255, 0.3) 10px
+                                            ); 
+        }
 
-        .pane.statuesFailed {
-            background-color: rgba(128, 128, 128, 0.5); /* Gray semi-translucent color */
+        .pane.statusFailed {
+            background-color: #6868688b;
+        }
+
+        .pane.statusFailed-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            #6868688b 5px,
+                                            #6868688b 10px
+                                            ); 
         }
 
     .email-container {
@@ -709,6 +754,19 @@
         width: 300px !important;
         height: 74px; 
         overflow-y: scroll;
+    }
+
+    .calendar-panes-archived {
+        width: 300px !important;
+        height: 74px; 
+        overflow-y: scroll;
+        background: repeating-linear-gradient(
+                                            180deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 10px,
+                                            #A9A9A961 10px,
+                                            #A9A9A961 20px
+                                            );
     }
 
     .emails-search-div {
@@ -1041,6 +1099,10 @@
         display: none;
     }
 
+    .archived {   
+        background-color: #c0c0c061;                                               
+    }
+
 </style>
 
 @code {
@@ -1170,26 +1232,32 @@
             }
 
             var fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
-            var groupedEmails = fetchedEmails.GroupBy(msg => msg.Sender.EmailAddress.Address).
-                ToDictionary(group => group.Key, group => group.ToList());
+            foreach(var email in fetchedEmails){
+                Console.WriteLine($"{email.Sender.EmailAddress}");
+            }
+            var groupedEmails = (fetchedEmails.Count() == 0 ? null : fetchedEmails.Where(msg => msg.Sender.EmailAddress != null).GroupBy(msg => msg.Sender.EmailAddress.Address).
+                ToDictionary(group => group.Key, group => group.ToList()));
 
-            for (int i = 0; i < timelines.Count(); i++)
+            if (groupedEmails != null)
             {
-                var timeline = timelines[i];
-                bool loopFlag = false;
-                foreach (var email in timeline.associatedEmailAddresses)
+                for (int i = 0; i < timelines.Count(); i++)
                 {
-                    if (loopFlag) { break; }
-                    if (groupedEmails.ContainsKey(email))
+                    var timeline = timelines[i];
+                    bool loopFlag = false;
+                    foreach (var email in timeline.associatedEmailAddresses)
                     {
-                        var messages = groupedEmails[email];
-                        foreach (var msg in messages)
+                        if (loopFlag) { break; }
+                        if (groupedEmails.ContainsKey(email))
                         {
-                            if (msg.IsRead == false)
+                            var messages = groupedEmails[email];
+                            foreach (var msg in messages)
                             {
-                                timelines[i].hasUnreadEmails = true;
-                                loopFlag = true;
-                                break;
+                                if (msg.IsRead == false)
+                                {
+                                    timelines[i].hasUnreadEmails = true;
+                                    loopFlag = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1241,6 +1309,7 @@
 
         fetchingTimelines = false;
         sortedAssessments = GetSortedAssessments();
+        HandleSortCriterionChange();
     }
     public async void ShowEmails(ApplicationTimeline timeline)
     {
@@ -1342,6 +1411,21 @@
             }
         }
 
+    }
+
+    private async Task UpdateArchivedStatus(ApplicationTimeline timeline, bool newStatus)
+    {
+        bool oldStatus = timeline.archived;
+        timeline.archived = newStatus;
+        HandleSortCriterionChange();
+        StateHasChanged();
+        bool result = await backendApiService.updateArchivedStatus(timeline.timelineID, Username, newStatus);
+        if(!result)
+        {
+            timeline.archived = oldStatus;
+            HandleSortCriterionChange();
+            StateHasChanged();
+        }
     }
 
 
@@ -1495,12 +1579,26 @@
 
     private void HandleSortCriterionChange()
     {
+        if(timelines == null)
+        {
+            return;
+        }
         switch (sortingCriterion)
         {
             case SortingCriteria.Date_Added:
                 timelines.Sort((t1, t2) =>
                 {
-                    return t1.timelineID.CompareTo(t2.timelineID);
+
+                    if (t1.archived && t2.archived) 
+                        return 0;
+
+                    else if (!t1.archived && t2.archived)
+                        return -1; 
+
+                    else if (t1.archived && !t2.archived)
+                        return 1; 
+
+                    return t1.timelineID.CompareTo(t2.timelineID); 
                 }
                 );
                 break;
@@ -1508,6 +1606,15 @@
             case SortingCriteria.Starred_First:
                 timelines.Sort((t1, t2) =>
                 {
+                    if (t1.archived && t2.archived) 
+                        return 0;
+
+                    else if (!t1.archived && t2.archived)
+                        return -1; 
+
+                    else if (t1.archived && !t2.archived)
+                        return 1; 
+
                     int heightComparison = t2.alertLevel.CompareTo(t1.alertLevel);
                     if (heightComparison != 0)
                         return heightComparison;
@@ -1518,6 +1625,15 @@
             case SortingCriteria.Unread_Emails_Fisrt:
                 timelines.Sort((t1, t2) =>
                 {
+                    if (t1.archived && t2.archived) 
+                        return 0;
+
+                    else if (!t1.archived && t2.archived)
+                        return -1; 
+
+                    else if (t1.archived && !t2.archived)
+                        return 1; 
+
                     return (t1.hasUnreadEmails ? 0 : 1).CompareTo(t2.hasUnreadEmails ? 0 : 1);
                 });
                 break;
