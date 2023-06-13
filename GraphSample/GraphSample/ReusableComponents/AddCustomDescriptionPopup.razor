@@ -58,14 +58,26 @@
         align-items: center;
         justify-content: center;
     }
+
+    .form-line{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
     
 </style>
 
 <div>
     <EditForm Model="_form" OnValidSubmit="SubmitForm">
-        <div>
-            <input type="text" @bind="_form.customDescription"/>
+        <div class = "form-line">
+            <label for="custom-text">Custom Description</label>
+            <div>
+                <input id="custom-text" type="text" @bind="_form.customDescription"/>
+            </div>
         </div>
+        
         <div class="button-line">
             <button class="sub-button" type="submit">Submit</button>
             <button class="can-button" @onclick="Cancel">Cancel</button>
