@@ -358,7 +358,7 @@
                     string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                     data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
-                    Console.WriteLine(" found in outlook");
+                    Console.WriteLine(" found in teams");
                 }
 
             }
@@ -390,7 +390,7 @@
                     string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                     data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
-                    Console.WriteLine(" found in Teams");
+                    Console.WriteLine(" found in outlook");
                 }
             }
 
