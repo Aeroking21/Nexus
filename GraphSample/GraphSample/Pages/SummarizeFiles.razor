@@ -51,6 +51,13 @@
         border-radius: 0.25rem;
     }
 
+    .chat-bot {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
 </style>
 
 
@@ -145,6 +152,9 @@
 
 </AuthorizeView>
 
+<div class="chat-bot">
+    <Chat />
+</div>
 @code{
 
     //ToDo:
