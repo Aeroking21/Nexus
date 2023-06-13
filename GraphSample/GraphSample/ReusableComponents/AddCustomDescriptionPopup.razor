@@ -1,14 +1,75 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using SharedModels.Models
 
+<style>
+    .sub-button{
+        background-color: #1b6ec2;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+        margin: 5px;
+    }
+
+    .sub-button:hover{
+        background-color: #1b6ec2c7;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    .can-button{
+        background-color: #f44336;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+        margin: 5px;
+    }
+    
+    .can-button:hover{
+        background-color: #f44336c7;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    .button-line{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+    
+</style>
 
 <div>
     <EditForm Model="_form" OnValidSubmit="SubmitForm">
         <div>
             <input type="text" @bind="_form.customDescription"/>
         </div>
-        <button type="submit">Submit</button>
-        <button @onclick="Cancel">Cancel</button>
+        <div class="button-line">
+            <button class="sub-button" type="submit">Submit</button>
+            <button class="can-button" @onclick="Cancel">Cancel</button>
+        </div>
     </EditForm>
 </div>
 

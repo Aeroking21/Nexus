@@ -329,7 +329,7 @@
 
 <AuthorizeView>
     <Authorized>
-        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 12)
+        @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 11)
         {
             var name = context?.User?.Identity?.Name;
             if (context?.User?.Identity?.Name.Length > 1)
@@ -338,7 +338,7 @@
             }
             <div class="welcome"> Good Morning, @name </div>
         }
-        else if (DateTime.UtcNow.Hour >= 12 && DateTime.UtcNow.Hour < 18)
+        else if (DateTime.UtcNow.Hour >= 11 && DateTime.UtcNow.Hour < 18)
         {
             var name = context?.User?.Identity?.Name;
             if (context?.User?.Identity?.Name.Length > 1)
@@ -485,7 +485,7 @@
         //await RerunToDo();
         //await RerunCal();
         await RerunEmail();
-        //await BeginTeams();
+        await BeginTeams();
     }
 
     public async Task BeginToDos()

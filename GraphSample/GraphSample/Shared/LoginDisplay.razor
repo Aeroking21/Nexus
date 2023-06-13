@@ -1,5 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Security.Authentication
+@using Microsoft.Graph
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
 
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
@@ -74,6 +78,18 @@
                     </ul>
 
                     <div class="ms-auto">
+                        <a style="color:black; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
+                        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
+                            <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <h5 class="dropdown-item-text mb-0">@context?.User?.Identity?.Name</h5>
+                            <p class="dropdown-item-text text-muted mb-0" >@context?.User?.GetUserGraphEmail()</p>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
+                        </div>
+                    </div>
+                    @* <div class="ms-auto">
                         <div class="navbar-text me-3">
                             Welcome @context?.User?.Identity?.Name!
                         <a class="dropdown-toggle" data-bs-toggle="dropdown" role="button" style="color:black;">
@@ -86,7 +102,7 @@
                             <div class="dropdown-divider"></div>
                             <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
                         </div>
-                    </div>
+                    </div> *@
                 </div>
             </div>
         </nav>
@@ -105,5 +121,3 @@
         Navigation.NavigateToLogout("authentication/logout");
     }
 }
-
-

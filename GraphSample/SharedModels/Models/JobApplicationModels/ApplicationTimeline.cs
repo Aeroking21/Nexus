@@ -26,5 +26,7 @@ public class ApplicationTimeline
 
     public int alertLevel { get; set; }
 
+    public bool archived {get; set;}
+
 }
 

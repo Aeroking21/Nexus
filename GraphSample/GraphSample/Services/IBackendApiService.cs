@@ -23,6 +23,7 @@ namespace GraphSample.Services
         public Task<bool> updateAssessmentDate(string username, int timelineID, DateTimeOffset oldDate, DateTimeOffset newDate);
         public Task<bool> updateAssessmentTodo(Assessment assessment, string username, int timelineID, bool newTodoStatus);
         public Task<bool> updateAlertLevel(int timelineID, string username, int newLevel);
+        public Task<bool> updateArchivedStatus(int timelineID, string username, bool newStatus);
         public Task<bool> addEmails(List<string> emails, string username, int timelineID);
     }
 }
