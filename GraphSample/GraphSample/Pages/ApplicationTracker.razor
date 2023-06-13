@@ -85,16 +85,19 @@
                                 @foreach (var timeline in timelines)
                                     {
                                     <tr height="77px">
-                                        <td width="40%">
-                                            <div calss="flex-container">
+                                        <td width="30%">
+                                            <div class="flex-container-v2">
+                                                <div class="button-row">
                                                 @if (emailsShowing && emailsShowingTimeline == timeline.timelineID)
                                                     {
-                                                    <button class="show-emails-button-highlighted" @onclick="() => emailsShowing = false">Hide Emails</button>
+                                                    <button class="show-emails-button-highlighted" @onclick="() => {emailsShowing = false; selectedEmail = null;}">Hide Emails</button>
                                                     }
                                                     else
                                                     {
                                                     <button class="show-emails-button" @onclick="() => ShowEmails(timeline)">Show Emails</button>
                                                     }
+                                                </div>
+                                                <div class="button-row">
                                                 <span class="remove-button" @onclick="() => ShowRemoveTimelineModal(timeline.timelineID)"><FluentIcon Name="@FluentIcons.Delete" Color="@Color.Error"></FluentIcon></span>
                                                 @if (timeline.hasUnreadEmails)
                                                     {
@@ -106,18 +109,19 @@
                                                     {
                                                     <span class="timeline-icon" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Neutral"></FluentIcon></span>
                                                     }
-                                                    else
+                                                else
                                                     {
                                                     <span class="timeline-icon" @onclick="() => UpdateAlertLevel(timeline)"><FluentIcon Name="@FluentIcons.Star" Color="@Color.Custom" Variant="@IconVariant.Filled" CustomColor="#ffff00"></FluentIcon></span>
                                                     }
+                                                </div>
                                             </div>
                                         </td>
-                                        <td width="27%">
+                                        <td width="30%">
                                             <div class="company-content">
                                                 <p>@timeline.company</p>
                                             </div>
                                         </td>
-                                        <td width="33%"><div class="role-content">@timeline.role</div></td>
+                                        <td width="40%"><div class="role-content">@timeline.role</div></td>
                                     </tr>
                                     }
                             </tbody>
@@ -313,7 +317,7 @@
                                             var timelineGroups = assessmentGroup.GroupBy(ag => ag.Item1);
                                             <div class="calendar-column">
                                                 <div class="calendar-date" style="position: sticky; top: 0px;">
-                                                    @assessmentGroup.Key.ToString("dd/MM/yyyy")
+                                                    @assessmentGroup.Key.ToString("ddd, dd MMM, yyyy")
                                                 </div>
                                                 @foreach(var timelineGroup in timelineGroups){
                                                 int index = timelines.FindIndex(tl => tl.timelineID == timelineGroup.Key);
@@ -399,6 +403,8 @@
                                 }
                                 else
                                 {
+                                    if (selectedEmail== null)
+                                    {
                                     var tmpEmails = filteresSelectedEmails == null ? selectedAssociatedEmails : filteresSelectedEmails;
                                     <div class="right-emails-div">
                                         <div class="emails-search-div">
@@ -419,7 +425,7 @@
                                         <div class="right-emails-scrollable-div">
                                     @foreach (var email in tmpEmails)
                                         {
-                                        <button class="email-info-div">
+                                        <button class="email-info-div" @onclick="() => HandleEmailClick(email)">
                                             @if (email.IsRead.HasValue ? !email.IsRead.Value : false)
                                                 {
                                                 <span class="timeline-icon">
@@ -433,17 +439,34 @@
                                                 </span>
                                                 }
                                             <span style="margin-left: 10px; width: 150px !important; max-height: 50px !important;">@email.Sender?.EmailAddress?.Address</span>
-                                            <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 220px;">@email.Subject</span>
-                                            <span style="position: absolute; right: 120px;">@email.ReceivedDateTime?.DateTime.ToString("HH:mm:ss")</span>
-                                            <span style="position: absolute; right: 5px;">@email.ReceivedDateTime?.DateTime.ToString("yyyy-MM-dd")</span>
+                                            <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 400px;">@email.Subject</span>
+                                            <span style="position: absolute; right: 200px;">@email.ReceivedDateTime?.DateTime.ToString("HH:mm:ss")</span>
+                                            <span style="position: absolute; right: 5px;">@email.ReceivedDateTime?.DateTime.ToString("ddd, dd MMM, yyyy")</span>
                                         </button>
                                         }
                                         </div>
                                 </div>
                             } 
+                            else{
+                                <div class="right-emails-div">
+                                    <div style="display: flex;">
+                                        <span class="remove-button" @onclick="() => {selectedEmail = null; StateHasChanged();}">
+                                            <FluentIcon Name="@FluentIcons.ArrowLeft" Color="@Color.Neutral" Variant="@IconVariant.Regular"></FluentIcon>
+                                        </span>
+                                        <span style="margin-left: 10px; width: 150px !important; max-height: 50px !important;"><b>From: </b>@selectedEmail.Sender?.EmailAddress?.Address</span>
+                                        <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 420px;"><b>Subject: </b>@selectedEmail.Subject</span>
+                                        <span style="position: absolute; right: 120px;">@selectedEmail.ReceivedDateTime?.DateTime.ToString("ddd, dd MMM, yyyy HH:mm")</span>
+                                    </div>
+                                    <div class="right-emails-scrollable-div">
+                                        @((MarkupString)selectedEmail.Body.Content)
+                                    </div>    
+                                </div>
+                            }
+                        }
                     }
                     else {
-                        <div style="display: none"></div>
+                        <div style="display: none">
+                        </div>
                     }
 
                 </div>
@@ -998,6 +1021,20 @@
         display: flex;
         align-items: center;
         margin-bottom: 4px;
+        overflow-y: scroll;
+    }
+
+    .flex-container-v2 {
+        display: flex;
+        flex-direction: column; /* Stack child elements vertically */
+        align-items: flex-start; /* Align child elements to the start (left) */
+        margin-bottom: 4px;
+        overflow-y: scroll;
+    }
+
+    .button-row {
+    display: flex;
+    align-items: center;
     }
 
     .hidden {
@@ -1025,6 +1062,8 @@
 
     private List<IGrouping<DateTimeOffset, (int, Assessment)>>? sortedAssessments;
     private int emailsShowingTimeline;
+
+    private Message? selectedEmail = null;
     //private List<Message>? selectedAssociatedEmails;
     private List<Message> selectedAssociatedEmails;
     private List<Message>? filteresSelectedEmails;
@@ -1120,7 +1159,7 @@
             //experimental
             isRegistered = true;
             List<Message> allAssociatedEmails = new();
-            List<string> allAssociatedEmailStrings = new();
+            HashSet<string> allAssociatedEmailStrings = new();
             //Dictionary<string, int> emailCounts = new Dictionary<string, int>();
             foreach (var currentAssociatedEmails in timelines.Select(t => t.associatedEmailAddresses))
             {
@@ -1130,15 +1169,8 @@
                 }
             }
 
-            var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
-            var filter = string.Join(" or ", emailFilters);
-
-            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-            {
-                requestConfiguration.QueryParameters.Filter = filter;
-            });
-
-            var groupedEmails = result.Value.GroupBy(msg => msg.Sender.EmailAddress.Address).
+            var fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
+            var groupedEmails = fetchedEmails.GroupBy(msg => msg.Sender.EmailAddress.Address).
                 ToDictionary(group => group.Key, group => group.ToList());
 
             for (int i = 0; i < timelines.Count(); i++)
@@ -1173,10 +1205,15 @@
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
                 config.QueryParameters.Select = new string[] { "sender" };
                 config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
+                config.QueryParameters.Top = 999;
             });
 
             allMessages = mailPage?.Value ?? new List<Message>();
             allSenders = new HashSet<string>(allMessages.Select(msg => msg.Sender.EmailAddress.Address));
+            foreach(var s in allSenders)
+            {
+                Console.WriteLine(s);
+            }
 
             fetchingTimelines = false;
 
@@ -1215,8 +1252,7 @@
     public async Task GetAssociatedEmails(ApplicationTimeline timeline)
     {
         fetchingEmails = true;
-        //List<Message>? fetchedEmails = new();
-        List<string> allAssociatedEmailStrings = new();
+        HashSet<string> allAssociatedEmailStrings = new();
         List<Message>? fetchedEmails = new();
 
         if (timeline.associatedEmailAddresses.Count() == 0)
@@ -1232,17 +1268,7 @@
             allAssociatedEmailStrings.Add(email);
         }
 
-        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
-        var filter = string.Join(" or ", emailFilters);
-
-        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.Filter = filter;
-            requestConfiguration.QueryParameters.Top = 999;
-        });
-
-        fetchedEmails = result?.Value;
-        //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
+        fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
         if (fetchedEmails != null)
         {
             selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
@@ -1265,7 +1291,7 @@
         if (response)
         {
             var newTimeline = await backendApiService.getUserTimelineAsync(Username, timelineID);
-            List<string?> allAssociatedEmailStrings = new();
+            HashSet<string?> allAssociatedEmailStrings = new();
             foreach (var emailString in newTimeline.associatedEmailAddresses)
             {
                 allAssociatedEmailStrings.Add(emailString);
@@ -1284,16 +1310,7 @@
             }
             else
             {
-                var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
-                var filter = string.Join(" or ", emailFilters);
-
-                var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-                {
-                    requestConfiguration.QueryParameters.Filter = filter;
-                });
-
-                var fetchedEmails = result?.Value;
-                Console.WriteLine(fetchedEmails.Count());
+                var fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
 
                 if (index != -1)
                 {
@@ -1426,7 +1443,8 @@
                 timeline.assessments[assessmentsIndex2].customDescription = customDescription;
                 StateHasChanged();
         }
-        else{
+        else
+        {
                 int assessmentsIndex2 = timeline.assessments.FindIndex(a => a.date == assessment.date);
                 timeline.assessments[assessmentsIndex2].type = oldType;
                 timeline.assessments[assessmentsIndex2].customDescription = oldDescription;
@@ -1504,6 +1522,29 @@
                 });
                 break;
         }
+    }
+
+    private async Task HandleEmailClick(Message email)
+    {
+        selectedEmail = email;
+        StateHasChanged();
+
+        var updatedEmail = new Message
+        {
+            IsRead = true
+        };
+
+        try
+        {
+            await graphClient.Me.Messages[email.Id].PatchAsync(updatedEmail);
+            email.IsRead = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ;
+        }
+
     }
 
     private async Task SendToDo(Assessment assessment, string company, string role, DateTimeOffset dueDate, int timelineID)
@@ -1617,16 +1658,9 @@
             expandAssociatedEmails = true;
             expandedEmailsTimeline = timeline.timelineID;
             StateHasChanged();
-            var emailFilters = timeline.associatedEmailAddresses.Select(email => $"from/emailAddress/address eq '{email}'");
-            var filter = string.Join(" or ", emailFilters);
-
-            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-            {
-                requestConfiguration.QueryParameters.Filter = filter;
-            });
 
             int index = timelines.FindIndex(tl => tl.timelineID == timeline.timelineID);
-            var fetchedEmails = result?.Value;
+            var fetchedEmails = await GetEmailsFromAddresses(new HashSet<string>(timeline.associatedEmailAddresses));
             bool newHasUnread = fetchedEmails.Exists(msg => msg.IsRead.HasValue ? !msg.IsRead.Value : false);
             timelines[index].hasUnreadEmails = newHasUnread;
 
@@ -1845,14 +1879,8 @@
                 StateHasChanged();
 
                 var response = await backendApiService.addEmail(newEmail, Username, timelineID);
-                var filter = $"from/emailAddress/address eq '{newEmail}'";
 
-                var emailsResponse = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-                {
-                    requestConfiguration.QueryParameters.Filter = filter;
-                });
-
-                var fetchedEmails = emailsResponse?.Value;
+                var fetchedEmails = await GetEmailsFromAddresses(new HashSet<string>(new [] {newEmail}));
                 bool newHasUnread = fetchedEmails.Exists(msg => msg.IsRead.HasValue ? !msg.IsRead.Value : false);
                 if (response)
                 {
@@ -2029,7 +2057,7 @@
 
         fillingAssessments = true;
         fillingAssessmentsTimeline = timeline.timelineID;
-        List<string> allAssociatedEmailStrings = new();
+        HashSet<string> allAssociatedEmailStrings = new();
         List<Message>? fetchedEmails = new();
         
         if (timeline.associatedEmailAddresses.Count() == 0)
@@ -2044,16 +2072,7 @@
             allAssociatedEmailStrings.Add(email);
         }
 
-        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
-        var filter = string.Join(" or ", emailFilters);
-
-        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.Filter = filter;
-            requestConfiguration.QueryParameters.Top = 999;
-        });
-
-        fetchedEmails = result?.Value;
+        fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
         //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
         if (fetchedEmails != null)
         {
@@ -2061,6 +2080,8 @@
         }
 
         emailsShowing = false;
+        selectedEmail = null;
+
         string prompt;
         List<AssessmentAIResponse> predictedAssessments = new();
         bool assessmentsUpdated = false;
@@ -2123,14 +2144,8 @@
             }
             catch (Exception ex)
                 {
-                    Console.WriteLine("Message: ");
-                    Console.WriteLine(ex.Message);
+                    ;
                 }
-            }
-
-            foreach(var assessment in timeline.assessments)
-            {
-                Console.WriteLine(assessment.date);
             }
 
             if (assessmentsUpdated)
@@ -2147,11 +2162,7 @@
                             StateHasChanged();
                         }
                     }
-                    Console.WriteLine("after backend");
-                    foreach(var assessment in timelines[index].assessments)
-                        {
-                            Console.WriteLine(assessment.date);
-                         }   
+
                 }
             fillingAssessmentsTimeline = -1;
             fillingAssessments = false;
@@ -2162,7 +2173,7 @@
 
         fillingAssessments = true;
         fillingAssessmentsTimeline = timeline.timelineID;
-        List<string> allAssociatedEmailStrings = new();
+        HashSet<string> allAssociatedEmailStrings = new();
         List<Message>? fetchedEmails = new();
         
         if (timeline.associatedEmailAddresses.Count() == 0)
@@ -2176,17 +2187,7 @@
         {
             allAssociatedEmailStrings.Add(email);
         }
-
-        var emailFilters = allAssociatedEmailStrings.Select(email => $"from/emailAddress/address eq '{email}'");
-        var filter = string.Join(" or ", emailFilters);
-
-        var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.Filter = filter;
-            requestConfiguration.QueryParameters.Top = 999;
-        });
-
-        fetchedEmails = result?.Value;
+        fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
         //selectedAssociatedEmails = fetchedEmails.OrderByDescending(m => m.ReceivedDateTime).ToList();
         if (fetchedEmails != null)
         {
@@ -2194,6 +2195,8 @@
         }
 
         emailsShowing = false;
+        selectedEmail = null;
+
         string prompt;
         List<AssessmentAIResponse> predictedAssessments = new();
 
@@ -2242,7 +2245,6 @@
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
 
-            Console.WriteLine("Start of Json||" + completion + "||End of Json");
             try
             {
                 int startIndex = completion.IndexOf('{');
@@ -2314,6 +2316,21 @@
     ///////////////////////////////////////
     /////////    AI stuff      ///////////
     ///////////////////////////////////////
+
+    private async Task<List<Message>?> GetEmailsFromAddresses(HashSet<string> emailAddresses)
+        {
+            var emailFilters = emailAddresses.Select(email => $"from/emailAddress/address eq '{email}'");
+            var filter = string.Join(" or ", emailFilters);
+
+            var result = await graphClient.Me.Messages.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Filter = filter;
+                requestConfiguration.QueryParameters.Top = 999;
+            });
+
+            return result?.Value;
+        }
+
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
