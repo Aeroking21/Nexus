@@ -120,35 +120,3 @@
 </section>
 
 </div>
-
-
-
-@code {
-    private bool isInTeams = false;
-
-    private async Task Login()
-    {
-        isInTeams = false;
-        // Call the JavaScript function and get the result
-        var result = await JSRuntime.InvokeAsync<dynamic>("getAccessToken", isInTeams);
-
-        // Retrieve the token and inTeamsTrue value from the result
-        var token = result.token;
-        isInTeams = result.isInTeams;
-
-        if (isInTeams)
-        {
-             Navigation.NavigateTo("authentication/login?token=" + token);
-        }
-        else
-        {
-            Navigation.NavigateTo("authentication/login");
-        }
-    }
-
-    private async Task BeginLogout(MouseEventArgs args)
-    {
-        await SignOutManager.SetSignOutState();
-        Navigation.NavigateToLogout("authentication/logout");
-    }
-}
