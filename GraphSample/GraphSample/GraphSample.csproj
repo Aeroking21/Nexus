@@ -43,6 +43,9 @@
     <Folder Include="ReusableComponents\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="wwwroot\teamHelper.js" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\SharedModels\SharedModels.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
