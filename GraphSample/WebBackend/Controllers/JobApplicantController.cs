@@ -120,7 +120,8 @@ public class JobApplicantsController : ControllerBase
             associatedEmailAddresses = new List<string>(),
             timelineID = newTimelineID,
             hasUnreadEmails = false,
-            alertLevel = 0
+            alertLevel = 0,
+            archived = false
         };
 
         var timelineUpdate = Builders<JobApplicant>.Update.Push("applicationTimelines", newTimeline);
@@ -739,6 +740,28 @@ public class JobApplicantsController : ControllerBase
         );
 
         var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.alertLevel", newLevel);
+
+        try
+        {
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Route("update-archived-status/{username}/{timelineID}/{newStatus}")]
+    [HttpGet]
+    public async Task<IActionResult> updateArchivedStatus(string username, int timelineID, bool newStatus)
+    {
+        var filter = Builders<JobApplicant>.Filter.And(
+            Builders<JobApplicant>.Filter.Eq("username", username),
+            Builders<JobApplicant>.Filter.Eq("applicationTimelines.timelineID", timelineID)
+        );
+
+        var update = Builders<JobApplicant>.Update.Set("applicationTimelines.$.archived", newStatus);
 
         try
         {
