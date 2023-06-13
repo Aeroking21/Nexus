@@ -158,6 +158,21 @@
             var uri = new Uri(Navigation.Uri);
             var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
             var teams = queryParams.TryGetValue("teams", out var teamsValue) ? teamsValue.ToString() : null;
+            
+            var tokenResult = await AccessTokenProvider.RequestAccessToken();
+            if (tokenResult.TryGetToken(out var accessToken))
+            {
+                AccessToken = accessToken.Value;
+                count += 1;
+            }
+            if (authenticationStateTask == null)
+            {
+                throw new AuthenticationException(
+                "Unable to access authentication state");
+            }
+            user = (await authenticationStateTask).User;
+            graphClient = clientFactory.GetAuthenticatedClient();
+
             if (!string.IsNullOrEmpty(teams))
             {
                 // The "teams" query parameter is present, indicating that the app is running within Microsoft Teams
@@ -167,19 +182,6 @@
             else
             {
                 isTeams = false;
-                var tokenResult = await AccessTokenProvider.RequestAccessToken();
-                if (tokenResult.TryGetToken(out var accessToken))
-                {
-                    AccessToken = accessToken.Value;
-                    count += 1;
-                }
-                if (authenticationStateTask == null)
-                {
-                    throw new AuthenticationException(
-                    "Unable to access authentication state");
-                }
-                user = (await authenticationStateTask).User;
-                graphClient = clientFactory.GetAuthenticatedClient();
                 await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
             }
         }
