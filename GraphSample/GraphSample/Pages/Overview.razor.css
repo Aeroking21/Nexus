@@ -3,6 +3,7 @@
     left: 0;
     right: 0;
     padding-bottom: 15px;
+    width:100%;
 }
 
 .chat-bot {
@@ -146,96 +147,61 @@ ul {
 }
 
 
-$delete-red: red;
+$delete2-red: red;
 
 .btn {
-    display: flex;
-    align-items: center;
-    background: none;
-    border: 1px solid lighten(gray, 24%);
-    height: 48px;
-    letter-spacing: .25px;
-    border-radius: 24px;
-    cursor: pointer;
-
-    &:focus {
-        outline: none;
-    }
-
-    .mdi {
-        margin-right: 8px;
-    }
 }
 
 .btn-delete {
-    font-size: 16px;
-    color: red;
-
-    >.mdi-delete-empty {
-        display: none;
-    }
-
-    &:hover {
-        background-color: lighten(red, 48%);
-
-        >.mdi-delete-empty {
-            display: block;
-        }
-
-        > .mdi-delete {
-            display: none;
-        }
-    }
-
-    &:focus {
-        box-shadow: 0 0 0 4px lighten(red, 40%);
-    }
 
 }
 
-.sendbtn {
+.btn2 {
     display: flex;
     align-items: center;
     background: none;
-    border: 1px solid lighten(gray, 24%);
-    height: 48px;
-    letter-spacing: .25px;
-    border-radius: 24px;
+
+    border: none;
+    height: 35px;
+
     cursor: pointer;
-
-    &:focus {
-        outline: none;
-    }
-
-    .mdi {
-        margin-right: 8px;
-    }
 }
 
-.sentbtn {
+    .btn2:focus {
+        outline: none;
+        border: none;
+    }
+
+    .btn2 .mdi {
+        margin-right: 4px;
+        margin-left: 4px;
+    }
+
+.btn-delete2 {
     font-size: 16px;
     color: red;
+}
 
-    >.mdi-reply {
+    .btn-delete2 > .mdi-delete-empty {
         display: none;
     }
 
-    &:hover {
+    .btn-delete2:hover {
         background-color: lighten(red, 48%);
+    }
 
-        >.mdi-reply {
+        .btn-delete2:hover > .mdi-delete-empty {
             display: block;
         }
 
-        > .mdi-reply-outline {
+        .btn-delete2:hover > .mdi-delete {
             display: none;
         }
+
+    .btn-delete2:focus {
+        box-shadow: 0px 0px 0px 4px lighten(red, 40%);
     }
 
-    &:focus {
-        box-shadow: 0 0 0 4px lighten(red, 40%);
-    }
-}
 
 .emailGap {
     padding-bottom: 5px;
@@ -305,6 +271,19 @@ $delete-red: red;
             padding-left: 20px;
             padding-right: 20px;
             padding-bottom: 15px;
+        }
+
+        .emailDisplayContent .emailReply {
+            width: 100%;
+        }
+
+        .emailReply .heading {
+            display:flex;
+            flex-direction: column;
+        }
+
+        .emailReply .emailResponseContent{
+            width: 100%;
         }
 
 /*

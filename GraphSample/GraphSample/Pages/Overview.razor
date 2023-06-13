@@ -107,7 +107,7 @@
                                                 </div>
 
                                                 <div class="emailInteraction">
-                                                    <button class="btn btn-delete" @onclick="() => deleteMail(mail)">
+                                                    <button class="btn2 btn-delete2" @onclick="() => deleteMail(currentEmail)">
                                                         <span class="mdi mdi-delete mdi-16px"></span>
                                                         <span class="mdi mdi-delete-empty mdi-16px"></span>
                                                     </button>
@@ -128,13 +128,13 @@
                                                 <p class="recipient">To: @currentEmail?.ToRecipients?[0].EmailAddress?.Address</p>
                                             </div>
                                             <div class="emailInteraction">
-                                                <button class="btn btn-delete" @onclick="() => deleteMail(currentEmail)">
-                                                    <span class="mdi mdi-delete mdi-16px"></span>
-                                                    <span class="mdi mdi-delete-empty mdi-16px"></span>
+                                                <button class="btn2 btn-delete2" @onclick="() => deleteMail(currentEmail)">
+                                                     <span class="mdi mdi-delete mdi-16px"></span>
+                                                     <span class="mdi mdi-delete-empty mdi-16px"></span>
                                                 </button>
-                                                <button class="sendbtn sentbtn" @onclick="() => replyToEmail(true)">
-                                                    <span class="mdi mdi-reply-outline mdi-16px"></span>
-                                                    <span class="mdi mdi-reply mdi-16px"></span>
+                                                <button class="btn2 btn-delete2" @onclick="() => replyToEmail(true)">
+                                                     <span class="mdi mdi-delete mdi-16px"></span>
+                                                     <span class="mdi mdi-delete-empty mdi-16px"></span>
                                                 </button>
                                             </div>
                                         </div>
@@ -152,7 +152,7 @@
                                             <div class="emailResponseContent">
                                                 <FluentTextArea @bind-Value=emailContent></FluentTextArea>
                                             </div>
-                                            <button @onclick="() => sendEmail(currentEmail?.Sender?.EmailAddress?.Address, currentEmail?.ToRecipients, currentEmail?.Subject, emailContent)">SEND</button>
+                                            <button @onclick="() => sendEmail(currentEmail, emailContent)">SEND</button>
                                         </div>
                                     </div>
                                 }
@@ -553,13 +553,13 @@
             .CalendarView
             .GetAsync(config =>
             {
-                //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                //config.QueryParameters.StartDateTime = startOfWeek.ToString("o");
-                //config.QueryParameters.EndDateTime = endOfWeek.ToString("o");
-                config.QueryParameters.Top = 50;
-                config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
-                config.QueryParameters.Orderby = new[] { "start/dateTime" };
-            });*/
+            //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
+            //config.QueryParameters.StartDateTime = startOfWeek.ToString("o");
+            //config.QueryParameters.EndDateTime = endOfWeek.ToString("o");
+            config.QueryParameters.Top = 50;
+            config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
+            config.QueryParameters.Orderby = new[] { "start/dateTime" };
+        });*/
 
         var eventPage = await graphClient.Me.Calendar.Events.GetAsync();
         /*
@@ -783,33 +783,31 @@
     private bool emailReply { get; set; } = false;
     private void replyToEmail(bool change) { emailReply = change; }
 
-    public async void sendEmail(string mainAddress, List<Recipient> recipients, string subject, string content)
+    public async void sendEmail(Message originEmail, string content)
     {
         graphClient = clientFactory.GetAuthenticatedClient();
+
+        var recipients = originEmail.ToRecipients;
+        var mainAddress = originEmail?.Sender?.EmailAddress?.Address;
 
         if (recipients == null) { recipients = new List<Recipient> { new Recipient { EmailAddress = new EmailAddress { Address = mainAddress, }, }, }; }
         else
         {
+            Console.WriteLine("not nulled?");
             var mainAddressSend = new Recipient { EmailAddress = new EmailAddress { Address = mainAddress, }, };
             recipients.Add(mainAddressSend);
         }
 
-        var requestBody = new Microsoft.Graph.Me.SendMail.SendMailPostRequestBody
+        var requestBody = new Microsoft.Graph.Me.Messages.Item.Reply.ReplyPostRequestBody
         {
             Message = new Message
             {
-                Subject = subject,
-                Body = new ItemBody
-                {
-                    ContentType = BodyType.Text,
-                    Content = content,
-                },
                 ToRecipients = recipients,
             },
+            Comment = content,
         };
 
-        await graphClient.Me.SendMail.PostAsync(requestBody);
-        StateHasChanged();
+        await graphClient.Me.Messages[originEmail?.Id].Reply.PostAsync(requestBody);
 
         emailContent = String.Empty;
         emailReply = false;
