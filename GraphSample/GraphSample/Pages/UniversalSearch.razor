@@ -38,7 +38,6 @@
         width: 60%;
         max-width: 100%;
         background: white;
-        border: 3px solid red;
     }
 
 
@@ -61,13 +60,13 @@
 <AuthorizeView>
     <Authorized>
 
-        <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" >
+        <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" @onmouseleave="MouseOut" >
 
             <input class="form-control search" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
             <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
 
-            <div class="dropdown-content" style="@DropDownStyle" @onfocusout="HandleOutsideClick">
+            <div class="dropdown-content" style="@DropDownStyle">
 
                 @if (data_response.Count == 0)
                 {
@@ -171,10 +170,18 @@
         InputStyle = "width:100%;";
     }
 
-    protected void HandleOutsideClick()
+    //protected void HandleOutsideClick()
+    //{
+    //    InputStyle = "";
+    //    //data_response.Clear();
+    //    ToggleDropdown(false);
+    //}
+
+    protected void MouseOut()
     {
+        Console.WriteLine("mouse outside");
         InputStyle = "";
-        //data_response.Clear();
+        data_response.Clear();
         ToggleDropdown(false);
     }
 
@@ -235,6 +242,7 @@
             ProgressStyle = "display: none;";
         }
     }
+
 
     protected async Task CallApiAsync(string searchTerm)
     {
@@ -350,7 +358,7 @@
                     string teamName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                     data_response.Add(new Author(teamName, user1.Value[0].HitsContainers[0].Hits[0].Summary, searchItems["webLink"].ToString(), "Teams"));
-                    Console.WriteLine(" found in outlook");
+                    Console.WriteLine(" found in teams");
                 }
 
             }
@@ -382,7 +390,7 @@
                     string messageName = fromMessage.GetProperty("emailAddress").GetProperty("name").GetString();
 
                     data_response.Add(new Author(messageName, searchItems?["subject"].ToString(), searchItems["webLink"].ToString(), "Outlook"));
-                    Console.WriteLine(" found in Teams");
+                    Console.WriteLine(" found in outlook");
                 }
             }
 
