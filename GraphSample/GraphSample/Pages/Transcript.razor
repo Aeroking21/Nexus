@@ -161,9 +161,23 @@
         Console.WriteLine(meetingInfo.Value[0].Id);
         Console.WriteLine(transcripts2.Value[0].Id);
 
-        //var content = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.GetAsync();
 
-        //Console.WriteLine(content);
+        var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.ToGetRequestInformation();
+        requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
+        requestInformation.QueryParameters.Add("format", "text/vtt");
+        var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+
+
+        Console.WriteLine(ConvertWebVttStreamToString(content2));
+    }
+
+
+    protected string ConvertWebVttStreamToString(Stream? stream)
+    {
+        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+        {
+            return reader.ReadToEnd();
+        }
     }
 
 
