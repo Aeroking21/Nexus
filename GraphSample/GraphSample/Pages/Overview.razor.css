@@ -1,11 +1,4 @@
-﻿.container {
-    position: relative;
-    left: 0;
-    right: 0;
-    padding-bottom: 15px;
-    width:100%;
-}
-
+﻿
 .chat-bot {
     position: fixed;
     bottom: 20px;
@@ -160,10 +153,8 @@ $delete2-red: red;
     display: flex;
     align-items: center;
     background: none;
-
     border: none;
     height: 35px;
-
     cursor: pointer;
 }
 
@@ -177,13 +168,35 @@ $delete2-red: red;
         margin-left: 4px;
     }
 
+    .btn2 > .mdi-delete {
+        color: red;
+    }
+
+    .btn2 > .mdi-reply-outline {
+        color: dodgerblue;
+    }
+
+    .btn2 > .mdi-reply-all-outline {
+        color: dodgerblue;
+    }
+
 .btn-delete2 {
     font-size: 16px;
-    color: red;
 }
 
     .btn-delete2 > .mdi-delete-empty {
         display: none;
+        color: red;
+    }
+
+    .btn-delete2 > .mdi-reply {
+        display: none;
+        color: dodgerblue;
+    }
+
+    .btn-delete2 > .mdi-reply-all {
+        display: none;
+        color: dodgerblue;
     }
 
     .btn-delete2:hover {
@@ -198,9 +211,27 @@ $delete2-red: red;
             display: none;
         }
 
+        .btn-delete2:hover > .mdi-reply {
+            display: block;
+        }
+
+        .btn-delete2:hover > .mdi-reply-outline {
+            display: none;
+        }
+
+        .btn-delete2:hover > .mdi-reply-all {
+            display: block;
+        }
+
+        .btn-delete2:hover > .mdi-reply-all-outline {
+            display: none;
+        }
+
     .btn-delete2:focus {
         box-shadow: 0px 0px 0px 4px lighten(red, 40%);
     }
+
+
 
 
 .emailGap {
@@ -231,11 +262,11 @@ $delete2-red: red;
         justify-content: space-between;
     }
         .emailDisplayContent .heading .ccDetails {
-            width: 90%;
+            width: 85%;
         }
 
         .emailDisplayContent .heading .emailInteraction {
-            width: 10%;
+            width: 15%;
             display: flex;
         }
 
@@ -275,17 +306,30 @@ $delete2-red: red;
 
         .emailDisplayContent .emailReply {
             width: 100%;
+            margin-top:10px;
         }
 
         .emailReply .heading {
             display:flex;
             flex-direction: column;
+            padding: 20px;
+            margin-bottom: 0px;
         }
+            .heading .subject {
+                font-size:large;
+                margin-bottom: 0px;
+            }
+            .heading .recipient {
+                margin-bottom: 0px;
+            }
 
         .emailReply .emailResponseContent{
             width: 100%;
         }
 
+        .emailResponseContent .responseBox {
+            width:100%;
+        }
 /*
 * TEAMS
 */
@@ -293,72 +337,110 @@ $delete2-red: red;
 .teamsPage {
     display: flex;
     height: 70vh;
+    width: 100%;
 }
 
 .teamsBar {
+    height: 100%;
     width: 20%;
-    overflow-y: scroll;
+    margin-left: 0px;
+    padding-top: 5px;
 }
 
-.teamsSelect {
+.teamsSelectBox {
     width: 100%;
+    font-family: 'Pavanam', sans-serif;
+    padding-left: 15px;
+    padding-top: 5px;
+    border-radius: 10px;
+    border: 1px solid #cdd4d4;
+    background: #ffffff;
+    margin-bottom: 5px;
 }
-
-.teamChatIntial {
-    width: 100%;
-    padding: 5px;
-}
-
-.teamName {
-    width: 90%;
-    padding-bottom: 5px;
-    font-size: large;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
-}
+    .teamName {
+        width: 90%;
+        padding-bottom: 5px;
+        font-size: large;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 90%;
+    }
 
 .channelBar {
-    width: 20%;
-    overflow-y: scroll;
+    height: 100%;
+    width: 15%;
+    margin-left: 10px;
+    margin-top: 0;
+    padding-top: 5px;
 }
+    .channelSelectBox {
+        width: 100%;
+        font-family: 'Pavanam', sans-serif;
+        padding-left: 15px;
+        padding-top: 5px;
+        border-radius: 10px;
+        border: 1px solid #cdd4d4;
+        background: #ffffff;
+        margin-bottom: 5px;
+    }
 
-.channelSelect {
-    width: 100%;
-}
-
-.channelSelectBox {
-    width: 100%;
-    padding: 5px;
-}
-
-.channelName {
-    width: 90%;
-    padding-bottom: 5px;
-    font-size: large;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
-}
+    .channelName {
+        width: 90%;
+        padding-bottom: 5px;
+        font-size: large;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 90%;
+    }
 
 .teamChatBar {
-    width: 60%;
+    width: 65%;
     overflow-y: scroll;
     display: flex;
     flex-direction: column-reverse;
+
+    margin-left: 10px;
 }
 
-.teamChatSelect {
-    width: 100%;
+.teamsMessageBlock {
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #cdd4d4;
+    box-shadow: 0 0 3px rgba(33,33,33,.2);
+}
+
+.nestedMessages {
+    padding: 10px;
+}
+
+.teamMessageBlock {
+    font-family: 'Pavanam', sans-serif;
+
+    border-radius: 10px;
+    border: 1px solid #cdd4d4;
+    background: #ffffff;
+
+    margin-top: 20px;
+    padding-top:10px;
+    padding-bottom:10px;
 }
 
 .teamChatInital {
-    width: 100%;
-    padding: 5px;
-    padding-top: 20px;
+    display:flex;
+    justify-content:space-between;
+    padding-left: 20px;
+    margin-bottom: 10px;
+    margin-top: 10px;
 }
+
+    .teamChatInital .details {
+        width: 90%;
+    }
+    .teamChatInital .interact {
+        width: 10%;
+    }
 
 .teamChatName {
     width: 90%;
@@ -371,109 +453,60 @@ $delete2-red: red;
 }
 
 .teamChatContent {
-    width: 90%;
+    width: 100%;
     padding-bottom: 5px;
-    max-width: 90%;
+    font-size:medium;
 }
 
 .teamReplySection {
     width: 70%;
-    align-items
-}
-
-/* Split page into 2 */
-/* Control the left side */
-.row {
-    display: flex;
-}
-
-.splitleft {
-    max-width: 33.3%;
-}
-
-.splitright {
-    max-width: 66.6%;
+    margin-bottom: 10px;
 }
 
 /*
-             * TEAMS
-            */
-
-.teamSec {
-    max-height: 78vh;
-    overflow-y: scroll;
+* Chats
+*/
+.chatsPage {
+    display: flex;
+    height: 70vh;
+    width: 100%;
 }
 
-.teamEntryBox {
-    display: flex;
-    padding-bottom: 5px;
+.mypChats {
+    width: 20%;
+    height: 100%;
+    margin-left: 0px;
     padding-top: 5px;
 }
 
-.teamEntryData {
-    flex: 100%;
-}
-
-    .teamEntryData .subject {
-        padding: 0;
-        padding-right: 10px;
-        margin-bottom: 0;
+    .chatSelectBox {
+        width: 100%;
+        font-family: 'Pavanam', sans-serif;
+        padding-left: 15px;
+        padding-top: 5px;
+        border-radius: 10px;
+        border: 1px solid #cdd4d4;
+        background: #ffffff;
+        margin-bottom: 5px;
+    }
+    .chatName {
+        width: 90%;
+        padding-bottom: 5px;
         font-size: large;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 300px;
+        max-width: 90%;
     }
+
+.myChatBar {
+    width: 80%;
+}
+
 
 /*
-             * CALENDAR
-            */
-
-.calSec {
-    max-height: 78vh;
-    overflow-y: scroll;
-}
-
-.calEntryBox {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 50px;
-}
-
-.calEntryData .subject {
-    padding: 0;
-    margin-bottom: 0;
-    font-size: large;
-}
-
-.calEntryData .organizer {
-    padding: 0;
-    margin-bottom: 0;
-    font-size: small;
-}
-
-.calEntryData .content {
-    padding: 0;
-    margin-bottom: 0;
-    font-size: small;
-}
-
-.calDateTime {
-    justify-content: space-between;
-}
-
-    .calDateTime .begin {
-        padding: 0;
-        font-size: small;
-        margin-bottom: 0;
-        margin-top: 27px;
-    }
-
-    .calDateTime .fin {
-        padding: 0;
-        font-size: small;
-    }
-
+* Calendar section
+*/
 .calendarSection {
     font-family: 'Pavanam', sans-serif;
     width: 15%;
@@ -481,4 +514,31 @@ $delete2-red: red;
     flex-direction: column;
     display: flex;
     overflow-y: scroll;
+    margin-left: 20px;
+    margin-top: 40px;
 }
+
+    .calendarSection .event {
+        border-radius: 10px;
+        border: 1px solid #cdd4d4;
+        background: #ffffff;
+        padding: 10px;
+        margin-top:5px;
+    }
+        .event .subject {
+            font-size:large;
+        }
+
+        .event .timing {
+        }
+            .event .timing .date {
+                margin-bottom: 0px;
+            }
+
+            .event .timing .time {
+                margin-bottom: 0px;
+            }
+
+        .event .organiser {
+            margin-bottom: 0px;
+        }
