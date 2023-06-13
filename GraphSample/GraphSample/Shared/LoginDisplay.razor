@@ -7,31 +7,37 @@
 
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
+<style>
 
-<style> 
-    .navbar-ui{
+    .nav-link {
+        text-decoration: none;
+        color: #08396F;
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+        .nav-link:hover {
+            border-bottom: 2px solid white;
+        }
+
+    .navbar-ui {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
         font-family: 'Alata', sans-serif;
         font-weight: 400;
         border-radius: 0.5rem;
+        padding: 10px 20px;
         background: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-    }
-    .navbar-links {
-        display: flex;
-        align-items: center;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 
-    .nav-link{
-        color: black;
-        font-size: 1.1rem;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .nav-link:hover {
-        color: green;
-        @* transform: scale(1.1); *@
+    .navbar-brand img {
+        width: 80px;
+        height: 50px;
     }
 
 </style>
@@ -64,16 +70,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/UniversalSearch">
-                               Search
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="/SummariseFiles">
                                NotesPro
                             </a>
                         </li>
+
                     </ul>
+
                     <div class="ms-auto">
                         <a style="color:black; text-decoration:none;font-size:1rem;"> Welcome @context?.User?.Identity?.Name!</a>
                         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
