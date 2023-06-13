@@ -310,7 +310,9 @@
             });
         events = eventPage?.Value ?? new List<Event>();
         await LoadCalendar();
-        getEventsOfSelectedDay(selectedDay.Date.ToString());
+        var day = new CalendarDay();
+        day.Date = selectedDay.Date;
+        getEventsOfSelectedDay(day);
         return events.ToList();
     }
 
