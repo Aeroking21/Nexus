@@ -1,7 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.JSInterop
-@using Microsoft.TeamsFx
+@using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Graph
 
 @inject IJSRuntime JSRuntime
@@ -128,35 +128,30 @@
 
 @code{
     bool isTeams = true;
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        await base.OnAfterRenderAsync(firstRender);
-
-        if (firstRender)
+        try
         {
-            try
+            var uri = new Uri(Navigation.Uri);
+            var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+            var teams = queryParams.TryGetValue("teams", out var teamsValue) ? teamsValue.ToString() : null;
+            if (!string.IsNullOrEmpty(teams))
             {
-                var uri = new Uri(Navigation.Uri);
-                var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-                var teams = queryParams.TryGetValue("teams", out var teamsValue) ? teamsValue.ToString() : null;
-                if (!string.IsNullOrEmpty(teams))
-                {
-                    // The "teams" query parameter is present, indicating that the app is running within Microsoft Teams
-                    isTeams = true;
-                    Navigation.NavigateTo("authentication/login");
-                }
-                else
-                {
-                    isTeams = false;
-                    Navigation.NavigateTo("authentication/login");
-                }
+                // The "teams" query parameter is present, indicating that the app is running within Microsoft Teams
+                isTeams = true;
+                await JSRuntime.InvokeVoidAsync("TeamsLogin");
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine(ex.Message);
                 isTeams = false;
                 Navigation.NavigateTo("authentication/login");
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            isTeams = false;
+            Navigation.NavigateTo("authentication/login");
         }
         StateHasChanged();
     }
