@@ -33,7 +33,7 @@
    
     }
 
-    .dropdown-content {
+    .dropdown-contentMGT {
         max-height: 100%;
         overflow: scroll;
         max-width: 99%;
@@ -84,7 +84,7 @@
 
             <div>
                 <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                    <div class="dropdown-content">
+                    <div class="dropdown-contentMGT">
 
                         @foreach (var file in data_response)
                         {
@@ -551,6 +551,7 @@
         var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
         Console.WriteLine("Getting files...");
         data_response = files.Value;
+        StateHasChanged();
 
         // The type of files is Microsoft.Graph.Models.DriveItem
     }
