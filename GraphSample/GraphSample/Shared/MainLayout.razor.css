@@ -10,10 +10,9 @@
 }
 
 .outerSearch {
-    max-width: 60vw;
-    width: 25vw;
+    /* put this search bar in line with the nav bar */
     position: fixed;
     top: 25px;
-    left: 50%;
+    right: 27rem;
     z-index: 10000;
 }

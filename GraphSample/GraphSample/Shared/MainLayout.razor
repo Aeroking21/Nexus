@@ -13,16 +13,27 @@
 
 
 @inject IJSRuntime JSRuntime
-
+<style>
+    .topgun{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 9999; 
+    }
+</style>
 <div class="page">
     <main>
-
-        <div class="auth">
-            <LoginDisplay />
-            <div class="outerSearch">
-                <GraphSample.Pages.UniversalSearch />
-            </div>
+        <div class="topgun" >
+        <LoginDisplay />
         </div>
+        <br />
+        <br />
+        <br />
+        <div class="outerSearch">
+            <GraphSample.Pages.UniversalSearch />
+        </div>
+
         <article class="content px-4">
             @Body
         </article>
@@ -63,6 +74,5 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
         await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
-        Console.WriteLine("Access Token: " + AccessToken);
     }
 }
