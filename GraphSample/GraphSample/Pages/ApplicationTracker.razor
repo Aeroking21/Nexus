@@ -423,7 +423,7 @@
                                         <span style="width: 250px !important; max-height: 50px !important; overflow-x: scroll; position: absolute; right: 550px;"><b>Subject: </b>@selectedEmail.Subject</span>
                                         <span style="position: absolute; right: 120px;">@selectedEmail.ReceivedDateTime?.DateTime.ToString("ddd, dd MMM, yyyy HH:mm")</span>
                                     </div>
-                                    <div class="right-emails-scrollable-div">
+                                    <div class="right-emails-scrollable-div" style="background-color: white">
                                         @((MarkupString)selectedEmail.Body.Content)
                                     </div>    
                                 </div>
@@ -1186,8 +1186,8 @@
             }
 
             var fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
-            var groupedEmails = (fetchedEmails.Count() == 0 ? null : fetchedEmails.Where(msg => msg.Sender.EmailAddress != null).GroupBy(msg => msg.Sender.EmailAddress.Address).
-                ToDictionary(group => group.Key, group => group.ToList()));
+            var groupedEmails = (fetchedEmails.Count() == 0 ? null : (fetchedEmails.Where(msg => ((msg.Sender.EmailAddress != null) && (msg.Sender != null))).GroupBy(msg => msg.Sender.EmailAddress.Address).
+                ToDictionary(group => group.Key, group => group.ToList())));
 
             if (groupedEmails != null)
             {
