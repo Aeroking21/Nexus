@@ -98,10 +98,8 @@
                                                 <div class="emailRight">
                                                     <div class="emailRightData">
                                                         <div class="timing">3:30PM</div>
-                                                        @if (@mail?.IsRead == false)
-                                                        {<span class="dotOn">&nbsp;</span> }
-                                                        else
-                                                        { <span class="dotOff">&nbsp;</span>}
+                                                        @if (@mail?.IsRead == false) {<span class="dotOn">&nbsp;</span> }
+                                                        else { <span class="dotOff">&nbsp;</span>}
                                                     </div>
 
                                                     <div class="emailInteraction">
@@ -208,16 +206,26 @@
                                             <ul class="nestedMessages">
                                                 @foreach (var full in fullPage)
                                                 {
+                                                    Console.WriteLine(currentTeam.Id);
+                                                    Console.WriteLine(currentChannel.Id);
                                                     <li class="teamMessageBlock">
                                                         <div class="teamChatInital">
                                                             <div class="details">
                                                                 <div class="teamChatName">@full?.mainMessage?.From?.User?.DisplayName</div>
                                                                 <div>@full?.mainMessage?.CreatedDateTime</div>
-                                                                <div class="teamChatContent">@full?.mainMessage?.Body?.Content</div>
+                                                                @if (full?.mainMessage?.DeletedDateTime != null) { <div class="teamChatContent"><i>This message has been deleted</i></div> }
+                                                                else { <div class="teamChatContent">@full?.mainMessage?.Body?.Content</div> }
                                                             </div>
 
                                                             <div class="interact">
-                                                                <button class="btn2 btn-delete2">
+                                                                @if (full?.mainMessage?.From.User.Id == myID)
+                                                                {
+                                                                    <button class="btn2 btn-delete2" @onclick="() => delChannelMessage(full?.mainMessage)">
+                                                                        <span class="mdi mdi-delete mdi-16px"></span>
+                                                                        <span class="mdi mdi-delete-empty mdi-16px"></span>
+                                                                    </button>
+                                                                }
+                                                                <button class="btn2 btn-delete2" @onclick="() => replyToChannelMsg(true)">
                                                                     <span class="mdi mdi-reply-outline mdi-16px"></span>
                                                                     <span class="mdi mdi-reply mdi-16px"></span>
                                                                 </button>
@@ -230,7 +238,10 @@
                                                                     <div class="teamReplySection">
                                                                         <div class="teamChatName">@reply?.From?.User?.DisplayName</div>
                                                                         <div>@reply?.CreatedDateTime</div>
-                                                                        <div class="teamChatContent">@reply?.Body?.Content</div>
+
+                                                                        @if (reply?.DeletedDateTime != null) { <div class="teamChatContent"><i>This message has been deleted</i></div> }
+                                                                        else { <div class="teamChatContent">@reply?.Body?.Content</div> }
+                                                                        
                                                                     </div>
                                                                 </li>
                                                             }
@@ -333,6 +344,7 @@
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     private GraphServiceClient? graphClient;
+    private string? myID;
 
     private string? dateTimeFormat;
     private string? oldData;
@@ -347,10 +359,10 @@
 
         if (ids != null) { await initialLayout(); }
 
-        await getMail("All");
-        await getTeams("All");
-        await getChats("All");
-        await getCal("All");
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var me = await graphClient.Me.GetAsync();
+        myID = me?.Id;
+        await refreshContent(4);
     }
 
     /*
@@ -382,9 +394,7 @@
             _timer.Enabled = false;
         }
 
-        Console.WriteLine(myActiveId);
-        //await getMail(mailQuery);
-        await refreshContent(0);
+        await refreshContent(4);
     }
 
     public async Task initialLayout()
@@ -420,15 +430,16 @@
             //await getChannels();
             await displayChannelData();
         }
-        else if (page == 2) { await getCal(calQuery); }
+        else if (page == 2) { await getChats("hi"); }
         else if (page == 3) { }
         else
         {
             await getMail(mailQuery);
             await getTeams(teamQuery);
-            await getCal(calQuery);
             await getChats("hi");
+            await getCal(calQuery);
         }
+        await getCal("hi");
         StateHasChanged();
     }
 
@@ -570,6 +581,58 @@
 
         fullPageLocal.Reverse();
         fullPage = fullPageLocal;
+        await refreshContent(1);
+    }
+
+    // Create new channel message
+    string? newChannelMessageContent;
+    private bool newChannelMessageBool { get; set; } = false;
+    private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
+
+    public async void newChannelMessage(string content)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        var requestBody = new ChatMessage
+        {
+            Body = new ItemBody
+            {
+                Content = content,
+            },
+        };
+
+        newChannelMessageContent = String.Empty;
+        newChannelMessageBool = false;
+
+        var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.PostAsync(requestBody);
+        await refreshContent(1);
+    }
+
+    // Delete Channel message
+    public async void delChannelMessage(ChatMessage currMessage)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[currMessage.Id].SoftDelete.PostAsync();
+        await refreshContent(1);
+    }
+
+    // Reply to a message account
+    string? messageContent;
+    private bool messageReply { get; set; } = false;
+    private void replyToChannelMsg(bool change) { messageReply = change; }
+
+    public async void replyChannelMessage(ChatMessage currMessage)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new ChatMessage
+        {
+            Body = new ItemBody
+            {
+                ContentType = BodyType.Html,
+                Content = "Hello World",
+            },
+        };
+        var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[currMessage.Id].Replies.PostAsync(requestBody);
         await refreshContent(1);
     }
 
@@ -866,30 +929,5 @@
         {
             myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
         }
-    }
-
-    // Create new channel message
-
-    string? newChannelMessageContent;
-    private bool newChannelMessageBool { get; set; } = false;
-    private void sendChannelMessage(bool change) { newChannelMessageBool = change; }
-
-    public async void newChannelMessage(string content)
-    {
-        graphClient = clientFactory.GetAuthenticatedClient();
-
-        var requestBody = new ChatMessage
-        {
-            Body = new ItemBody
-            {
-                Content = content,
-            },
-        };
-
-        newChannelMessageContent = String.Empty;
-        newChannelMessageBool = false;
-
-        var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages.PostAsync(requestBody);
-        await refreshContent(1);
     }
 }
