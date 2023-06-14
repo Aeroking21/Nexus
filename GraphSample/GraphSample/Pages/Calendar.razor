@@ -7,21 +7,74 @@
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
 <style>
-    .row {
-        margin: 20px;
-        display: flex;
-        flex-wrap: wrap;
+     .grid-container {
+        display: grid;
+        grid-template-columns: 700px 450px;
+        grid-template-rows: 500px 500px;
+        gap: 20px;
+        padding-left: 20px;
+        margin-top: 20px;
+        margin-bottom: 20px;
     }
 
-    .column {
-        @* float: left; *@
-        width: 50%;
+    
+      @@media (max-width: 850px) {
+            .grid-container {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Shrink the grid items */
+        grid-template-rows: auto; /* Reset the rows to adjust automatically */
+        padding-left: 0; /* Remove the left padding */
+        margin-left: 0; /* Center everything */
+        justify-items: center;
+        align-items: center;
     }
-    @@media (max-width: 768px) {
-        @* stack the columns on top of eachother *@
-        .column {
-            width: 100% !important;
-        }
+    }
+
+       .grid-item {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        height: 100%;
+        width: 100%;
+        overflow-y: auto;
+        margin-bottom: 0%;
+        padding-right: 5px;
+        position: relative;
+        font-family: 'Pavanam', sans-serif;
+    }
+
+    .grid-item::-webkit-scrollbar {
+        width: 10px;
+        height: 70%;
+        background-color: transparent;
+        height: calc(100% - 20px);
+    }
+
+    .grid-item::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 1.5rem;
+    }
+
+    .grid-item::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .grid-container .grid-item a {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+        font-size: 1.5rem;
+    }
+
+    .grid-container .grid-item a:hover {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+    }
+
+    .grid-container .grid-item a:active {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
     }
 
 
@@ -60,49 +113,71 @@
     .event-row:hover {
         background-color: #A2CFFA;
     }
+
+    #popupContainer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        z-index: 9999;
+    }
+
+    #popupContent {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        width: 400px;
+    }
 </style>
 
 <AuthorizeView>
     <Authorized>
-        <link rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-        <div class="row">
-            @* <div class="column"> *@
-                <h2 style="color: #0078d4 !important;">Add Event</h2>
-                @* mt will dispay a form which the user can fill and use to add an event*@
-                <form>
-                    <div class="mb-3">
-                        <label for="subject">Subject</label>
-                        <input @bind="subject" id="subject" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="attendees">Attendees</label>
-                        <input @bind="attendees" id="attendees" class="form-control" />
-                    </div>
-                     <div class="row">
-                <div class="col">
-                    <div class="mb-3">
-                        <label for="start">Start</label>
-                        <input @bind="start" type="datetime-local" id="date" class="form-control" />
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="mb-3">
-                        <label for="end">End</label>
-                        <input @bind="end" type="datetime-local" id="end" class="form-control" />
-                    </div>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+            <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
+            <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">Get Free Schedule</button>
+            <div id="popupContainer">
+                <div id="popupContent">
+                    <h2 style="color: #0078d4 !important;">Add Event</h2>
+                        <form>
+                            <div class="mb-3">
+                                <label for="subject">Subject</label>
+                                <input @bind="subject" id="subject" class="form-control" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="attendees">Attendees</label>
+                                <input @bind="attendees" id="attendees" class="form-control" />
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="start">Start</label>
+                                        <input @bind="start" type="datetime-local" id="date" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="end">End</label>
+                                        <input @bind="end" type="datetime-local" id="end" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="body">Body</label>
+                                <textarea @bind="body" id="body" class="form-control"></textarea>
+                            </div>
+                            </form>
+                    <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
+                    <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
                 </div>
             </div>
-            <div class="mb-3">
-                <label for="body">Body</label>
-                <textarea @bind="body" id="body" class="form-control"></textarea>
-            </div>
-                </form>
-                         <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
-                
-       
-            @* </div> *@ 
-            <div class="column">
+        <div class="grid-container">
+            <div class="grid-item">
                 <div class="display-month">
                     <h2 style="color: #0078d4;">@MonthToText() @year</h2>
                     <div class="d-flex justify-content-between">
@@ -160,7 +235,7 @@
                     </table>
                 </div>
             </div>
-            <div class="column">
+                <div class="grid-item">
                 @if (selectedDay.Date == DateTime.Now.Date)
                 {
                     <h2 style="color: #0078d4 !important;">Events for today</h2>
@@ -181,9 +256,9 @@
                             <th>Organizer</th>
                             <th>Subject</th>
                             <th>Start Day</th>
-                            <th>End Day</th>
+                            @* <th>End Day</th> *@
                             <th>Start Time</th>
-                            <th>End Time</th>
+                            @* <th>End Time</th> *@
                         </tr>
                     </thead>
                     <tbody>
@@ -201,9 +276,9 @@
                                     <td>@e?.Organizer?.EmailAddress?.Name</td>
                                     <td>@e?.Subject</td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td>
+                                    @* <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td> *@
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
-                                    <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td>
+                                    @* <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td> *@
                                     <i class="fa fa-trash-o" style="font-size:24px"
                                     @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
                                 </tr>
@@ -249,7 +324,6 @@
     private string userTimeZone = string.Empty;
 
     public async Task AddEvent(){
-        @* use the form under the add event section to add a new wvwnt and that display that added event across the whole page, update the calendar with the add event *@
         var newEvent = new Event
         {
             Subject = subject,
@@ -291,6 +365,12 @@
                 .PostAsync(newEvent);   
             events = await getEvents();
             Console.WriteLine(userTimeZone.ToString());
+            @* close the pop up *@
+            subject = "";
+            attendees = "";
+            start = new DateTime(DateTime.Today.Ticks);
+            end = new DateTime(DateTime.Today.Ticks);
+            body = "";
         }
         catch (Exception ex)
         {
@@ -310,9 +390,7 @@
             });
         events = eventPage?.Value ?? new List<Event>();
         await LoadCalendar();
-        var day = new CalendarDay();
-        day.Date = selectedDay.Date;
-        getEventsOfSelectedDay(day);
+        @* getEventsOfSelectedDay(selectedDay.Date.To?String()); *@
         return events.ToList();
     }
 
@@ -496,10 +574,15 @@
             .GetAsync(config =>
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
-                config.QueryParameters.Select = new [] { "subject", "organizer", "start", "end" };
             });
         @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
         events = eventPage?.Value ?? new List<Event>();
+        
+        foreach (var e in events)
+        {
+            Console.WriteLine(e.ToString());
+        }
+
         await base.OnInitializedAsync();
         await LoadCalendar();
         StateHasChanged();

@@ -1,26 +1,26 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
-using Microsoft.Graph;
-using Microsoft.Graph.Models.ODataErrors;
+using Microsoft.Graph.Beta;
+using Microsoft.Graph.Beta.Models.ODataErrors;
 
-namespace GraphSample.Graph
+namespace GraphSampleBeta.Graph
 {
     // Extends the AccountClaimsPrincipalFactory that builds
     // a user identity from the identity token.
     // This class adds additional claims to the user's ClaimPrincipal
     // that hold values from Microsoft Graph
-    public class GraphUserAccountFactoryBeta
+    public class GraphUserAccountFactory
         : AccountClaimsPrincipalFactory<RemoteUserAccount>
     {
         private readonly IAccessTokenProviderAccessor accessor;
-        private readonly ILogger<GraphUserAccountFactoryBeta> logger;
+        private readonly ILogger<GraphUserAccountFactory> logger;
 
-        private readonly GraphClientFactory clientFactory;
+        private readonly GraphClientFactoryBeta clientFactory;
 
-        public GraphUserAccountFactoryBeta(IAccessTokenProviderAccessor accessor,
-            GraphClientFactory clientFactory,
-            ILogger<GraphUserAccountFactoryBeta> logger)
+        public GraphUserAccountFactory(IAccessTokenProviderAccessor accessor,
+            GraphClientFactoryBeta clientFactory,
+            ILogger<GraphUserAccountFactory> logger)
         : base(accessor)
         {
             this.accessor = accessor;
@@ -46,11 +46,6 @@ namespace GraphSample.Graph
                 catch (AccessTokenNotAvailableException exception)
                 {
                     logger.LogError($"Graph API access token failure: {exception.Message}");
-                }
-                catch (ServiceException exception)
-                {
-                    logger.LogError($"Graph API error: {exception.Message}");
-                    logger.LogError($"Response body: {exception.RawResponseBody}");
                 }
             }
 
