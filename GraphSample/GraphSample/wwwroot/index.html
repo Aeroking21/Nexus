@@ -8,7 +8,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Nexus{TBA}</title>
+    <title>Nexus</title>
     <base href="/" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -78,4 +78,11 @@
       var navbar = document.querySelector('.navbar');
       navbar.classList.toggle('navbar-expanded');
     }
-  </script>
+    function OpenPopup() {
+        document.getElementById("popupContainer").style.display = "block";
+    }
+    function ClosePopup() {
+        document.getElementById("popupContainer").style.display = "none";
+    }
+
+</script>
