@@ -20,7 +20,7 @@
 
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
-@inject ILogger<FileUpload> Logger
+@*@inject ILogger<SummariseFiles> Logger*@
 @inject GraphSample.AI.OpenAIService OpenAIService
 
 <style>
@@ -33,13 +33,14 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         height: 86vh;
         width: 96vw;
-   
+        font-family: 'Pavanam', sans-serif;
     }
 
     .dropdown-contentMGT {
-        height: 370px;
+        max-height: 370px;
         overflow: scroll;
         max-width: 99%;
+        border: 2px solid orange;
     }
 
     .textbox {
@@ -123,7 +124,7 @@
     <Authorized>
  
         <div class="containerFiles">
-            <div class="dropdown">
+            <div>
                 <button class="btn btn-primary" @onclick="OnOpen" style="margin: 10px;">
                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6 20q-.825 0-1.413-.588T4 18v-3h2v3h12v-3h2v3q0 .825-.588 1.413T18 20H6Zm5-4V7.85l-2.6 2.6L7 9l5-5l5 5l-1.4 1.45l-2.6-2.6V16h-2Z"/></svg> SmartScribe
                 </button>
@@ -136,31 +137,7 @@
                                 @* <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
                                 <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" /> *@
                             <div class="dropzone @dropClass rounded">
-                                <InputFile id="fileInput" multiple title=""
-                                        OnChange="@LoadFile"
-                                        @ondragenter="HandleDragEnter"
-                                        @ondragleave="HandleDragLeave" />
-                            </div>
-                        </FluentTabPanel>
-                        <FluentTabPanel>
-                            <div class="dropdown-contentMGT">
-                                @foreach (var file in data_response)
-                                {
-                                    string npath = path + file.Id;
-                                    
-                                    <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id, file.Name)"></mgt-file>
-                                }
-                            </div>
-                        </FluentTabPanel>
-                    </FluentTabs>
-                    <FluentTabs OnTabChange="HandleOnTabChange">
-                        <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
-                        <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;"/>
-                        <FluentTabPanel>
-                                @* <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
-                                <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" /> *@
-                            <div class="dropzone @dropClass rounded">
-                                <InputFile id="fileInput" multiple title=""
+                                <InputFile id="fileInput" title=""
                                         OnChange="@LoadFile"
                                         @ondragenter="HandleDragEnter"
                                         @ondragleave="HandleDragLeave" />
@@ -350,17 +327,6 @@
         MyFluentDialog!.Hide();
 
     }
-
-    // Extracts all the text from file
-    //private async Task<string> ExtractAllTextAsync(IBrowserFile file)
-    //{
-    //    using var memoryStream = new MemoryStream();
-    //    await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
-    //    var document = new GcPdfDocument();
-    //    document.Load(memoryStream);
-    //    var text = document.GetText();
-    //    return text;
-    //}
 
     public async Task<Stream> ConvertToStream(IBrowserFile file)
     {
@@ -725,21 +691,7 @@
 
         // Convert the HTML string to a byte array using UTF-8 encoding
         byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
-        // create a new page in the section
-        //var page = new OnenotePage
-        //{
-        //     set the title and include a textbox with the content of the summary
-        //    Title = pageTitle,
-        //    Content = contentBytes
-        //};
-        //Console.WriteLine(htmlContent);
-        //var pageResult = await graphClient.Me.Onenote.Sections[sectionId]
-        //    .Pages
-        //    .PostAsync(page, requestConfiguration =>
-        //    {
-        //        requestConfiguration.Headers.Add("Content-Type", "application/xhtml+xml");
-        //    });
-        //var pageResult = await graphClient.Me.Onenote.Sections[sectionId].Pages.PostAsync(page);
+    
         // Create multipart object with the relevant content
         var multipartContent = new MultipartFormDataContent();
         var htmlString = htmlContent;
