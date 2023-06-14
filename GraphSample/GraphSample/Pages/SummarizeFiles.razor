@@ -9,9 +9,10 @@
 @using System.Text
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
-@using Microsoft.Graph.Models.ODataErrors;
+@using Microsoft.Graph.Models.ODataErrors
 @using Microsoft.Kiota.Abstractions
 @using Microsoft.Kiota.Abstractions.Serialization
+@using Microsoft.Fast.Components.FluentUI
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
 
@@ -34,7 +35,7 @@
     }
 
     .dropdown-contentMGT {
-        max-height: 100%;
+        height: 370px;
         overflow: scroll;
         max-width: 99%;
     }
@@ -57,6 +58,60 @@
         right: 20px;
         z-index: 9999;
     }
+
+    .dropzone {
+        border: 3px dashed steelblue;
+        padding: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #eee;
+        box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+        color: #444;
+        font-size: 1.5rem;
+        cursor: pointer;
+        position: relative;
+    }
+ 
+    .dropzone:hover {
+        background-color: #f3f3f3;
+        color: #333;
+    }
+
+    .sum-btn{
+        margin: 10px;
+        background-color: #1D6F42;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+    }
+
+    .onenote-btn{
+        margin: 10px;
+        background-color: #AE4BD5;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+    }
+
+    .sum-btn:hover{
+        background-color: #1a673d;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .onenote-btn:hover{
+        background-color: #a246c7;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .file-label{
+        margin: 10px;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
 </style>
 
 
@@ -66,46 +121,49 @@
  
         <div class="containerFiles">
             <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    SmartScribe
+                <button class="btn btn-primary" @onclick="OnOpen" style="margin: 10px;">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6 20q-.825 0-1.413-.588T4 18v-3h2v3h12v-3h2v3q0 .825-.588 1.413T18 20H6Zm5-4V7.85l-2.6 2.6L7 9l5-5l5 5l-1.4 1.45l-2.6-2.6V16h-2Z"/></svg> SmartScribe
                 </button>
-                <ul class="dropdown-menu">
 
-                    <li class="dropdown-item">
-                        <div>
-                            <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
-                            <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" />
-                        </div>
-                    </li>
-                    <li class="dropdown-item" @onclick="OnOpen"> Upload from OneDrive </li>
-
-                </ul>
-            </div>
-
-            <div>
                 <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
-                    <div class="dropdown-contentMGT">
-
-                        @foreach (var file in data_response)
-                        {
-                            string npath = path + file.Id;
-                            <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id)"></mgt-file>
-                        }
-
-                    </div>
-
+                    <FluentTabs OnTabChange="HandleOnTabChange">
+                        <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
+                        <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;"/>
+                        <FluentTabPanel>
+                                @* <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
+                                <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" /> *@
+                            <div class="dropzone @dropClass rounded">
+                                <InputFile id="fileInput" multiple title=""
+                                        OnChange="@LoadFile"
+                                        @ondragenter="HandleDragEnter"
+                                        @ondragleave="HandleDragLeave" />
+                            </div>
+                        </FluentTabPanel>
+                        <FluentTabPanel>
+                            <div class="dropdown-contentMGT">
+                                @foreach (var file in data_response)
+                                {
+                                    string npath = path + file.Id;
+                                    
+                                    <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id, file.Name)"></mgt-file>
+                                }
+                            </div>
+                        </FluentTabPanel>
+                    </FluentTabs>
                 </FluentDialog>
+            
+
+                <div class="file-label">
+                    File Chosen: @fileName
+                </div>
+
+                <button class="sum-btn" @onclick="SummarizeFile"> <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="currentColor" d="m227.32 73.37l-44.69-44.68a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h168a8 8 0 0 0 0-16H115.32l112-112a16 16 0 0 0 0-22.63ZM136 75.31L152.69 92L68 176.69L51.31 160ZM48 208v-28.69L76.69 208Zm48-3.31L79.32 188L164 103.31L180.69 120Zm96-96L147.32 64l24-24L216 84.69Z"/></svg> Summarize </button>
+                <button class="onenote-btn" @onclick="WriteToOneNote"> <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path fill="#733781" d="M16.621 2.326h1.9v2.547c2.976.114 5.988-.242 8.942.2c.1.337.216.671.328 1c.75.134 1.959.041 2.077 1.059a28.973 28.973 0 0 1-.048 5.606a22.957 22.957 0 0 1-.057 5.962a21.112 21.112 0 0 1 .1 5.52c-.137.989-1.31.919-2.051 1.059a4.73 4.73 0 0 1-.378 1.549a3.8 3.8 0 0 1-1.921.3c-2.331-.022-4.662-.013-6.99-.013v2.547h-1.991C11.7 28.787 6.846 27.976 2 27.13V4.876c4.875-.849 9.75-1.682 14.621-2.55Z"/><path fill="#fff" d="M18.523 5.821h8.271v1.266c.731 0 1.463.016 2.2.048c.041 1.673.057 3.345-.013 5.018c-.728.025-1.46.038-2.185.041v13.985h-8.271v-2.55h6.042v-1.266h-6.042v-1.6h6.042v-1.266h-6.042V17.9h6.042v-1.266h-6.042v-1.6h6.039v-1.266h-6.042v-1.6h6.042v-1.266h-6.042v-1.6h6.042V8.036h-6.042V5.821Zm-6.697 4.846c.633-.035 1.269-.07 1.908-.1V21.1c-.687-.029-1.367-.067-2.048-.1c-1.266-2.433-2.636-4.811-3.86-7.266c.07 2.353.029 4.71.035 7.063c-.579-.038-1.151-.073-1.727-.108q.014-4.846 0-9.7l1.965-.1c1.243 2.277 2.506 4.544 3.714 6.843c.026-2.355 0-4.712.013-7.065Z"/><path fill="#fff" d="M27.742 13.122c.413.016.827.035 1.243.054a65.438 65.438 0 0 1-.01 5.012c-.413.019-.824.038-1.234.054q-.004-2.562.001-5.12Zm0 6.039c.413.019.83.041 1.25.064a89.23 89.23 0 0 1 0 4.989l-1.25.076q-.005-2.566 0-5.129Z"/></svg> Write To OneNote </button>
             </div>
-
-            <button class="btn btn-success" @onclick="SummarizeFile"> Summarize </button>
-            <button class="btn btn-warning" @onclick="WriteToOneNote"> Write To OneNote </button>
-
             @if (isLoading)
             {
                 <p>Uploading...</p>
             }
-
-
 
             @if (isSummarizing)
             {
@@ -185,10 +243,35 @@
     private bool isWriting;
     private bool noSummary;
 
+    FluentTab? changedto;
+    private string dropClass = "";
+    public string fileName = "";
+
+    private async void HandleOnTabChange(FluentTab tab)
+    {
+        changedto = tab;
+        if (tab.Text == "Upload from OneDrive")
+        {
+            uploadMethod = false;
+            await listFiles();
+        }
+    }
+
+    private void HandleDragEnter()
+    {
+        dropClass = "dropzone-drag";
+    }
+    
+    private void HandleDragLeave()
+    {
+        dropClass = "";
+    }
+
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender){
             MyFluentDialog!.Hide();
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -199,8 +282,9 @@
     private async void OnOpen()
     {
         MyFluentDialog!.Show();
-        uploadMethod = false;
-        await listFiles();
+        Console.WriteLine("Clicked");
+        //uploadMethod = false;
+        //await listFiles();
 
     }
 
@@ -221,18 +305,21 @@
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
             loadedFile.Add(file);
+            fileName = file.Name;
         }
         isLoading = false;
+        MyFluentDialog!.Hide();
     }
 
 
     // apply error handling to not click on folders
     // Can do regex to check if path is folder
-    protected void GetContent(string path)
+    protected void GetContent(string path, string name)
     {
 
         Console.WriteLine("Clicked on: " + path);
         itemId = path;
+        fileName = name;
         MyFluentDialog!.Hide();
 
     }
