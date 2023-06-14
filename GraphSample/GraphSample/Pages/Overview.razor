@@ -206,15 +206,13 @@
                                             <ul class="nestedMessages">
                                                 @foreach (var full in fullPage)
                                                 {
-                                                    Console.WriteLine(currentTeam.Id);
-                                                    Console.WriteLine(currentChannel.Id);
                                                     <li class="teamMessageBlock">
                                                         <div class="teamChatInital">
                                                             <div class="details">
                                                                 <div class="teamChatName">@full?.mainMessage?.From?.User?.DisplayName</div>
                                                                 <div>@full?.mainMessage?.CreatedDateTime</div>
                                                                 @if (full?.mainMessage?.DeletedDateTime != null) { <div class="teamChatContent"><i>This message has been deleted</i></div> }
-                                                                else { <div class="teamChatContent">@full?.mainMessage?.Body?.Content</div> }
+                                                                else { <div class="teamChatContent">@((MarkupString)full?.mainMessage?.Body?.Content)</div> }
                                                             </div>
 
                                                             <div class="interact">
@@ -240,7 +238,7 @@
                                                                         <div>@reply?.CreatedDateTime</div>
 
                                                                         @if (reply?.DeletedDateTime != null) { <div class="teamChatContent"><i>This message has been deleted</i></div> }
-                                                                        else { <div class="teamChatContent">@reply?.Body?.Content</div> }
+                                                                        else { <div class="teamChatContent">@((MarkupString)reply?.Body?.Content)</div> }
                                                                         
                                                                     </div>
                                                                 </li>
