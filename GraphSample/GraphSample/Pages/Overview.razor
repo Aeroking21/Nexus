@@ -91,7 +91,7 @@
                                                 <div class="emailData">
                                                     <p class="sender">@mail?.Sender?.EmailAddress?.Name</p>
                                                     <p class="subject">@mail?.Subject</p>
-                                                    <p class="content">@mail?.Body?.Content</p>
+                                                    <p class="content">@mail?.BodyPreview</p>
                                                 </div>
 
 
@@ -145,26 +145,30 @@
                                             </div>
 
                                             <div class="content">
-                                                <div class="body">@currentEmail?.Body?.Content</div>
+                                                <div class="body">@((MarkupString)currentEmail?.Body?.Content)</div>
                                             </div>
 
                                             <div class="emailReply" hidden="@(!emailReply)">
                                                 
                                                 <div class="heading">
-                                                    <p class="subject">Re: @currentEmail?.Subject</p>
-                                                    <p class="recipient">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
-                                                </div>
-                                                <div class="emailResponseContent">
-                                                    <button class="mdi mdi-close" @onclick="() => replyToEmail(false)"></button>
-                                                    <FluentTextArea class="reponseBox" @bind-Value=emailContent></FluentTextArea>
-                                                    <button class="mdi mdi-send" @onclick="() => sendEmail(currentEmail, emailContent)"></button>
+                                                    <div class="replyDetails">
+                                                        <div class="content">
+                                                            <p class="subject">Re: @currentEmail?.Subject</p>
+                                                            <p class="recipient">To: @currentEmail?.Sender?.EmailAddress?.Name</p>
+                                                        </div>
+                                                        <button class="mdi mdi-close" @onclick="() => replyToEmail(false)"></button>
+                                                    </div>
+
+                                                    <div class="emailResponseContent">
+                                                        <FluentTextArea class="reponseBox" @bind-Value=emailContent></FluentTextArea>
+                                                        <button class="mdi mdi-send" @onclick="() => sendEmail(currentEmail, emailContent)"></button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     }
                                 </div>
                             </div>
-
                         </FluentTabPanel>
 
                         @* TEAMS TAB *@
@@ -327,9 +331,9 @@
         await getCal();
     }
 
-    /*
-    * REFRESH EVERY 10s
-    */
+/*
+* REFRESH EVERY 10s
+*/
     private static System.Timers.Timer _timer;
     private int counter = 60;
 
@@ -400,12 +404,12 @@
             .Messages
             .GetAsync(config =>
             {
-                config.Headers.Add("Prefer", "outlook.body-content-type='text'");
+                //config.Headers.Add("Prefer", "outlook.body-content-type='text'");
                 //config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
 
                 if (addresses != "All") { config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + addresses; }
 
-                config.QueryParameters.Select = new string[] { "subject", "sender", "body", "isRead" };
+                config.QueryParameters.Select = new string[] { "subject", "sender", "body", "isRead", "bodyPreview" };
                 //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
 

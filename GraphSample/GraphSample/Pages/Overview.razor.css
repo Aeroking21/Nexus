@@ -320,16 +320,42 @@ $delete2-red: red;
                 margin-bottom: 0px;
             }
             .heading .recipient {
-                margin-bottom: 0px;
+                margin-bottom: 5px;
             }
 
         .emailReply .emailResponseContent{
             width: 100%;
         }
 
-        .emailResponseContent .responseBox {
-            width:100%;
-        }
+            .replyDetails {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .replyDetails .content {
+                padding-top: 0px;
+                border: none;
+            }
+
+            .replyDetails .mdi-close {
+                padding: 0;
+                border: none;
+                background: none;
+                font-size: large;
+            }
+
+
+            .emailResponseContent .mdi-send {
+                padding: 0;
+                border: none;
+                background: none;
+                font-size: large;
+            }
+
+            .emailResponseContent .responseBox {
+                margin-top: 20px;
+                width:100%;
+            }
 /*
 * TEAMS
 */
@@ -527,6 +553,9 @@ $delete2-red: red;
     }
         .event .subject {
             font-size:large;
+            padding-bottom: 0px;
+            margin-bottom: 0px;
+            text-align: center;
         }
 
         .event .timing {
@@ -542,3 +571,4 @@ $delete2-red: red;
         .event .organiser {
             margin-bottom: 0px;
         }
+
