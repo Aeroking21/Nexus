@@ -44,11 +44,10 @@
     }
 
     .textbox {
-        margin: 10vw;
         min-height: 50vh;
         min-width: 50vw;
         max-height: 50vh;
-        max-width: 50vw;
+        max-width: 100vw;
         background-color: ghostwhite;
         color: black;
         overflow: scroll;
@@ -169,38 +168,32 @@
                 <p>Uploading...</p>
             }
 
-            @if (isSummarizing)
-            {
-                <div class="textbox">
+            <div class="textbox">
+                @if (isSummarizing)
+                {
                     <p>Summarizing...</p>
                     <FluentProgressRing></FluentProgressRing>
-                </div>
-            }
+                }
 
-            else if (isWriting)
-            {
-                <div class="textbox">
+                else if (isWriting)
+                {
                     <p>Writing to OneNote...</p>
                     <FluentProgressRing></FluentProgressRing>
                     <h3>Summary:</h3>
                     <p>@summary</p>
-                </div>
-            }
+                }
 
-            else if (!string.IsNullOrEmpty(summary))
-            {
-                <div class="textbox">
+                else if (!string.IsNullOrEmpty(summary))
+                {
                     <h3>Summary:</h3>
                     <p>@summary</p>
-                </div>
-            }
+                }
 
-            @if (noSummary)
-            {
-                <div class="textbox">
+                @if (noSummary)
+                {
                     <p>No summary to write to OneNote yet...</p>
-                </div>
-            }
+                }
+            </div>
 
         </div>
 
@@ -245,7 +238,7 @@
     private bool isLoading;
     private bool isSummarizing;
     private bool isWriting;
-    private bool noSummary;
+    private bool noSummary = true;
 
     FluentTab? changedto;
     private string dropClass = "";
@@ -265,7 +258,7 @@
     {
         dropClass = "dropzone-drag";
     }
-    
+
     private void HandleDragLeave()
     {
         dropClass = "";
@@ -345,7 +338,10 @@
 
         if (uploadMethod)
         {
-            if (loadedFile.Count == 0) return;
+            if (loadedFile.Count == 0) {
+                isSummarizing = false;
+                return;
+            }
 
             // Read the content of the file
             var file = loadedFile[0];
@@ -372,7 +368,7 @@
 
 
         await SummarizeText(content);
-
+        noSummary = false;
         isSummarizing = false;
         Console.WriteLine(summary);
     }
@@ -640,10 +636,10 @@
     {
         if (summary == "")
         {
-            summary = "Hello World";
-            //noSummary = true;
-            //return;
+            noSummary = true;
+            return;
         }
+        noSummary = false;
         var fileName = "";
         if (loadedFile.Count == 0)
         {
