@@ -74,11 +74,11 @@
                                 NotesPro
                             </a>
                         </li>
-                        <li class="nav-item">
+                        @* <li class="nav-item">
                             <a class="nav-link" href="/AiTranscript">
                                 CallsMax
                             </a>
-                        </li>
+                        </li> *@
 
                     </ul>
 
@@ -87,7 +87,7 @@
                         <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" style="color:black;">
                             <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
                         </a>
-                        <div class="dropdown-menu dropdown-menu-end">
+                        <div class="dropdown-menu dropdown-menu-end" style=" position: absolute; top: 100%;">
                             <h5 class="dropdown-item-text mb-0">@context?.User?.Identity?.Name</h5>
                             <p class="dropdown-item-text text-muted mb-0" >@context?.User?.GetUserGraphEmail()</p>
                             <div class="dropdown-divider"></div>
