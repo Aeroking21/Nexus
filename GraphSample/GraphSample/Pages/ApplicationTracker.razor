@@ -151,7 +151,7 @@
                                             @for (int i = 0; i < timelines.Count(); i++)
                                                 {
                                                     var timeline = timelines[i];
-                                                <tr height="5em">
+                                                <tr height="77px">
                                                     <td width="85%" class="@((timeline.archived == true) ? "archived" : "")">
                                                         <div class="associated-emails-content">
                                                             @if (expandActions && (expandedActionsTimeline == timeline.timelineID))
@@ -511,6 +511,7 @@
         max-heigth 85vh !important: 
         top: 15vh;
         padding-bottom: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
     .assessments-container {
@@ -578,7 +579,7 @@
         }
 
         .pane.statusFailed {
-            background-color: #6868688b;
+            background-color: #8080808b;
         }
 
         .pane.statusFailed-archived {
@@ -586,8 +587,8 @@
                                             45deg,
                                             #c0c0c061 ,
                                             #c0c0c061 5px,
-                                            #6868688b 5px,
-                                            #6868688b 10px
+                                            #8080808b 5px,
+                                            #8080808b 10px
                                             ); 
         }
 
@@ -1086,7 +1087,6 @@
         display: flex;
         flex-direction: column; /* Stack child elements vertically */
         align-items: flex-start; /* Align child elements to the start (left) */
-        margin-bottom: 4px;
         overflow-y: scroll;
     }
 
@@ -2033,6 +2033,8 @@
                     {
                         ApplicationTimeline newTimeline = await backendApiService.getUserTimelineAsync(Username, newTimelineID);
                         timelines.Add(newTimeline);
+                        HandleSortCriterionChange();
+                        HandleDisplayChange();
                         StateHasChanged();
                     }
                     catch
