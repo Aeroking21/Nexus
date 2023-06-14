@@ -12,7 +12,7 @@
 .outerSearch {
     /* put this search bar in line with the nav bar */
     position: fixed;
-    top: 15px;
-    right: 20rem;
+    top: 25px;
+    right: 27rem;
     z-index: 10000;
 }
