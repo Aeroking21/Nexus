@@ -8,6 +8,7 @@
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
 <style>
+<<<<<<< HEAD
 
     .nav-link {
         text-decoration: none;
@@ -39,6 +40,41 @@
         width: 80px;
         height: 50px;
     }
+=======
+
+    .nav-link {
+        text-decoration: none;
+        color: #08396F;
+        margin-right: 10px;
+        font-size: 1.2rem;
+        transition: color 0.1s ease-in-out;
+    }
+
+        .nav-link:hover {
+            color: #81de1d;
+            transform: scale(1.2);
+        }
+
+    .navbar-ui {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        font-family: 'Alata', sans-serif;
+        font-weight: 400;
+        border-radius: 0.5rem;
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .navbar-brand img {
+        width: 80px;
+        height: 50px;
+    }
+>>>>>>> f63cf84 (Search in Navbar)
 
 </style>
 
@@ -71,8 +107,17 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/SummariseFiles">
+<<<<<<< HEAD
                                NotesPro
                             </a>
+=======
+                                NotesPro
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+>>>>>>> f63cf84 (Search in Navbar)
                         </li>
 
                     </ul>
@@ -121,3 +166,6 @@
         Navigation.NavigateToLogout("authentication/logout");
     }
 }
+
+@*TODO
+1. Try placing the Universal search bar here and integrate into navbar*@
