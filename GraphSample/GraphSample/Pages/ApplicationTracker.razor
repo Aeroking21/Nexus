@@ -1146,7 +1146,7 @@
     {
         Date_Added,
         Starred_First,
-        Unread_Emails_Fisrt,
+        Unread_Emails_First,
     }
 
     bool IsHovered { get; set; }
@@ -1574,7 +1574,7 @@
                         return t2.timelineID.CompareTo(t2.timelineID);
                 });
                 break;
-            case SortingCriteria.Unread_Emails_Fisrt:
+            case SortingCriteria.Unread_Emails_First:
                 timelines.Sort((t1, t2) =>
                 {
                     if (t1.archived && t2.archived) 
