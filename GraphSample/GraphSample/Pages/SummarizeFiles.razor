@@ -37,7 +37,7 @@
     }
 
     .dropdown-contentMGT {
-        max-height: 20%;
+        max-height: 370px;
         overflow: scroll;
         max-width: 99%;
         border: 2px solid orange;
@@ -137,7 +137,7 @@
                                 @* <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
                                 <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" /> *@
                             <div class="dropzone @dropClass rounded">
-                                <InputFile id="fileInput" multiple title=""
+                                <InputFile id="fileInput" title=""
                                         OnChange="@LoadFile"
                                         @ondragenter="HandleDragEnter"
                                         @ondragleave="HandleDragLeave" />
@@ -154,30 +154,6 @@
                             </div>
                         </FluentTabPanel>
                     </FluentTabs>
-                    <!--<FluentTabs OnTabChange="HandleOnTabChange">
-                        <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
-                        <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;"/>
-                        <FluentTabPanel>-->
-                                @* <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
-                                <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" /> *@
-                            <!--<div class="dropzone @dropClass rounded">
-                                <InputFile id="fileInput" multiple title=""
-                                        OnChange="@LoadFile"
-                                        @ondragenter="HandleDragEnter"
-                                        @ondragleave="HandleDragLeave" />
-                            </div>
-                        </FluentTabPanel>
-                        <FluentTabPanel>
-                            <div class="dropdown-contentMGT">
-                                @foreach (var file in data_response)
-                                {
-                                    string npath = path + file.Id;
-                                    
-                                    <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id, file.Name)"></mgt-file>
-                                }
-                            </div>
-                        </FluentTabPanel>
-                    </FluentTabs>-->
                 </FluentDialog>
             
 
