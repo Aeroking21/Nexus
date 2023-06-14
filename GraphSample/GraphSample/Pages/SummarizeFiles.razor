@@ -36,14 +36,30 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         height: 86vh;
         width: 96vw;
-        font-family: 'Pavanam', sans-serif;
+        font-family: 'Robota', sans-serif;
     }
 
     .dropdown-contentMGT {
         max-height: 370px;
-        overflow: scroll;
+        overflow-y: scroll;
         max-width: 99%;
         border: 2px solid orange;
+    }
+    @* make the scroll bar glass *@
+       .dropdown-contentMGT::-webkit-scrollbar {
+        width: 10px;
+        height: 70%;
+        background-color: transparent;
+        height: calc(100% - 20px);
+    }
+
+    .dropdown-contentMGT::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 1.5rem;
+    }
+
+    .dropdown-contentMGT::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.9);
     }
 
     .textbox {
@@ -126,7 +142,7 @@
         <div class="containerFiles">
             <div>
                 <button class="btn btn-primary" @onclick="OnOpen" style="margin: 10px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6 20q-.825 0-1.413-.588T4 18v-3h2v3h12v-3h2v3q0 .825-.588 1.413T18 20H6Zm5-4V7.85l-2.6 2.6L7 9l5-5l5 5l-1.4 1.45l-2.6-2.6V16h-2Z" /></svg> SmartScribe
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6 20q-.825 0-1.413-.588T4 18v-3h2v3h12v-3h2v3q0 .825-.588 1.413T18 20H6Zm5-4V7.85l-2.6 2.6L7 9l5-5l5 5l-1.4 1.45l-2.6-2.6V16h-2Z" /></svg> Select File
                 </button>
 
                 <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
