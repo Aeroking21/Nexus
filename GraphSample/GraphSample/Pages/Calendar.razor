@@ -9,19 +9,24 @@
 <style>
      .grid-container {
         display: grid;
-        grid-template-columns: 700px 500px;
+        grid-template-columns: 700px 450px;
         grid-template-rows: 500px 500px;
         gap: 20px;
         padding-left: 20px;
         margin-top: 20px;
+        margin-bottom: 20px;
     }
-      @@media (max-width: 767px) {
-        .grid-container {
-            grid-template-columns: repeat(1, 1fr); /* Display a single column on screens up to 767px */
-            grid-template-columns: 1fr; /* Display a single column on screens up to 767px */
-            grid-template-rows: auto; /* Reset the rows to adjust automatically */
-            padding-left: 0; /* Remove the left padding */
-        }
+
+    
+      @@media (max-width: 850px) {
+            .grid-container {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Shrink the grid items */
+        grid-template-rows: auto; /* Reset the rows to adjust automatically */
+        padding-left: 0; /* Remove the left padding */
+        margin-left: 0; /* Center everything */
+        justify-items: center;
+        align-items: center;
+    }
     }
 
        .grid-item {
