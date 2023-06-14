@@ -7,12 +7,15 @@
 @using Azure.AI.OpenAI
 @using System.Text
 @using Microsoft.Graph.Beta
-@inject GraphSample.Graph.GraphClientFactory clientFactory
-@inject GraphSample.AI.OpenAIService OpenAIService
+@inject GraphSampleBeta.Graph.GraphClientFactoryBeta clientFactory
 
 <style>
     h3 {
-       color:cyan; 
+        color: cyan;
+    }
+
+    .dropBox{
+        border:2px solid red;
     }
 
 </style>
@@ -21,9 +24,35 @@
     <Authorized>
 
         <div>
-            <h3> Transcript Ai </h3>
+            <h3> Transcript.Ai </h3>
         </div>
 
+        <div>
+            <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+                <div class="dropdown-content">
+
+                    @foreach (var eventResponse in data_response)
+                    {
+                            if ((bool)eventResponse.IsOnlineMeeting)
+                            {
+                                DateTime response = DateTime.Parse(@eventResponse.End.DateTime);
+                                string readableEndDate = response.ToString("MMMM dd, yyyy HH:mm");
+                                <div class="dropBox" @onclick="() => GetContent(eventResponse.OnlineMeeting.JoinUrl)">
+                                    <span> @eventResponse.Subject  --- </span>
+                                    <span> @readableEndDate </span>
+                                </div>
+                                
+                            }
+                    }
+
+                </div>
+
+            </FluentDialog>
+        </div>
+
+        <button class="btn btn-primary" type="button" aria-expanded="false" @onclick="OnOpen">
+            Magic
+        </button>
 
     </Authorized>
 
@@ -37,5 +66,119 @@
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
     private GraphServiceClient? graphClient;
+    private FluentDialog? MyFluentDialog;
+    protected List<Microsoft.Graph.Beta.Models.Event> data_response = new List<Microsoft.Graph.Beta.Models.Event>();
+
+
+    protected async Task testing()
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+                "Unable to access authentication state");
+        }
+
+        var user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+
+        var me = await graphClient.Me.GetAsync();
+
+        var user1 = await graphClient.Me.Events.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.Select = new string[] {"subject","organizer","isOnlineMeeting","onlineMeeting,start,end"};
+        });
+
+        data_response = user1.Value;
+
+        //var meetingLink = user1?.Value?[0].OnlineMeeting?.JoinUrl;
+        //var originalString = "JoinWebUrl eq '1234'";
+        //string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
+
+        //Console.WriteLine(modifiedLink);
+
+        //var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        //{
+        //    requestConfiguration.QueryParameters.Filter = modifiedLink;
+        //});
+
+        ////https://graph.microsoft.com/beta/me/onlineMeetings?$filter=joinWebUrl eq 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_YTAxYjU2OTgtMzlmNy00Y2VhLTlhNDMtZmUzYWEzNmQzMzE5%40thread.v2/0?context=%7b%22Tid%22%3a%2290928426-9cee-454b-808b-acb4a34437de%22%2c%22Oid%22%3a%229e0e9478-c521-46f0-99fe-e6e5a4def94b%22%7d'
+
+        //var result2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
+
+        //Console.WriteLine(meetingInfo.Value[0].EndDateTime);
+        //Console.WriteLine(result2);
+
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
+
+
+
+    private async void OnOpen()
+    {
+        await testing();
+        MyFluentDialog!.Show();
+    }
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
+
+    protected async void GetContent(string meetingLink)
+    {
+        var originalString = "JoinWebUrl eq '1234'";
+        string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
+
+        Console.WriteLine(modifiedLink);
+
+        var me = await graphClient.Me.GetAsync();
+
+        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.Filter = modifiedLink;
+        });
+
+        var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
+
+        foreach(var met in meetingInfo.Value)
+        {
+            Console.WriteLine(":: " + met.Subject);
+        }
+
+        Console.WriteLine(transcripts2.Value[0].Id);
+        Console.WriteLine(transcripts2.Value[0].CreatedDateTime);
+
+        Console.WriteLine(me.Id);
+        Console.WriteLine(meetingInfo.Value[0].Id);
+        Console.WriteLine(transcripts2.Value[0].Id);
+
+
+        var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.ToGetRequestInformation();
+        requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
+        requestInformation.QueryParameters.Add("format", "text/vtt");
+        var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+
+
+        Console.WriteLine(ConvertWebVttStreamToString(content2));
+    }
+
+
+    protected string ConvertWebVttStreamToString(Stream? stream)
+    {
+        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+        {
+            return reader.ReadToEnd();
+        }
+    }
+
 
 }
