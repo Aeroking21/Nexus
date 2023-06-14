@@ -438,6 +438,10 @@
                 </div>
             </div>
                 }
+            <div class="chat-bot">
+                <Chat />
+            </div>
+
         </Authorized>
         <NotAuthorized>
             <RedirectToLogin />
@@ -446,17 +450,15 @@
 
 </div>
 
-<div class="chat-bot">
-    <Chat />
-</div>
 
 
 <style>
 
+    @* -------------------------------------------Chat Bot --------------------------------------------- *@
     .chat-bot{
         position: fixed;
         bottom: 20px;
-        right: 20px;
+        right: 20px !important;
         z-index: 9999;
     }
 
