@@ -10,8 +10,10 @@
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using Microsoft.Graph.Models.ODataErrors
+@using Microsoft.Graph.Models.ODataErrors
 @using Microsoft.Kiota.Abstractions
 @using Microsoft.Kiota.Abstractions.Serialization
+@using Microsoft.Fast.Components.FluentUI
 @using Microsoft.Fast.Components.FluentUI
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
@@ -127,6 +129,30 @@
                 </button>
 
                 <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+                    <FluentTabs OnTabChange="HandleOnTabChange">
+                        <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
+                        <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;"/>
+                        <FluentTabPanel>
+                                @* <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
+                                <InputFile OnChange="@LoadFile" id="fileInput" style="visibility:hidden;" /> *@
+                            <div class="dropzone @dropClass rounded">
+                                <InputFile id="fileInput" multiple title=""
+                                        OnChange="@LoadFile"
+                                        @ondragenter="HandleDragEnter"
+                                        @ondragleave="HandleDragLeave" />
+                            </div>
+                        </FluentTabPanel>
+                        <FluentTabPanel>
+                            <div class="dropdown-contentMGT">
+                                @foreach (var file in data_response)
+                                {
+                                    string npath = path + file.Id;
+                                    
+                                    <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id, file.Name)"></mgt-file>
+                                }
+                            </div>
+                        </FluentTabPanel>
+                    </FluentTabs>
                     <FluentTabs OnTabChange="HandleOnTabChange">
                         <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
                         <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;"/>
@@ -639,6 +665,7 @@
         var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
         Console.WriteLine("Getting files...");
         data_response = files.Value;
+        StateHasChanged();
 
         // The type of files is Microsoft.Graph.Models.DriveItem
     }
