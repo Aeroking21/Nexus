@@ -2207,6 +2207,7 @@
        foreach(var email in selectedAssociatedEmails){
             //var body = new MarkupString(email.Body.Content);
             string plainTextBody = Regex.Replace(email.Body.Content, "<.*?>", "");
+            string dateOfEmail = Regex.Replace(email.CreatedDateTime.ToString(), "<.*?>", "");
             //Console.WriteLine($"Body || {plainTextBody} || End of body");
             if(plainTextBody.Count() < 10)
             {
@@ -2225,7 +2226,8 @@
             {plainTextBody}
 
             Your response should be a string which can directly be deserialized when I pass it into JsonConvert.DeserializeObject() in C#.
-            If the IsAssessmentInvitation field is false, the rest of the fields shoudl be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'";
+            If the IsAssessmentInvitation field is false, the rest of the fields shoudl be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'.
+            If no year is given, base times off the email being sent on {dateOfEmail}.";
 
             //Console.WriteLine("Start of Json||" + completion + "||End of Json");
             try
@@ -2321,6 +2323,7 @@
        foreach(var email in selectedAssociatedEmails){
             //var body = new MarkupString(email.Body.Content);
             string plainTextBody = Regex.Replace(email.Body.Content, "<.*?>", "");
+            string dateOfEmail = Regex.Replace(email.CreatedDateTime.ToString(), "<.*?>", "");
             Console.WriteLine($"Body || {plainTextBody} || End of body");
             if(plainTextBody.Count() < 10)
             {
@@ -2358,7 +2361,8 @@
             {plainTextBody}
 
             Your response should be a string which can directly be deserialized when I pass it into JsonConvert.DeserializeObject() in C#.
-            If the IsAssessmentInvitation field is false, the rest of the fields should be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'";
+            If the IsAssessmentInvitation field is false, the rest of the fields should be 'null'. Custom Description shouldn't be null only if the AssessmentType is 'Custom'.
+            If no year is given, base times off the email being sent on {dateOfEmail}.";
 
             var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
             var completion = completionsResponse.Value.Choices[0].Text;
