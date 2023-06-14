@@ -11,18 +11,22 @@
 @using Microsoft.JSInterop
 @using Microsoft.Fast.Components.FluentUI
 
-
 @inject IJSRuntime JSRuntime
+
+
 
 <div class="page">
     <main>
-
-        <div class="auth">
+        <div class="seperateNavBar">
             <LoginDisplay />
-            <div class="outerSearch">
-                <GraphSample.Pages.UniversalSearch />
-            </div>
         </div>
+        <br />
+        <br />
+        <br />
+        <div class="outerSearch">
+            <GraphSample.Pages.UniversalSearch />
+        </div>
+
         <article class="content px-4">
             @Body
         </article>
@@ -63,6 +67,5 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
         await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
-        Console.WriteLine("Access Token: " + AccessToken);
     }
 }
