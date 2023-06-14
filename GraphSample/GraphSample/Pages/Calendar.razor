@@ -273,9 +273,10 @@
                         {
                             @foreach (var e in getEventsOfSelectedDay(selectedDay))
                             {
-                                <tr class="event-row" @onclick=> 
+                                <tr class="event-row">
                                     <td>@e?.Organizer?.EmailAddress?.Name</td>
                                     <td>@e?.Subject</td>
+                                    <td> @e.OnlineMeeting.JoinUrl </td>
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
                                     @* <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td> *@
                                     <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>

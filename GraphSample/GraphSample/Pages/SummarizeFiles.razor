@@ -25,6 +25,7 @@
 
     h3, p {
         padding: 1% 1% 1% 1%;
+
     }
     .containerFiles {
         background-color: rgba(255, 255, 255, 0.3);
@@ -34,7 +35,7 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         height: 86vh;
         width: 96vw;
-        font-family: 'Robota', sans-serif;
+        font-family: 'Pavanam', sans-serif;
     }
 
     .dropdown-contentMGT {
@@ -164,7 +165,6 @@
                         <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
                         <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;" />
                         <FluentTabPanel>
-                            <a style="text-align:centre;">Only .pdf files are supported</a>
                             <div class="dropzone @dropClass rounded">
                                 <InputFile id="fileInput" multiple title=""
                                         OnChange="@LoadFile"
@@ -222,11 +222,6 @@
                 {
                     <h3>Summary:</h3>
                     <p>@summary</p>
-                }
-
-                @if (noSummary)
-                {
-                    <p>No summary to write to OneNote yet...</p>
                 }
             </div>
 
