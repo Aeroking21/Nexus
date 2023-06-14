@@ -40,10 +40,9 @@
     }
 
     .dropdown-contentMGT {
-        max-height: 370px;
+        max-height: 330px;
         overflow-y: scroll;
         max-width: 99%;
-        border: 2px solid orange;
     }
     @* make the scroll bar glass *@
        .dropdown-contentMGT::-webkit-scrollbar {
@@ -81,7 +80,7 @@
     }
 
     .dropzone {
-        border: 3px dashed steelblue;
+        border: 3px dashed gray;
         padding: 3rem;
         display: flex;
         align-items: center;
@@ -92,12 +91,13 @@
         font-size: 1.5rem;
         cursor: pointer;
         position: relative;
+        height: 310px;
     }
 
-        .dropzone:hover {
-            background-color: #f3f3f3;
-            color: #333;
-        }
+    .dropzone:hover {
+        background-color: #f3f3f3;
+        color: #333;
+    }
 
     .sum-btn {
         margin: 10px;
@@ -150,10 +150,12 @@
                         <FluentTab Text="Browse Files" style="font-size: 18px; padding:20px;"></FluentTab>
                         <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;" />
                         <FluentTabPanel>
+                            <a style="text-align:centre;">Only .pdf files are supported</a>
                             <div class="dropzone @dropClass rounded">
-                                <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
-                                <InputFile id="fileInput" title="" style="display:none;"
-                                          OnChange="@LoadFile" @ondragenter="HandleDragEnter" @ondragleave="HandleDragLeave" />
+                                <InputFile id="fileInput" multiple title=""
+                                        OnChange="@LoadFile"
+                                        @ondragenter="HandleDragEnter"
+                                        @ondragleave="HandleDragLeave" />
                             </div>
                         </FluentTabPanel>
                         <FluentTabPanel>
@@ -324,6 +326,7 @@
             loadedFile.Add(file);
             fileName = file.Name;
         }
+
         isLoading = false;
         MyFluentDialog!.Hide();
     }
