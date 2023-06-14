@@ -14,7 +14,7 @@
     position: fixed;
     top: 25px;
     right: 27rem;
-    z-index: 10;
+    z-index: 4;
 }
 
 .seperateNavBar {
@@ -22,5 +22,5 @@
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 9;
+    z-index: 3;
 }
