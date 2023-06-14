@@ -206,6 +206,13 @@ namespace GraphSample.Services
 
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<bool> updateArchivedStatus(int timelineID, string username, bool newStatus)
+        {
+            var response = await httpClient.GetAsync($"https://localhost:7023/api/JobApplicants/update-archived-status/{username}/{timelineID}/{newStatus}");
+
+            return response.IsSuccessStatusCode;
+        }
     }
 }
 

@@ -1,15 +1,88 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using SharedModels.Models
 
+<style>
+    .form-line{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .sub-button{
+        background-color: #1b6ec2;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+        margin: 5px;
+    }
+
+    .sub-button:hover{
+        background-color: #1b6ec2c7;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    .can-button{
+        background-color: #f44336;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+        margin: 5px;
+    }
+    
+    .can-button:hover{
+        background-color: #f44336c7;
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    .button-line{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+</style>
+
 <div>
     <EditForm Model="_form" OnValidSubmit="SubmitForm">
-        <label for="company">Company</label>
-        <InputText @bind-Value="_form.company" />
-        <label for="role">Role</label>
-        <InputText @bind-Value="_form.role" />
-
-        <button type="submit">Submit</button>
-        <button @onclick="Cancel">Cancel</button>
+        <div class="form-line">
+            <label for="company">Company</label>
+            <InputText @bind-Value="_form.company" />
+        </div>
+        <div class="form-line">
+            <label for="role">Role</label>
+            <InputText @bind-Value="_form.role" />
+        </div>
+        
+        <div class="button-line">
+            <button class="sub-button" type="submit">Submit</button>
+        </div>
     </EditForm>
 </div>
 
@@ -18,8 +91,8 @@
 
     [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
 
-    //protected override void OnInitialized() => BlazoredModal.SetTitle("");
-
+    protected override void OnInitialized() => BlazoredModal.SetTitle("Enter a new application:");
+    
     private async Task SubmitForm() => await BlazoredModal.CloseAsync(ModalResult.Ok(_form));
     private async Task Cancel() => await BlazoredModal.CancelAsync();
 
