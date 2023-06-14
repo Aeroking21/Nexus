@@ -55,23 +55,6 @@
                 </select>
             </span>
         </div>
-            @* @if(displayMode == DisplayMode.Calendar_Display)
-            {
-            <div class="calendar-header-container">
-                <div style="width: 36% !important; height: 100%;"></div> 
-                <div class="right-right-div" style="width: 64%; height=100%;">
-                @foreach (var assessmentGroup in sortedAssessments)
-                    {
-                    var timelineGroups = assessmentGroup.GroupBy(ag => ag.Item1);
-                    <div class="calendar-column" style="width: 300px;">
-                        <div class="calendar-date">
-                        @assessmentGroup.Key.ToString("dd/MM/yyyy")
-                        </div>
-                    </div>
-                    }
-                </div>
-            </div>
-            } *@
             <div class="outer-container">
                 <div class="@((emailsShowing) ? "restricted-inner-container" : "inner-container")">
                     <div class="@((emailsShowing) ? "restricted-left-div" : "left-div")">
@@ -187,14 +170,12 @@
                                                             @if (expandAssociatedEmails && (expandedEmailsTimeline == timeline.timelineID))
                                                                 {
                                                                 <button class="show-email-addresses-highlighted" @onclick="() => { expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID; }">
-                                                                    @*<FluentIcon Name="@FluentIcons.ChevronDoubleDown" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
                                                                     <span style="display: inline-block; vertical-align: middle;">Hide Email Addresses</span>
                                                                 </button>
                                                                 }
                                                                 else
                                                                 {
                                                                 <button class="show-email-addresses" @onclick="() => { expandActions = false; expandAssociatedEmails = expandedEmailsTimeline == timeline.timelineID ? (!expandAssociatedEmails) : true; expandedEmailsTimeline = timeline.timelineID; }">
-                                                                    @*<FluentIcon Name="@FluentIcons.ChevronDoubleRight" Color="@Color.Neutral" Variant="@IconVariant.Filled" style="display: inline-block; vertical-align: middle;"></FluentIcon>*@
                                                                     <span style="display: inline-block; vertical-align: middle;">Show Email Addresses</span>
                                                                 </button>
                                                                 }
@@ -258,11 +239,7 @@
                                                                     var assessment = timeline.assessments[j];
                                                                 <div class="pane @("status" + assessment.status + (timeline.archived ? "-archived" : ""))">
                                                                     <div class="assessment-line">
-                                                                        @* <div class="assessment-type-container">
-                                                                            @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
-                                                                        </div> *@
-                                                                        <select class="status-select" @bind="assessment.type" @oninput="(e) => HandleTypeChange(timeline, assessment, Enum.Parse<AssessmentType>(e.Value.ToString()))">
-                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
+                                                                       <select class="status-select" @bind="assessment.type" @oninput="(e) => HandleTypeChange(timeline, assessment, Enum.Parse<AssessmentType>(e.Value.ToString()))">
 
                                                                             @foreach (AssessmentType option in Enum.GetValues(typeof(AssessmentType)))
                                                                                 {
@@ -281,7 +258,6 @@
                                                                     </div>
                                                                     <div>
                                                                         <select class="status-select" @bind="assessment.status" @oninput="(e) => HandleStatusChange(timeline, assessment, Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
-                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
 
                                                                             @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
                                                                                 {
@@ -314,12 +290,6 @@
                                     </table>
                                     }
                                     else{
-                                        @* @foreach (var assessmentGroup in sortedAssessments)
-                                        {
-                                            <div class="calendar-date" style="position: sticky; top: 0px;">
-                                                @assessmentGroup.Key.ToString("dd/MM/yyyy")
-                                            </div> 
-                                        } *@
                                         <div class="calendar-div">
                                         @foreach (var assessmentGroup in sortedAssessments)
                                         {
@@ -337,11 +307,7 @@
                                                         var assessment = assessmentPair.Item2;
                                                                 <div class="pane @("status" + assessment.status + (timeline.archived ? "-archived" : ""))">
                                                                     <div class="assessment-line">
-                                                                        @* <div class="assessment-type-container">
-                                                                            @((assessment.type != AssessmentType.Custom) ? assessment.type.ToString().Replace("_", " ") : assessment.customDescription)
-                                                                        </div> *@
                                                                         <select class="status-select" @bind="assessment.type" @oninput="(e) => HandleTypeChange(timeline, assessment, Enum.Parse<AssessmentType>(e.Value.ToString()))">
-                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
 
                                                                             @foreach (AssessmentType option in Enum.GetValues(typeof(AssessmentType)))
                                                                                 {
@@ -359,7 +325,6 @@
                                                                     </div>
                                                                     <div>
                                                                         <select class="status-select" @bind="assessment.status" @oninput="(e) => HandleStatusChange(timeline, assessment, Enum.Parse<AssessmentStatus>(e.Value.ToString()))">
-                                                                            @*<option value="@assessment.status">@assessment.status</option>*@
 
                                                                             @foreach (AssessmentStatus option in Enum.GetValues(typeof(AssessmentStatus)))
                                                                                 {
@@ -416,14 +381,7 @@
                                     var tmpEmails = filteresSelectedEmails == null ? selectedAssociatedEmails : filteresSelectedEmails;
                                     <div class="right-emails-div">
                                         <div class="emails-search-div">
-                                                @* <FluentSearch
-                                                              @oninput=HandleEmailsSearchTest
-                                                              @onchange=HandleEmailsSearchTest
-                                                              Placeholder="Search"
-                                                              @bind-Value="@searchValue"
-                                                              autocomplete="off" /> *@
-                                                @* <input type="text" @onfocus="() => HandleEmailSearchFocus()" @onblur="() => HandleEmailSearchBlur()" placeholder="Search" @bind="searchValue"> *@
-                                                 <FluentSearch 
+                                                <FluentSearch 
                                                                 @bind-Value="@searchValue"
                                                                 @oninput="(e => SearchValue = e.Value?.ToString())"
                                                                 @onchange=HandleClear
@@ -890,7 +848,7 @@
         display: flex;
         flex-wrap: wrap;
         height: 75px;
-        overflow-y: scroll;
+        overflow-y: hidden;
         width: 100%;
         text-align: center;
     }
@@ -900,7 +858,7 @@
         flex-wrap: wrap;
         height: 75px;
         width: 100%;
-        overflow-y: scroll;
+        overflow-y: hidden;
         text-align: center;
     }
 
@@ -1201,12 +1159,10 @@
                 "Unable to access authentication state");
         }
 
-        // Get the user's time zone
         var user = (await authenticationStateTask).User;
         Username = user.Identity?.Name;
         var graphTimeZone = user.GetUserGraphTimeZone();
         dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-        // Calculate the start and end of the current week in user's time zone
         var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
         var endOfWeek = startOfWeek.AddDays(7);
 
@@ -1218,11 +1174,9 @@
         if (timelines != null)
         {
 
-            //experimental
             isRegistered = true;
             List<Message> allAssociatedEmails = new();
             HashSet<string> allAssociatedEmailStrings = new();
-            //Dictionary<string, int> emailCounts = new Dictionary<string, int>();
             foreach (var currentAssociatedEmails in timelines.Select(t => t.associatedEmailAddresses))
             {
                 foreach (var email in currentAssociatedEmails)
@@ -1232,9 +1186,6 @@
             }
 
             var fetchedEmails = await GetEmailsFromAddresses(allAssociatedEmailStrings);
-            foreach(var email in fetchedEmails){
-                Console.WriteLine($"{email.Sender.EmailAddress}");
-            }
             var groupedEmails = (fetchedEmails.Count() == 0 ? null : fetchedEmails.Where(msg => msg.Sender.EmailAddress != null).GroupBy(msg => msg.Sender.EmailAddress.Address).
                 ToDictionary(group => group.Key, group => group.ToList()));
 
@@ -1278,10 +1229,6 @@
 
             allMessages = mailPage?.Value ?? new List<Message>();
             allSenders = new HashSet<string>(allMessages.Select(msg => msg.Sender.EmailAddress.Address));
-            foreach(var s in allSenders)
-            {
-                Console.WriteLine(s);
-            }
 
             fetchingTimelines = false;
 
@@ -1562,7 +1509,6 @@
         HandleDisplayChange();
         StateHasChanged();
 
-        //var response = await backendApiService.updateAssessmentDate(Username, timeline.timelineID, oldDate, newDate.Value);
         var response = await backendApiService.updateAssessments(timeline.assessments, Username, timeline.timelineID);
         int assessmentsIndex2 = -1;
         if (!response)
@@ -1840,7 +1786,6 @@
 
             InvokeAsync(StateHasChanged);
 
-            // Reset the search pending flag
             isSearchPending = false;
         }, null, (int)TimeSpan.FromMilliseconds(300).TotalMilliseconds, -1);
     }
@@ -1849,7 +1794,6 @@
     private void HandleEmailSearchFocus(){
  
         timer = new Timer(500);
-        Console.WriteLine("Focus");
 
         timer.Elapsed += HandleEmailsSearchTest2;
 
@@ -1858,7 +1802,6 @@
 
     private void HandleEmailSearchBlur(){
 
-        Console.WriteLine("Blur");
         emailSearchIsFocused = false;
         timer?.Stop();
         timer?.Dispose();
@@ -1866,15 +1809,12 @@
         private void HandleEmailsSearchTest2(object? sender, ElapsedEventArgs e)
     {
 
-        Console.WriteLine("Searching");
-        Console.WriteLine($"Before loop: {searchValue}");
         if (searchValue is not null && !string.IsNullOrWhiteSpace(searchValue))
         {
             string searchTerm = searchValue.ToLower();
 
             if (searchTerm.Length > 0)
             {
-                Console.WriteLine($"{searchValue}");
                 List<Message> temp = selectedAssociatedEmails.Where(msg => ($"{msg.Sender?.EmailAddress?.Address} {msg.Subject}").ToLower().Contains(searchTerm)).Select(str => str).ToList();
                 if (temp.Count() > 0)
                 {
@@ -1896,7 +1836,6 @@
     private async Task HandleEmailsSearch()
     {
 
-        Console.WriteLine("Searching");
         if (searchValue is not null && !string.IsNullOrWhiteSpace(searchValue))
         {
             string searchTerm = searchValue.ToLower();
@@ -2372,16 +2311,14 @@
                 int startIndex = completion.IndexOf('{');
                 int endIndex = completion.LastIndexOf('}');
                 string jsonString = completion.Substring(startIndex, endIndex - startIndex + 1);
-                Console.WriteLine($"Json string: {jsonString}");
                 AssessmentAIResponse? response = JsonConvert.DeserializeObject<AssessmentAIResponse>(jsonString);
-                Console.WriteLine(response.IsAssessmentInvitation);
                 if (response != null){
                     predictedAssessments.Add(response);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+            ;
             }
             }
             if (predictedAssessments.Count() != 0)
