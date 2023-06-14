@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using GraphSample;
 using GraphSample.Graph;
 using GraphSample.Services;
+using GraphSampleBeta.Graph;
 using GraphSample.ReusableComponents;
 using Microsoft.JSInterop;
 using Blazored.Modal;
@@ -38,6 +39,7 @@ builder.Services.AddMsalAuthentication<RemoteAuthenticationState, RemoteUserAcco
 
 
 builder.Services.AddScoped<GraphClientFactory>();
+builder.Services.AddScoped<GraphClientFactoryBeta>();
 builder.Services.AddScoped<IBackendApiService, BackendApiService>();
 builder.Services.AddScoped<GraphSample.AI.OpenAIService>();
 

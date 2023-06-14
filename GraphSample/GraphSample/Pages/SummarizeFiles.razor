@@ -247,7 +247,7 @@
     //    1.  Return tuple instead for PDF/DOC/ppt to refactor
     //    2. Apply error handling to GetContent so folders not clicked
     //    3. Clean up the AI function too bulky
-    //    4. OneNote button (Angus)
+
 
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
@@ -352,15 +352,15 @@
     }
 
     // Extracts all the text from file
-    private async Task<string> ExtractAllTextAsync(IBrowserFile file)
-    {
-        using var memoryStream = new MemoryStream();
-        await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
-        var document = new GcPdfDocument();
-        document.Load(memoryStream);
-        var text = document.GetText();
-        return text;
-    }
+    //private async Task<string> ExtractAllTextAsync(IBrowserFile file)
+    //{
+    //    using var memoryStream = new MemoryStream();
+    //    await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+    //    var document = new GcPdfDocument();
+    //    document.Load(memoryStream);
+    //    var text = document.GetText();
+    //    return text;
+    //}
 
     public async Task<Stream> ConvertToStream(IBrowserFile file)
     {
