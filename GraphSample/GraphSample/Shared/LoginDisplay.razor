@@ -8,29 +8,31 @@
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
 <style>
-
     .nav-link {
         text-decoration: none;
-        color: #08396F;
+        color: #08396f;
         margin-right: 10px;
         font-size: 1.2rem;
     }
 
-        .nav-link:hover {
-            border-bottom: 2px solid white;
-        }
+    .nav-link:hover {
+        border-bottom: 2px solid #08396f;
+    }
+    .nav-link:active {
+        border-bottom: 2px solid #08396f;
+    }
 
     .navbar-ui {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: white;
-        font-family: 'Alata', sans-serif;
+        color: #fff;
+        font-family: Alata, sans-serif;
         font-weight: 400;
-        border-radius: 0.5rem;
+        border-radius: .5rem;
         padding: 10px 20px;
-        background: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, .8);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, .2);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
@@ -39,8 +41,8 @@
         width: 80px;
         height: 50px;
     }
-
 </style>
+
 
 <AuthorizeView>
     <Authorized>
@@ -94,20 +96,6 @@
                             <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
                         </div>
                     </div>
-                    @* <div class="ms-auto">
-                        <div class="navbar-text me-3">
-                            Welcome @context?.User?.Identity?.Name!
-                        <a class="dropdown-toggle" data-bs-toggle="dropdown" role="button" style="color:black;">
-                            <img src="@(context.User.GetUserGraphPhoto() ?? "/img/no-profile-photo.png")" class="nav-profile-photo rounded-circle align-self-center mr-2">
-                        </a>
-                        </div>
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <h5 class="dropdown-item-text mb-0 white-text">@context?.User?.Identity?.Name</h5>
-                            <p class="dropdown-item-text text-muted mb-0 white-text">@context?.User?.GetUserGraphEmail()</p>
-                            <div class="dropdown-divider"></div>
-                            <button class="dropdown-item white-text" @onclick="BeginLogout">Log out</button>
-                        </div>
-                    </div> *@
                 </div>
             </div>
         </nav>
