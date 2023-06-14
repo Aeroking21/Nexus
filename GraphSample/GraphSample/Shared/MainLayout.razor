@@ -11,21 +11,14 @@
 @using Microsoft.JSInterop
 @using Microsoft.Fast.Components.FluentUI
 
-
 @inject IJSRuntime JSRuntime
-<style>
-    .topgun{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 9999; 
-    }
-</style>
+
+
+
 <div class="page">
     <main>
-        <div class="topgun" >
-        <LoginDisplay />
+        <div class="seperateNavBar">
+            <LoginDisplay />
         </div>
         <br />
         <br />
