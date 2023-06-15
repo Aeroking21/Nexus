@@ -3,7 +3,7 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 9999;
+    z-index: 3;
 }
 
 /*
@@ -180,6 +180,14 @@ $delete2-red: red;
         color: dodgerblue;
     }
 
+    .btn2 > .mdi-send-outline {
+        color: blue;
+    }
+
+    .btn2 > .mdi-close {
+        color: black;
+    }
+
 .btn-delete2 {
     font-size: 16px;
 }
@@ -197,6 +205,16 @@ $delete2-red: red;
     .btn-delete2 > .mdi-reply-all {
         display: none;
         color: dodgerblue;
+    }
+
+    .btn-delete2 > .mdi-send {
+        display: none;
+        color: blue;
+    }
+
+    .btn-delete2 > .mdi-close-outline {
+        display: none;
+        color: red;
     }
 
     .btn-delete2:hover {
@@ -227,12 +245,25 @@ $delete2-red: red;
             display: none;
         }
 
+        .btn-delete2:hover > .mdi-send {
+            display: block;
+        }
+
+        .btn-delete2:hover > .mdi-send-outline {
+            display: none;
+        }
+
+        .btn-delete2:hover > .mdi-close-outline {
+            display: block;
+        }
+
+        .btn-delete2:hover > .mdi-close {
+            display: none;
+        }
+
     .btn-delete2:focus {
         box-shadow: 0px 0px 0px 4px lighten(red, 40%);
     }
-
-
-
 
 .emailGap {
     padding-bottom: 5px;
@@ -309,6 +340,9 @@ $delete2-red: red;
             margin-top:10px;
         }
 
+        .emailReply {
+        }
+
         .emailReply .heading {
             display:flex;
             flex-direction: column;
@@ -320,16 +354,47 @@ $delete2-red: red;
                 margin-bottom: 0px;
             }
             .heading .recipient {
-                margin-bottom: 0px;
+                margin-bottom: 5px;
             }
 
         .emailReply .emailResponseContent{
             width: 100%;
+            display: flex;
         }
 
-        .emailResponseContent .responseBox {
-            width:100%;
-        }
+            .replyDetails {
+                display: flex;
+                justify-content: space-between;
+                padding: 0;
+                border: none;
+                background: none;
+            }
+
+            .replyDetails .replyContent {
+                padding: 0;
+                border: none;
+                background: none;
+            }
+
+            .replyDetails .mdi-close {
+                padding: 0;
+                border: none;
+                background: none;
+                font-size: large;
+            }
+
+
+            .emailResponseContent .mdi-send {
+                padding: 0;
+                border: none;
+                background: none;
+                font-size: large;
+            }
+
+            .emailResponseContent .responseBox {
+                margin-top: 20px;
+                width:100px;
+            }
 /*
 * TEAMS
 */
@@ -463,6 +528,16 @@ $delete2-red: red;
     margin-bottom: 10px;
 }
 
+.teamInteract {
+    display: flex;
+}
+
+.teamMsgInteract {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 /*
 * Chats
 */
@@ -527,6 +602,9 @@ $delete2-red: red;
     }
         .event .subject {
             font-size:large;
+            padding-bottom: 0px;
+            margin-bottom: 0px;
+            text-align: center;
         }
 
         .event .timing {
@@ -542,3 +620,4 @@ $delete2-red: red;
         .event .organiser {
             margin-bottom: 0px;
         }
+

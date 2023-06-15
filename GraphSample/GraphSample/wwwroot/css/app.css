@@ -59,7 +59,7 @@ a, .btn-link {
     left: 0;
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     width: 100%;
-    z-index: 1000;
+    z-index: 1;
 }
 
     #blazor-error-ui .dismiss {

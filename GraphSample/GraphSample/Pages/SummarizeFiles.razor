@@ -10,10 +10,8 @@
 @using Microsoft.Graph
 @using Microsoft.Graph.Models
 @using Microsoft.Graph.Models.ODataErrors
-@using Microsoft.Graph.Models.ODataErrors
 @using Microsoft.Kiota.Abstractions
 @using Microsoft.Kiota.Abstractions.Serialization
-@using Microsoft.Fast.Components.FluentUI
 @using Microsoft.Fast.Components.FluentUI
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
@@ -27,6 +25,7 @@
 
     h3, p {
         padding: 1% 1% 1% 1%;
+
     }
     .containerFiles {
         background-color: rgba(255, 255, 255, 0.3);
@@ -36,15 +35,15 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         height: 86vh;
         width: 96vw;
-        font-family: 'Robota', sans-serif;
+        font-family: 'Pavanam', sans-serif;
     }
 
     .dropdown-contentMGT {
-        max-height: 370px;
+        max-height: 330px;
         overflow-y: scroll;
         max-width: 99%;
-        border: 2px solid orange;
     }
+
     @* make the scroll bar glass *@
        .dropdown-contentMGT::-webkit-scrollbar {
         width: 10px;
@@ -93,11 +92,11 @@
         position: fixed;
         bottom: 20px;
         right: 20px;
-        z-index: 9999;
+        z-index: 3;
     }
 
     .dropzone {
-        border: 3px dashed steelblue;
+        border: 3px dashed gray;
         padding: 3rem;
         display: flex;
         align-items: center;
@@ -108,12 +107,13 @@
         font-size: 1.5rem;
         cursor: pointer;
         position: relative;
+        height: 310px;
     }
 
-        .dropzone:hover {
-            background-color: #f3f3f3;
-            color: #333;
-        }
+    .dropzone:hover {
+        background-color: #f3f3f3;
+        color: #333;
+    }
 
     .sum-btn {
         margin: 10px;
@@ -167,9 +167,10 @@
                         <FluentTab Text="Upload from OneDrive" style="font-size: 18px; padding:20px;" />
                         <FluentTabPanel>
                             <div class="dropzone @dropClass rounded">
-                                <label for="fileInput" type="button" class="btn btn-info"> Browse Files</label>
-                                <InputFile id="fileInput" title="" style="display:none;"
-                                          OnChange="@LoadFile" @ondragenter="HandleDragEnter" @ondragleave="HandleDragLeave" />
+                                <InputFile id="fileInput" multiple title=""
+                                        OnChange="@LoadFile"
+                                        @ondragenter="HandleDragEnter"
+                                        @ondragleave="HandleDragLeave" />
                             </div>
                         </FluentTabPanel>
                         <FluentTabPanel>
@@ -222,11 +223,6 @@
                 {
                     <h3>Summary:</h3>
                     <p>@summary</p>
-                }
-
-                @if (noSummary)
-                {
-                    <p>No summary to write to OneNote yet...</p>
                 }
             </div>
 
@@ -340,6 +336,7 @@
             loadedFile.Add(file);
             fileName = file.Name;
         }
+
         isLoading = false;
         MyFluentDialog!.Hide();
     }

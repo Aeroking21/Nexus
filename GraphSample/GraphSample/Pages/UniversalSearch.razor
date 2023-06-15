@@ -11,7 +11,6 @@
         overflow: scroll;
         max-height: 50vh;
         width: 100%;
-        padding-bottom: 1%;
         background-color: white;
     }
 
@@ -59,6 +58,10 @@
         margin-top: 25%;
     }
 
+    .dropdown-content2{
+        max-width: 100%;
+    }
+
 </style>
 
 <AuthorizeView>
@@ -66,7 +69,7 @@
 
         <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" @onmouseleave="MouseOut">
 
-            <input class="form-control search" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">
+            <input class="form-control" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">
 
             <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
 
@@ -146,7 +149,7 @@
 
     protected void HandleInputFocus()
     {
-        InputStyle = "width:100%;";
+        InputStyle = "width:65vw;";
     }
 
 
