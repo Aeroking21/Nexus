@@ -1,13 +1,20 @@
 @page "/calendar"
 @using System.Security.Authentication
-@using Microsoft.Graph
-@using Microsoft.Graph.Models
 @using TimeZoneConverter
+@using System.IO;
+@using Azure
+@using Azure.AI.OpenAI
+@using System.Text
+@using Microsoft.Graph.Beta
+
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
+
+@inject GraphSampleBeta.Graph.GraphClientFactoryBeta clientFactory
 
 <style>
-     .grid-container {
+    .grid-container {
         display: grid;
         grid-template-columns: 700px 450px;
         grid-template-rows: 500px 500px;
@@ -18,8 +25,8 @@
         height: 70vh;
     }
 
-    
-      @@media (max-width: 850px) {
+
+    @@media (max-width: 850px) {
         .grid-container {
             grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Shrink the grid items */
             grid-template-rows: auto; /* Reset the rows to adjust automatically */
@@ -30,7 +37,7 @@
         }
     }
 
-       .grid-item {
+    .grid-item {
         background-color: rgba(255, 255, 255, 0.3);
         border-radius: 10px;
         padding: 15px;
@@ -46,21 +53,21 @@
         font-family: 'Pavanam', sans-serif;
     }
 
-    .grid-item::-webkit-scrollbar {
-        width: 10px;
-        height: 70%;
-        background-color: transparent;
-        height: calc(100% - 20px);
-    }
+        .grid-item::-webkit-scrollbar {
+            width: 10px;
+            height: 70%;
+            background-color: transparent;
+            height: calc(100% - 20px);
+        }
 
-    .grid-item::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.7);
-        border-radius: 1.5rem;
-    }
+        .grid-item::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 1.5rem;
+        }
 
-    .grid-item::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
+            .grid-item::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(255, 255, 255, 0.9);
+            }
 
     .grid-container .grid-item a {
         color: rgb(0, 0, 0);
@@ -68,15 +75,15 @@
         font-size: 1.5rem;
     }
 
-    .grid-container .grid-item a:hover {
-        color: rgb(0, 0, 0);
-        text-decoration: none;
-    }
+        .grid-container .grid-item a:hover {
+            color: rgb(0, 0, 0);
+            text-decoration: none;
+        }
 
-    .grid-container .grid-item a:active {
-        color: rgb(0, 0, 0);
-        text-decoration: none;
-    }
+        .grid-container .grid-item a:active {
+            color: rgb(0, 0, 0);
+            text-decoration: none;
+        }
 
 
     .calendar-table {
@@ -84,32 +91,32 @@
         text-align: center;
     }
 
-    .calendar-table thead {
-        background-color: rgba(255, 255, 255, 0.5);
-    }
+        .calendar-table thead {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
 
-    .calendar-table .day {
-        margin: 2px;
-        cursor: pointer;
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
+        .calendar-table .day {
+            margin: 2px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.3);
+            /*            border-radius: 10px;*/
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
 
-    .calendar-table td {
-        padding: 30px;
-        vertical-align: middle;
-    }
+        .calendar-table td {
+            padding: 30px;
+            vertical-align: middle;
+        }
 
-    .calendar-table .day:hover {
-        background-color: #A2CFFA;
-    }
+        .calendar-table .day:hover {
+            background-color: #A2CFFA;
+        }
 
-    .calendar-table .day.selected {
-        background-color: #A2CFFA;
-    }
+        .calendar-table .day.selected {
+            background-color: #A2CFFA;
+        }
 
     .event-row:hover {
         background-color: #A2CFFA;
@@ -135,48 +142,61 @@
         padding: 20px;
         width: 400px;
     }
+
+    .event-OnlineMeeting {
+        border: 2px solid green;
+    }
+
+    .dropdown-Calendar {
+        max-height: 95%;
+        overflow: scroll;
+        max-width: 99%;
+        border: 2px solid black;
+        padding: 1% 1% 1% 1%;
+    }
 </style>
+
 
 <AuthorizeView>
     <Authorized>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-            <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-            @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="GetFreeSchedule">Get Free Schedule</button> *@
-            <div id="popupContainer">
-                <div id="popupContent">
-                    <h2 style="color: #0078d4 !important;">Add Event</h2>
-                        <form>
+        <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
+        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="GetFreeSchedule">Get Free Schedule</button> *@
+        <div id="popupContainer">
+            <div id="popupContent">
+                <h2 style="color: #0078d4 !important;">Add Event</h2>
+                <form>
+                    <div class="mb-3">
+                        <label for="subject">Subject</label>
+                        <input @bind="subject" id="subject" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="attendees">Attendees</label>
+                        <input @bind="attendees" id="attendees" class="form-control" />
+                    </div>
+                    <div class="row">
+                        <div class="col">
                             <div class="mb-3">
-                                <label for="subject">Subject</label>
-                                <input @bind="subject" id="subject" class="form-control" />
+                                <label for="start">Start</label>
+                                <input @bind="start" type="datetime-local" id="date" class="form-control" />
                             </div>
+                        </div>
+                        <div class="col">
                             <div class="mb-3">
-                                <label for="attendees">Attendees</label>
-                                <input @bind="attendees" id="attendees" class="form-control" />
+                                <label for="end">End</label>
+                                <input @bind="end" type="datetime-local" id="end" class="form-control" />
                             </div>
-                            <div class="row">
-                                <div class="col">
-                                    <div class="mb-3">
-                                        <label for="start">Start</label>
-                                        <input @bind="start" type="datetime-local" id="date" class="form-control" />
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="mb-3">
-                                        <label for="end">End</label>
-                                        <input @bind="end" type="datetime-local" id="end" class="form-control" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="body">Body</label>
-                                <textarea @bind="body" id="body" class="form-control"></textarea>
-                            </div>
-                            </form>
-                    <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
-                    <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
-                </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="body">Body</label>
+                        <textarea @bind="body" id="body" class="form-control"></textarea>
+                    </div>
+                </form>
+                <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
+                <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
             </div>
+        </div>
         <div class="grid-container">
             <div class="grid-item">
                 <div class="display-month">
@@ -207,7 +227,9 @@
                                         if (item.Date == DateTime.Now.Date)
                                         {
                                             <td class="day text-white" style="background-color: #1b6ec2"
-                                            @onclick="() => getEventsOfSelectedDay(item)"><b>@DayTemplate(item)</b></td>
+                                                @onclick="() => getEventsOfSelectedDay(item)">
+                                                <b>@DayTemplate(item)</b>
+                                            </td>
                                         }
                                         else
                                         {
@@ -236,14 +258,14 @@
                     </table>
                 </div>
             </div>
-                <div class="grid-item">
+            <div class="grid-item">
                 @if (selectedDay.Date == DateTime.Now.Date)
                 {
                     <h2 style="color: #0078d4 !important;">Events for today</h2>
                 }
                 else if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
                 {
-                    
+
                     <h2 style="color: #0078d4 !important;">Events</h2>
                 }
                 else
@@ -273,22 +295,58 @@
                         {
                             @foreach (var e in getEventsOfSelectedDay(selectedDay))
                             {
-                                <tr class="event-row" @onclick=> 
-                                    <td>@e?.Organizer?.EmailAddress?.Name</td>
-                                    <td>@e?.Subject</td>
-                                    <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                    @* <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[0..10]</td> *@
-                                    <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
-                                    @* <td>@FormatIso8601DateTime(e?.End?.DateTime).ToString()[11..16]</td> *@
-                                    <i class="fa fa-trash-o" style="font-size:24px"
-                                    @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
-                                </tr>
+                                if (!(bool)e.IsOnlineMeeting)
+                                {
+                                    <tr class="event-row">
+                                        <td>@e?.Organizer?.EmailAddress?.Name</td>
+                                        <td>@e?.Subject</td>
+                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
+                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+
+                                        <i class="fa fa-trash-o" style="font-size:22px"
+                                           @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                    </tr>
+                                }
+
+                                else
+                                {
+                                    <FluentTooltip Anchor="default3" Position=TooltipPosition.Top Delay=50>
+                                        Didn't attend? Summarize this call
+                                    </FluentTooltip>
+                                    <tr class="event-OnlineMeeting" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
+                                        <td>@e?.Organizer?.EmailAddress?.Name</td>
+                                        <td>@e?.Subject</td>
+                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
+                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+
+                                        <i class="fa fa-trash-o" style="font-size:22px"
+                                           @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                    </tr>
+
+                                }
+
                             }
                         }
                     </tbody>
                 </table>
             </div>
         </div>
+
+
+        <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+            <div class="dropdown-Calendar">
+                @if (string.IsNullOrEmpty(summary))
+                {
+                    <FluentProgressRing></FluentProgressRing>
+                }
+
+                else
+                {
+                    @summary
+                }
+            </div>
+        </FluentDialog>
+
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -297,13 +355,13 @@
 
 @code {
 
-@* --------------------------------------defintiions and calendar ------------------------ *@
+    @* --------------------------------------defintiions and calendar ------------------------ *@
     public class CalendarDay
     {
         public int DayNumber { get; set; }
         public DateTime Date { get; set; }
         public bool IsEmpty { get; set; }
-        public List<Event> dayEvents { get; set; } = new List<Event>();
+        public List<Microsoft.Graph.Beta.Models.Event> dayEvents { get; set; } = new List<Microsoft.Graph.Beta.Models.Event>();
     }
 
     private List<CalendarDay> days = new List<CalendarDay>();
@@ -314,17 +372,20 @@
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private GraphServiceClient? graphClient;
-    public IList<Event> events = new List<Event>();
+    public IList<Microsoft.Graph.Beta.Models.Event> events = new List<Microsoft.Graph.Beta.Models.Event>();
     private string? dateTimeFormat;
     public CalendarDay selectedDay = new CalendarDay();
 
     public string subject { get; set; } = "";
-    private string attendees { get; set; } = string.Empty;    
+    private string attendees { get; set; } = string.Empty;
     private DateTime start = new DateTime(DateTime.Today.Ticks);
     private DateTime end = new DateTime(DateTime.Today.Ticks);
     private string body = string.Empty;
     private string userTimeZone = string.Empty;
-@* ---------------------------------initilaisation ------------------------------------------- *@
+    protected string summary = "";
+    private FluentDialog? MyFluentDialog;
+
+    @* ---------------------------------initilaisation ------------------------------------------- *@
     protected override async Task OnInitializedAsync()
     {
         if (authenticationStateTask == null)
@@ -343,8 +404,8 @@
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
         @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
-        events = eventPage?.Value ?? new List<Event>();
-        
+        events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+
         foreach (var e in events)
         {
             Console.WriteLine(e.ToString());
@@ -383,9 +444,9 @@
 
 
 
-@* -----------------------------building and making calendar ----------------------------------------- *@
+    @* -----------------------------building and making calendar ----------------------------------------- *@
 
-  [Parameter]
+    [Parameter]
     public RenderFragment<CalendarDay> DayTemplate { get; set; } = DefaultDayTemplate;
     private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
     {
@@ -425,12 +486,12 @@
 
             return Enumerable.Range(1, numberOfDaysInMonth)
             .Select(day => new CalendarDay
-                {
-                    DayNumber = day,
-                    IsEmpty = false,
-                    Date = new DateTime(year, month, day),
-                    dayEvents = new List<Event>()
-                })
+            {
+                DayNumber = day,
+                IsEmpty = false,
+                Date = new DateTime(year, month, day),
+                dayEvents = new List<Microsoft.Graph.Beta.Models.Event>()
+            })
             .ToList();
         }
 
@@ -518,7 +579,7 @@
     }
 
     @* --------------------------------------Events ---------------------------------------- *@
-        public async Task<List<Event>> deleteItem(List<Event> e, Event item)
+    public async Task<List<Microsoft.Graph.Beta.Models.Event>> deleteItem(List<Microsoft.Graph.Beta.Models.Event> e, Microsoft.Graph.Beta.Models.Event item)
     {
         e.Remove(item);
         await graphClient.Me.Events[item.Id].DeleteAsync();
@@ -526,15 +587,15 @@
         return e;
     }
 
-    public List<Event> getEventsOfSelectedDay(CalendarDay day)
+    public List<Microsoft.Graph.Beta.Models.Event> getEventsOfSelectedDay(CalendarDay day)
     {
         selectedDay = day;
         return selectedDay.dayEvents;
     }
 
-    public List<Event> getEventsofToday(CalendarDay day)
+    public List<Microsoft.Graph.Beta.Models.Event> getEventsofToday(CalendarDay day)
     {
-        List<Event> eventsOfDay = new List<Event>();
+        List<Microsoft.Graph.Beta.Models.Event> eventsOfDay = new List<Microsoft.Graph.Beta.Models.Event>();
         foreach (var e in events)
         {
             if (((e.Start.DateTime).ToString()[0..10]).Split("-")[0] == ((day.Date).ToString()[0..10]).Split("/")[2] &&
@@ -548,47 +609,48 @@
     }
 
 
-        @* ----------------------------------------Adding Events --------------------------- *@
-    public async Task AddEvent(){
-        var newEvent = new Event
+    @* ----------------------------------------Adding Events --------------------------- *@
+    public async Task AddEvent()
+    {
+        var newEvent = new Microsoft.Graph.Beta.Models.Event
         {
             Subject = subject,
-            Body = new ItemBody
+            Body = new Microsoft.Graph.Beta.Models.ItemBody
             {
-                ContentType = BodyType.Text,
+                ContentType = Microsoft.Graph.Beta.Models.BodyType.Text,
                 Content = body
             },
-            Start = new DateTimeTimeZone
+            Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
             {
                 DateTime = start.ToString("o"),
                 TimeZone = userTimeZone
             },
-            End = new DateTimeTimeZone
+            End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
             {
                 DateTime = end.ToString("o"),
                 TimeZone = userTimeZone
             },
-            Attendees = new List<Attendee>()
+            Attendees = new List<Microsoft.Graph.Beta.Models.Attendee>()
         };
 
         var attendeesArray = attendees.Split(';');
         foreach (var attendee in attendeesArray)
         {
-            newEvent.Attendees.Add(new Attendee
+            newEvent.Attendees.Add(new Microsoft.Graph.Beta.Models.Attendee
             {
-                EmailAddress = new EmailAddress
+                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
                 {
                     Address = attendee.Trim()
                 },
-                Type = AttendeeType.Required
+                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
             });
         }
 
         try
-        {   
+        {
             await graphClient.Me
                 .Events
-                .PostAsync(newEvent);   
+                .PostAsync(newEvent);
             events = await getEvents();
             Console.WriteLine(userTimeZone.ToString());
             subject = "";
@@ -602,8 +664,8 @@
             Console.WriteLine(ex.Message);
         }
     }
-    
-    public async Task<List<Event>> getEvents()
+
+    public async Task<List<Microsoft.Graph.Beta.Models.Event>> getEvents()
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         var eventPage = await graphClient.Me
@@ -612,54 +674,232 @@
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        events = eventPage?.Value ?? new List<Event>();
+        events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
         await LoadCalendar();
         return events.ToList();
     }
 
     @* get free schedule *@
 
-    public async Task GetFreeSchedule(){
+    public async Task GetFreeSchedule()
+    {
         // Code snippets are only available for the latest version. Current version is 5.x
 
-    var graphClient = clientFactory.GetAuthenticatedClient();
-    
-    @* turn this into a string list seperated by commas *@
-    var attendeesArray = attendees.Split(';');
-    var schedulesTemp = new List<string>();
-          foreach (string attendee in attendeesArray)
+        var graphClient = clientFactory.GetAuthenticatedClient();
+
+        @* turn this into a string list seperated by commas *@
+        var attendeesArray = attendees.Split(';');
+        var schedulesTemp = new List<string>();
+        foreach (string attendee in attendeesArray)
+        {
+            schedulesTemp.Add(attendee.Trim());
+        };
+
+
+
+
+        var requestBody = new Microsoft.Graph.Beta.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
+        {
+
+            Schedules = schedulesTemp,
+
+
+            StartTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
             {
-                schedulesTemp.Add(attendee.Trim());
-            };
-
-    
-   
-
-    var requestBody = new Microsoft.Graph.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
-    {
-        @*  I have attendeesArray where the user enters more than 1 attendee seperated by  ";". This is a string. Schedules is a new List<string> how do I adjust for that*@
-            
-        Schedules = schedulesTemp,
-    
-        
-        StartTime = new DateTimeTimeZone
+                DateTime = start.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            EndTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = end.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            AvailabilityViewInterval = 60,
+        };
+        var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
         {
-            DateTime = start.ToString("o"),
-            TimeZone = userTimeZone
-        },
-        EndTime = new DateTimeTimeZone
-        {
-            DateTime = end.ToString("o"),
-            TimeZone = userTimeZone
-        },
-        AvailabilityViewInterval = 60,
-    };
-    var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
+            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+        });
+    }
+
+
+
+    @* ---------------------------------------- AI Transcript Function --------------------------- *@
+
+
+    protected override void OnAfterRender(bool firstRender)
     {
-        requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
-    });
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
+
+
+    private void OnOpen()
+    {
+        MyFluentDialog!.Show();
+    }
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
+
+
+    protected async void GetContent(string meetingLink)
+    {
+        OnOpen();
+        var originalString = "JoinWebUrl eq '1234'";
+        string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
+
+        Console.WriteLine(modifiedLink);
+
+        var me = await graphClient.Me.GetAsync();
+
+        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.Filter = modifiedLink;
+        });
+
+        var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
+
+
+        var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.ToGetRequestInformation();
+        requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
+        requestInformation.QueryParameters.Add("format", "text/vtt");
+        var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+
+        var string2 = ConvertWebVttStreamToString(content2);
+
+        await SummarizeText(string2);
+        StateHasChanged();
+        //Console.WriteLine(summary);
+    }
+
+
+    protected string ConvertWebVttStreamToString(Stream? stream)
+    {
+        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+        {
+            return reader.ReadToEnd();
+        }
+    }
+
+    // Event handler for the "Summarize" button click
+    protected async Task SummarizeText(string content)
+    {
+
+        // Perform summarization until the overall summary is less than 3000 characters
+        var summaries = new List<string>();
+        var overallSummary = "";
+
+        // Split the content into smaller chunks
+        var chunkSize = 750; // Adjust this value as per your model's character limit
+        var chunks = SplitContentIntoChunks(content, chunkSize);
+
+        // Perform summarization for each chunk
+        foreach (var chunk in chunks)
+        {
+            string prompt = $"Provide an executive level summary for the following meeting transcript in detail, assume the person was not able to attend this meeting. Ignore any timestamps and tags:\n\n{chunk}\n";
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+
+            summaries.Add(completion);
+            string finish = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish2);
         }
 
-        
+        // Combine the individual summaries into an overall summary
+        overallSummary = string.Join(" ", summaries);
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        if (overallSummary.Length >= 5000)
+        {
+            summaries.Clear();
+
+            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+
+            summaries.Add(completion);
+            string finish = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish2);
+        }
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        else if (overallSummary.Length <= 500)
+        {
+            summaries.Clear();
+
+            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+
+            summaries.Add(completion);
+            string finish = $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish2);
+        }
+
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+        summary = overallSummary;
+        Console.WriteLine("Generated AI summary");
+
+    }
+
+    // Helper method to split the content into smaller chunks
+    private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
+    {
+        var sentences = content.Split('.', '!', '?');
+        var currentChunk = new StringBuilder();
+
+        foreach (var sentence in sentences)
+        {
+            if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
+            {
+                currentChunk.Append(sentence).Append('.');
+            }
+            else
+            {
+                yield return currentChunk.ToString();
+                currentChunk.Clear().Append(sentence).Append('.');
+            }
+        }
+
+        if (currentChunk.Length > 0)
+        {
+            yield return currentChunk.ToString();
+        }
+    }
+
 
 }
