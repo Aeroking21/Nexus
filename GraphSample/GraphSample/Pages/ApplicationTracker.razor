@@ -2031,8 +2031,9 @@
 
         if (result.Confirmed)
         {
+            timelines.RemoveAll(tl => tl.timelineID == timelineID);
             var response = await backendApiService.removeTimeline(Username, timelineID);
-            if (response)
+            if (!response)
             {
                 timelines = await backendApiService.getUserTimelinesAsync(Username);
                 HandleSortCriterionChange();
