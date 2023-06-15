@@ -31,7 +31,7 @@
                     <div class="groupSettings">
 
                         <div class="nameBox">
-                            <FluentTextField @bind-Value=placename Placeholder="Group Name"></FluentTextField>
+                            <FluentTextField Style="z-index: 20;" @bind-Value=placename Placeholder="Group Name"></FluentTextField>
                         </div>
 
                         <div class="searchBoxes">
@@ -66,12 +66,12 @@
                     </div>
 
                     <div class="groupAdd">
-                        <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add</FluentButton>
+                        <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add Filter</FluentButton>
                     </div>
                 </div>
             </div>
 
-
+          
             <div class="mainContent">
                 <div class="emailTeamsSection">
                     <FluentTabs ActiveId="myActiveId" OnTabChange="HandleOnTabChange">
@@ -435,9 +435,8 @@
             await getMail(mailQuery);
             await getTeams(teamQuery);
             await getChats("hi");
-            await getCal(calQuery);
         }
-        await getCal("hi");
+        await getCal(calQuery);
         StateHasChanged();
     }
 
@@ -708,16 +707,20 @@
         if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
         {
             string searchTerm = args.Value.ToString()!.ToLower();
-            if (searchTerm == "all") { await getMail("All"); StateHasChanged(); }
+            if (searchTerm == "all")
+            {
+                mailQuery = "All";
+                teamQuery = "All";
+                calQuery = "All";
+                await refreshContent(4);
+            }
             else
             {
                 mailQuery = searchTerm.Split(';')[0] + "'";
                 teamQuery = searchTerm.Split(';')[1] + "'";
                 calQuery = searchTerm.Split(';')[2] + "'";
 
-                await getMail(mailQuery);
-
-                StateHasChanged();
+                await refreshContent(4);
             }
         }
     }
@@ -928,4 +931,6 @@
             myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
         }
     }
+
+
 }

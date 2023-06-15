@@ -15,25 +15,11 @@ ul {
 
 .mainContent {
     display: flex;
+    z-index: 25;
 }
 
 .emailTeamsSection {
     width: 85%;
-}
-
-/*
-* Group settings
-*/
-.groupSec {
-    display: flex;
-}
-
-.groupSettings {
-    display: flex;
-}
-
-.addGroup {
-    display: flex;
 }
 
 /*
@@ -621,3 +607,22 @@ $delete2-red: red;
             margin-bottom: 0px;
         }
 
+/*
+* Group settings
+*/
+.groupSec {
+    display: flex;
+}
+
+.groupSettings {
+    display: flex;
+}
+
+.addGroup {
+    display: flex;
+}
+
+.testing1 {
+    position: absolute;
+    z-index: 99;
+}
