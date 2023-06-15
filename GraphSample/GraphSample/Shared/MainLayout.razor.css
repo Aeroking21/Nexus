@@ -13,8 +13,9 @@
     /* put this search bar in line with the nav bar */
     position: fixed;
     top: 20px;
-    left: 11rem;
+    left: 12rem;
     z-index: 4;
+
 }
 
 .seperateNavBar {
