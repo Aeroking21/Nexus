@@ -14,28 +14,10 @@
         background-color: white;
     }
 
-    .dropdown-content::-webkit-scrollbar {
-        width: 10px;
-        height: 70%;
-        background-color: transparent;
-        height: calc(100% - 20px);
-        padding-left: 7px;
-    }
-
-    .dropdown-content::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.7);
-        border-radius: 1.5rem;
-    }
-
-    .dropdown-content::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
 
     .dropdown-content div {
         width: 98%;
-        margin-top: 1%;
-        margin-bottom: 1%;
-        margin-left: 1%;
+        margin: 1% 1% 1% 1%;
         box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
         border-radius: 0.25rem;
         height: 80px;
@@ -73,7 +55,7 @@
             <div class="dropdown-content2">
 
                 @*<input class="form-control" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">*@
-                <FluentSearch @bind-Value=searchValue placeholder="Search" @oninput="HandleInput" @onkeypress="HandleKeyPress"></FluentSearch>
+                <FluentSearch @bind-Value=searchValue placeholder="Search" @oninput="HandleInput" @onkeypress="HandleKeyPress" Style="width:100%;"></FluentSearch>
 
                 <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
 
@@ -130,7 +112,7 @@
         </FluentDialog>
 
 
-        <FluentButton Appearance=Appearance.Accent @onclick="OnOpen">Open dialog</FluentButton>
+        <i class="fa-solid fa-magnifying-glass fa-xl" style="color: #08396f;" @onclick="OnOpen"></i> 
     </Authorized>
 
     <NotAuthorized>
