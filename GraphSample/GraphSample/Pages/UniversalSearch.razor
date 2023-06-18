@@ -67,63 +67,70 @@
 <AuthorizeView>
     <Authorized>
 
-        <div class="dropdown-content2" style="@InputStyle" @onclick="HandleInputFocus" @onmouseleave="MouseOut">
 
-            <input class="form-control" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">
+        <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true TrapFocus=true @ondialogdismiss=OnDismiss>
 
-            <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
+            <div class="dropdown-content2">
 
-            <div class="dropdown-content" style="@DropDownStyle">
+                @*<input class="form-control" type="search" placeholder="Search" bind-Value="searchValue" @oninput="HandleInput" @onkeypress="HandleKeyPress">*@
+                <FluentSearch @bind-Value=searchValue placeholder="Search" @oninput="HandleInput" @onkeypress="HandleKeyPress"></FluentSearch>
 
-                @if (data_response.Count == 0)
-                {
-                    <div style="background-color: white;"> Nothing Found </div>
-                }
+                <FluentProgressRing class="ProgressRing" style="@ProgressStyle"></FluentProgressRing>
 
-                else
-                {
-                    @foreach (var data in data_response)
+                <div class="dropdown-content" style="@DropDownStyle">
+
+                    @if (data_response.Count == 0)
                     {
-                        <a href="@data.Url" target="_blank">
-                            <div>
-                                @if (data.App == "Outlook")
-                                {
-                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
-                                         width="32"
-                                         height="32"
-                                         alt="Outlook" />
-                                }
-                                else if (data.App == "Teams")
-                                {
-                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
-                                         width="32"
-                                         height="32"
-                                         alt="Teams" />
-                                }
-                                else
-                                {
-                                    <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
-                                         width="32"
-                                         height="32"
-                                         alt="OneDrive" />
-                                }
-
-                                @data.Sender
-                                @data.Title
-
-                            </div>
-
-
-                        </a>
-
+                        <div style="background-color: white;"> Nothing Found </div>
                     }
-                }
 
+                    else
+                    {
+                        @foreach (var data in data_response)
+                        {
+                            <a href="@data.Url" target="_blank">
+                                <div>
+                                    @if (data.App == "Outlook")
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Outlook" />
+                                    }
+                                    else if (data.App == "Teams")
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/teams_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="Teams" />
+                                    }
+                                    else
+                                    {
+                                        <img src="https://res-1.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/onedrive_32x1.svg"
+                                             width="32"
+                                             height="32"
+                                             alt="OneDrive" />
+                                    }
+
+                                    @data.Sender
+                                    @data.Title
+
+                                </div>
+
+
+                            </a>
+
+                        }
+                    }
+
+
+                </div>
 
             </div>
+        </FluentDialog>
 
-        </div>
 
+        <FluentButton Appearance=Appearance.Accent @onclick="OnOpen">Open dialog</FluentButton>
     </Authorized>
 
     <NotAuthorized>
@@ -146,20 +153,63 @@
     private GraphServiceClient? graphClient;
     private List<Author> data_response = new List<Author>();
 
+    private FluentDialog? MyFluentDialog;
+    private string? status;
 
-    protected void HandleInputFocus()
+    protected override void OnAfterRender(bool firstRender)
     {
-        InputStyle = "width:65vw;";
+        if (firstRender  && MyFluentDialog != null)
+            MyFluentDialog!.Hide();
+    }
+
+    protected void OnInitialized(bool firstRender)
+    {
+        if (MyFluentDialog != null)
+            MyFluentDialog!.Hide();
+    }
+
+    private void OnOpen()
+    {
+        status = "Dialog opened with button click";
+        MyFluentDialog!.Show();
+    }
+
+    public void OnClose()
+    {
+        status = $"Dialog dismissed with reason: Close button clicked";
+        MyFluentDialog!.Hide();
+
+    }
+
+    public void CloseDialog()
+    {
+        OnClose();
     }
 
 
-    protected void MouseOut()
+    private void OnDismiss(DialogEventArgs args)
     {
-        Console.WriteLine("mouse outside");
-        InputStyle = "";
-        data_response.Clear();
-        ToggleDropdown(false);
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            status = $"Dialog dismissed with reason: Dismissed";
+            MyFluentDialog!.Hide();
+        }
     }
+
+
+    //protected void HandleInputFocus()
+    //{
+    //    InputStyle = "width:65vw;";
+    //}
+
+
+    //protected void MouseOut()
+    //{
+    //    Console.WriteLine("mouse outside");
+    //    InputStyle = "";
+    //    data_response.Clear();
+    //    ToggleDropdown(false);
+    //}
 
     protected void ToggleDropdown(bool visibility)
     {
