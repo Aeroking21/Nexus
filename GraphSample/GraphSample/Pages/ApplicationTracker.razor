@@ -160,7 +160,12 @@
                                                                     <button class="action-item" @onclick="() => { HandleEmailAutofill(timeline); }">
                                                                         Autofill Email Addresses
                                                                     </button>
-                                                                    <button class="action-item" @onclick=" async () => { await AutofillAssessments(timeline); }">
+                                                                    <button class="action-item" @onclick=" async () => { 
+                                                                        if (!fillingAssessments || (!fillingAssessmentsTimelines.Exists(tlID => tlID == timeline.timelineID)))
+                                                                        {
+                                                                        await AutofillAssessments(timeline); 
+                                                                        }
+                                                                        }">
                                                                         Autofill Assessments
                                                                     </button>
                                                                 </div>
@@ -206,8 +211,8 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style="width: 15% !important;" class="@((timeline.archived == true) ? "archived" : "")"> 
-                                                        @if (!fillingAssessments || (timeline.timelineID != fillingAssessmentsTimeline))
+                                                    <td style="width: 15% !important;" class="@((timeline.archived == true) ? "archived" : "")">
+                                                        @if (!fillingAssessments || (!fillingAssessmentsTimelines.Exists(tlID => tlID == timeline.timelineID)))
                                                         {
                                                             <span class="add-button" @onclick="() => ShowAddAssessmentModal(timeline)"><FluentIcon Name="@FluentIcons.AddSquare" Color="@Color.Success" Variant="@IconVariant.Filled"></FluentIcon></span>
                                                         }
@@ -215,7 +220,7 @@
                                                         {
                                                             <div style="height: 75px !important; display: flex; justify-content: center; align-items: center;">
                                                             @* <FluentProgressRing style="width:35px; height: 35px !important; margin-top: 20; margin-bottom: 20;"></FluentProgressRing>  *@
-                                                            <FluentProgressRing Min="0" Max="100" Value="@(autofillProgress.ToString())" style="width: 32px; height: 32px;">
+                                                            <FluentProgressRing Min="0" Max="100" Value="@((autofillProgresses.ContainsKey(timeline.timelineID)) ? (autofillProgresses[timeline.timelineID].ToString()) : 0.ToString())" style="width: 32px; height: 32px;">
                                                             </FluentProgressRing>
                                                             </div>
                                                         }
@@ -1123,6 +1128,8 @@
 
     private int autofillProgress;
 
+    private Dictionary<int , int> autofillProgresses = new () {};
+
     private IList<TodoTaskList> toDos = new List<TodoTaskList>();
     Dictionary<string, string> TaskLists = new Dictionary<string, string>();
     private string selectedList = "Tasks";
@@ -1134,6 +1141,8 @@
     private bool fillingAssessments = false;
 
     private int fillingAssessmentsTimeline = -1;
+
+    private List<int> fillingAssessmentsTimelines = new List<int>(){};
 
     private string Username;
     private bool isRegistered;
@@ -2126,7 +2135,9 @@
     {
 
         fillingAssessments = true;
-        fillingAssessmentsTimeline = timeline.timelineID;
+        //fillingAssessmentsTimeline = timeline.timelineID;
+        expandActions = false;
+        fillingAssessmentsTimelines.Add(timeline.timelineID);
         HashSet<string> allAssociatedEmailStrings = new();
         List<Message>? fetchedEmails = new();
         
@@ -2155,7 +2166,8 @@
         string prompt;
         List<AssessmentAIResponse> predictedAssessments = new();
         bool assessmentsUpdated = false;
-        autofillProgress = 0; 
+        //autofillProgress = 0;
+        autofillProgresses[timeline.timelineID] = 0;
         int emailCount = selectedAssociatedEmails.Count();
         int counter = 0;
 
@@ -2223,7 +2235,7 @@
                 }
                 counter += 100;
                 autofillProgress = (counter/emailCount);
-                Console.WriteLine(autofillProgress);
+                autofillProgresses[timeline.timelineID] = (counter/emailCount);
                 StateHasChanged();
             }
 
@@ -2244,7 +2256,9 @@
 
                 }
             fillingAssessmentsTimeline = -1;
-            autofillProgress = 0;
+            fillingAssessmentsTimelines.Remove(timeline.timelineID);
+            //autofillProgress = 0;
+            autofillProgresses[timeline.timelineID] = 0;
             fillingAssessments = false;
     }
 
@@ -2410,7 +2424,6 @@
 
             return result?.Value;
         }
-
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
