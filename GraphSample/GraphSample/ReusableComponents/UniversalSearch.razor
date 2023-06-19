@@ -172,8 +172,7 @@
 
     protected void OnInitialized(bool firstRender)
     {
-        if (MyFluentDialog != null)
-            MyFluentDialog!.Hide();
+        OnClose();
     }
 
     private void OnOpen()
@@ -185,7 +184,8 @@
     public void OnClose()
     {
         status = $"Dialog dismissed with reason: Close button clicked";
-        MyFluentDialog!.Hide();
+        if (MyFluentDialog != null)
+            MyFluentDialog!.Hide();
 
     }
 
