@@ -24,7 +24,7 @@
         <br />
         <br />
         <div class="outerSearch">
-            <GraphSample.Pages.UniversalSearch @ref="NavBarSearch" />
+            <GraphSample.ReusableComponents.UniversalSearch @ref="NavBarSearch" />
         </div>
 
         <article class="content px-4">
@@ -43,7 +43,7 @@
     protected string? AccessToken { get; private set; }
     public int count = 0;
     public System.Security.Claims.ClaimsPrincipal user { get; set; }
-    GraphSample.Pages.UniversalSearch NavBarSearch;
+    GraphSample.ReusableComponents.UniversalSearch NavBarSearch;
 
     [JSInvokable]
     private async Task<String> GetAccessToken()
