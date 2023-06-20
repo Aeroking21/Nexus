@@ -39,20 +39,24 @@
             <h1 style="margin-left: 10px; margin-top: 10px;">Application Dashboard</h1>
             <button class="add-timeline-button" @onclick="() => ShowAddTimelineModal()">Add Application</button>
             <span class="sorting-select">
-                <span>Sort by:</span>
-                <select @bind="sortingCriterion" @oninput="(args) => { sortingCriterion = Enum.Parse<SortingCriteria>(args.Value.ToString()); HandleSortCriterionChange(); }">
-                    @foreach (SortingCriteria criterion in Enum.GetValues(typeof(SortingCriteria)))
-                        {
-                        <option value="@criterion">@criterion.ToString().Replace("_", " ")</option>
-                        }
-                </select>
-                <span>Select Display Mode:</span>
-                <select @bind="displayMode" @oninput="(args) => { displayMode = Enum.Parse<DisplayMode>(args.Value.ToString()); HandleDisplayChange(); }"> 
-                    @foreach (DisplayMode mode in Enum.GetValues(typeof(DisplayMode)))
-                        {
-                        <option value="@mode">@mode.ToString().Replace("_", " ")</option>
-                        }
-                </select>
+                <div class="mode-selection-inline">
+                    <span>Sort by:</span>
+                    <select @bind="sortingCriterion" @oninput="(args) => { sortingCriterion = Enum.Parse<SortingCriteria>(args.Value.ToString()); HandleSortCriterionChange(); }">
+                        @foreach (SortingCriteria criterion in Enum.GetValues(typeof(SortingCriteria)))
+                            {
+                            <option value="@criterion">@criterion.ToString().Replace("_", " ")</option>
+                            }
+                    </select>
+                </div>
+                <div class="mode-selection-inline">
+                    <span>Select Display Mode:</span>
+                    <select @bind="displayMode" @oninput="(args) => { displayMode = Enum.Parse<DisplayMode>(args.Value.ToString()); HandleDisplayChange(); }"> 
+                        @foreach (DisplayMode mode in Enum.GetValues(typeof(DisplayMode)))
+                            {
+                            <option value="@mode">@mode.ToString().Replace("_", " ")</option>
+                            }
+                    </select>
+                </div>
             </span>
         </div>
             <div class="outer-container">
@@ -1007,13 +1011,18 @@
     }
 
     .sorting-select {
-        height: 40px;
+        height: fit-content;
         padding: 5px 10px;
         color: white;
         border-radius: 3px;
         border: 1px none;
         margin-left: 20px;
         color: black;
+        overflow: hidden;
+    }
+
+    .mode-selection-inline {
+        display: inline-block;
     }
 
     .left-table {
