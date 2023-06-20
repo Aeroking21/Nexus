@@ -399,10 +399,7 @@
         var dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
         var eventPage = await graphClient.Me
             .Calendar.Events
-            .GetAsync(config =>
-            {
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
-            });
+            .GetAsync();
         @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
         events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
 
@@ -670,10 +667,7 @@
         graphClient = clientFactory.GetAuthenticatedClient();
         var eventPage = await graphClient.Me
             .Calendar.Events
-            .GetAsync(config =>
-            {
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
-            });
+            .GetAsync();
         events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
         await LoadCalendar();
         return events.ToList();
