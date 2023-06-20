@@ -184,18 +184,18 @@
                                 <div class="teamsBar">
                                     @foreach (var team in myTeams)
                                     {
-                                        <div class="teamsSelectBox" @onclick="() => ToggleTeam(team)">
+                                        <button class="teamsSelectBox" @onclick="() => ToggleTeam(team)">
                                             <div class="teamName">&nbsp;@team?.DisplayName</div>
-                                        </div>
+                                        </button>
                                     }
                                 </div>
 
                                 <div class="channelBar">
                                         @foreach (var channel in myChannels)
                                         {
-                                            <div class="channelSelectBox" @onclick="() => {ToggleChannel(channel); displayChannelData(); }">
+                                            <button class="channelSelectBox" @onclick="() => {ToggleChannel(channel); displayChannelData(); }">
                                                 <div class="channelName">&nbsp;@channel?.DisplayName</div>
-                                            </div>
+                                            </button>
                                         }
                                 </div>
 
