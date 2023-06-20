@@ -16,7 +16,7 @@
             <link rel="stylesheet" href="~/@(nameof(GraphSample)).styles.css" />
 
             <div class="groupSec">
-                <div class="seeGroups">
+                <div class="seeGroups" style="margin-top: 10px;">
                     <FluentSelect Id="state" name="state" TOption="GroupItem" @onchange="UpdateGroup" @bind-Value="selectedGroupValue">
                         <FluentOption Selected="true" Value="@null">All</FluentOption>
                         @foreach (var group in myGroups)
@@ -30,11 +30,11 @@
                 <div class="addGroup">
                     <div class="groupSettings">
 
-                        <div class="nameBox">
+                        <div class="nameBox" style="margin: 10px;">
                             <FluentTextField Style="z-index: 20;" @bind-Value=placename Placeholder="Group Name"></FluentTextField>
                         </div>
 
-                        <div class="searchBoxes">
+                        <div class="searchBoxes" style="margin:10px;">
                             <FluentSearch @ref=mailSearchTest
                                           @oninput=handleMailSearchInput
                                           @onchange=handleMailSearchInput
@@ -44,7 +44,7 @@
                             <FluentListbox Items=@mailResults TOption="string" SelectedOptionChanged="@(e => mailListValue = (e != defaultResultsText ? e : string.Empty) )" />
                         </div>
 
-                        <div class="searchBoxes">
+                        <div class="searchBoxes" style="margin: 10px;">
                             <FluentSearch @ref=teamSearchTest
                                           @oninput=handleTeamSearchInput
                                           @onchange=handleTeamSearchInput
@@ -54,7 +54,7 @@
                             <FluentListbox Items=@teamResults TOption="string" SelectedOptionChanged="@(e => teamNameValue = (e != defaultResultsText ? e : string.Empty) )" />
                         </div>
 
-                        <div class="searchBoxes">
+                        <div class="searchBoxes" style="margin: 10px;">
                             <FluentSearch @ref=calSearchTest
                                           @oninput=handleCalSearchInput
                                           @onchange=handleCalSearchInput
@@ -65,7 +65,7 @@
                         </div>
                     </div>
 
-                    <div class="groupAdd">
+                    <div class="groupAdd" style="margin: 10px;">
                         <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add Filter</FluentButton>
                     </div>
                 </div>
