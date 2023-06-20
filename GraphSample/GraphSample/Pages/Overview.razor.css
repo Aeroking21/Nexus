@@ -21,6 +21,12 @@ ul {
     width: 85%;
 }
 
+@media only screen and (max-width: 768px) {
+    .emailTeamsSection {
+        width: 100%;
+    }
+}
+
 /*
 * EMAILS
 */
@@ -33,6 +39,12 @@ ul {
     height: 100%;
     width: 25%;
     overflow-y: scroll;
+}
+
+@media only screen and (max-width: 768px) {
+    .emailBar {
+        width: 50%;
+    }
 }
 
 
@@ -275,6 +287,12 @@ $delete2-red: red;
     margin-top: 5px;
 }
 
+@media screen and (max-width: 768px) {
+    .emailDisplay {
+        font-size: small;
+    }
+}
+
 /* make scrollbar glassmorphism */
 .emailDisplay::-webkit-scrollbar {
     width: 10px;
@@ -431,6 +449,12 @@ $delete2-red: red;
     padding-top: 5px;
 }
 
+@media only screen and (max-width: 600px) {
+    .teamsBar {
+        width: 30%;
+    }
+}
+
 .teamsSelectBox {
     width: 100%;
     font-family: 'Pavanam', sans-serif;
@@ -517,9 +541,10 @@ $delete2-red: red;
     overflow-y: scroll;
     display: flex;
     flex-direction: column-reverse;
-
     margin-left: 10px;
 }
+
+
 
 /* make scroll bar glassmorphism */
 .teamChatBar::-webkit-scrollbar {
@@ -622,6 +647,11 @@ $delete2-red: red;
     height: 100%;
     margin-left: 0px;
     padding-top: 5px;
+}
+@media only screen and (max-width: 600px) {
+    .mypChats {
+        width: 30%;
+    }
 }
 
 .chatSelectBox {
