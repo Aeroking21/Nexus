@@ -724,6 +724,7 @@ $delete2-red: red;
 @media only screen and (max-width: 600px) {
     .groupSec {
         flex-direction: column;
+        width: 100%;
     }
 }
 
@@ -731,6 +732,17 @@ $delete2-red: red;
     display: flex;
 }
 
+@media (max-width: 600px) {
+    .groupSettings {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .searchBoxes {
+      margin-bottom: 10px;
+    }
+  }
+  
 .addGroup {
     display: flex;
 }
