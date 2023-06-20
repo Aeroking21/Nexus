@@ -431,7 +431,9 @@
                                         <span style="position: absolute; right: 120px;">@selectedEmail.ReceivedDateTime?.DateTime.ToString("ddd, dd MMM, yyyy HH:mm")</span>
                                     </div>
                                     <div class="right-emails-scrollable-div" style="background-color: white">
-                                        @((MarkupString)selectedEmail.Body.Content)
+                                        <div class="email-body">
+                                            @((MarkupString)selectedEmail?.Body?.Content)
+                                        </div>
                                     </div>    
                                 </div>
                             }
@@ -691,6 +693,17 @@
         border-radius: 0 0 3px 3px;
         overflow-y: scroll;
         height: 72vh !important;
+    }
+
+    .email-body {
+        word-wrap: break-word;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 15px;
+    }
+
+    .email-body tr {
+        border-bottom: 0px solid grey;
     }
 
     .calendar-column {
