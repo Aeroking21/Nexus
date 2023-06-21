@@ -129,14 +129,12 @@
 
                         @foreach (var key in messages)
                         {
-
                             <div class="right-bubble">
                                 @key
                             </div>
 
                             @if (mesReply[key].Length < 1)
                             {
-
                                 <div class="left-bubble typing">
                                     Typing....
                                 </div>
@@ -263,6 +261,7 @@
             {
                 throw new ArgumentNullException(nameof(item));
             }
+            // get the id of the list called "Tasks" for Todo func
             if (item.DisplayName == "Tasks"){
                 selectedList = item.Id;
             }
@@ -272,14 +271,14 @@
     private void HandleInput(ChangeEventArgs e)
     {
         value3 = e.Value.ToString();
-        Console.WriteLine("hi enter");
+        // Console.WriteLine("hi enter");
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            // call the async function from here;
+            // call the async function from here
             await AddMessage();
             Console.WriteLine("Entered: " + value3);
         }
@@ -297,19 +296,14 @@
         string temp = value3;
         value3 = "";
         StateHasChanged();
-        //reply = "Hello World";
-        //Console.Write("Entered: " + temp);
+
+        // switch between modes for chatbot
         if (Todo){
             Console.Write("Entered: " + temp);
             await ConvertTasks(temp);
             reply = "Your To Do List has been updated";
             Todo = false;
         }
-        /* else if (Weather){
-            await GetWeather();
-            reply = weatherReply;
-            Weather = false;
-        } */
         else{
             await AIAnswer(temp);
         }
@@ -342,17 +336,15 @@
         creating = true;    
         Console.WriteLine("Entered: " + textValue);
         textValue = textValue + " |||";
-        //string completion = "+10:00 - 11:00> Reply to emails +11:00 - 12:00> Schedule a meeting +12:00 - 12:30> Grab morning coffee +12:30 - 13:30> Meet colleague at cafe for lunch +19:00 - 20:00> Meet friend for dinner"; *@
         string prompt = $"Can you create a to-do list including a suitable start time in the form of hh:mm for today according to my plan/plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise, the plans list ends with '|||' : \n {textValue}";
         Console.Write($"Input: {prompt}\n");
 
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
         var completion = completionsResponse.Value.Choices[0].Text;
-        //string completion = "+06:00 > Grab morning coffee +08:00 > Reply to emails +12:00 > Meet colleague at cafe for lunch +18:00 > Meet friend for dinner +20:00 > Schedule meeting with someone in Toronto";
         Console.WriteLine(completion);
         todolist = completion.Split("\n");
-        //todolist = completion.Split("+");
 
+        // Parse the list of AI generated tasks and times
         foreach (string todo in todolist)
         {
             if (todo.Contains("+") && todo.Contains(">"))
@@ -382,14 +374,17 @@
     private async Task GetWeather(){
         HttpClient client = new HttpClient();
 
+        //Get IP address of user
         var ip = await client.GetStringAsync("https://api.ipify.org");
         
         string myIP = ip.ToString();
         
+        //Get location of user from IP address
         var loc = await client.GetStringAsync("https://api.ipgeolocation.io/ipgeo?apiKey=128faba391e648aba00fcf3acda914e3&ip="+ myIP);
         
         dynamic locationUser = JsonConvert.DeserializeObject(loc);
 
+        //Get weather data from location of user
         var response = await client.GetAsync("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"+ locationUser.city +"?key=SWMLUUAV7UHPW5NZ6ZQQNK2G6");
 
         response.EnsureSuccessStatusCode(); // Throw an exception if error
@@ -398,7 +393,7 @@
 
         dynamic weather = JsonConvert.DeserializeObject(weatherData);
 
-
+        // Get most recent weather conditions
         string weather_date = weather.days[0].datetime;
         string weather_desc = weather.days[0].description;
         string weather_tmaxF = weather.days[0].tempmax;
@@ -406,17 +401,14 @@
         string weather_tminF = weather.days[0].tempmin;
         string weather_tminC = FarenheitToCelsius(weather_tminF);
 
-
+        // Construct weather reply
         weatherReply = "The date is " + weather_date + " \nGeneral conditions: " +  weather_desc + "\nThe high temperature will be " +  weather_tmaxC + " ºC\nThe low temperature will be: " +  weather_tminC + " ºC" ;
-
-
-       //weatherReply = "General conditions: " +  weather_desc + "\nThe high temperature will be " +  weather_tmax + "\nThe low temperature will be: " +  weather_tmin ;
     }
 
 
     private async Task SendToDo(string todoTasks, string todoStart){
-        Console.WriteLine(todoStart);
-        Console.WriteLine("Sending");
+        // Console.WriteLine(todoStart);
+        // Console.WriteLine("Sending");
         DateTime now = DateTime.UtcNow.Date; // Get the current date in UTC
 
         // Split the time string into hours and minutes
@@ -433,6 +425,7 @@
             TimeZone = TimeZoneInfo.Local.Id
         };
 
+        // Create request to send to MS Todo using Graph API
         var requestBody = new TodoTask
         {
             Title = todoTasks,
@@ -441,8 +434,7 @@
 
         var todoTask = await graphClient.Me.Todo.Lists[selectedList].Tasks
             .PostAsync(requestBody);
-        Console.WriteLine("Sent");
-
+        //Console.WriteLine("Sent");
     }
 
 
@@ -452,23 +444,11 @@
         //Given this question respond in a chatgpt like manner and don't take up a real human persona:
         //string agenda = "Wake up, make my bed and eat breakfast";
         //string prompt = $"Can you create a to-do list including start time in the form of hh:mm for today according to my plans below, it is not always written in chronological order. List each todo task with a ‘+’ where the time is written first and the task is written next to it, separated by ‘>’ and rewrite some tasks to make them clearer and more precise: \n {textValue}";
-
+        
+        // For general chatting
         string prompt = "Given this question respond in a chatgpt like manner and don't take up a real human persona: " + input;
         
         Console.Write($"Input: {prompt}\n");
-
-
-/*
-        CompletionsOptions options = new CompletionsOptions
-        {
-            Temperature = 0.1f, // Controls the randomness of the generated completion (0.0 - 1.0)
-            //Prompts = new[] { prompt },
-        };
-
-        foreach (var item in options.Prompts){
-            Console.WriteLine("HERE:");
-            Console.WriteLine(item);
-        }*/
 
         var completionsResponse = await openAIService.client.GetCompletionsAsync(openAIService.engine, prompt);
         var completion = completionsResponse.Value.Choices[0].Text;

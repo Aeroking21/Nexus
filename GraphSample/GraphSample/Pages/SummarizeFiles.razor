@@ -45,7 +45,7 @@
     }
 
     @* make the scroll bar glass *@
-       .dropdown-contentMGT::-webkit-scrollbar {
+    .dropdown-contentMGT::-webkit-scrollbar {
         width: 10px;
         height: 70%;
         background-color: transparent;
@@ -178,7 +178,6 @@
                                 @foreach (var file in data_response)
                                 {
                                     string npath = path + file.Id;
-
                                     <mgt-file file-query="@npath" @onclick="() => GetContent(file.Id, file.Name)"></mgt-file>
                                 }
                             </div>
@@ -346,12 +345,10 @@
     // Can do regex to check if path is folder
     protected void GetContent(string path, string name)
     {
-
         Console.WriteLine("Clicked on: " + path);
         itemId = path;
         fileName = name;
         MyFluentDialog!.Hide();
-
     }
 
     public async Task<Stream> ConvertToStream(IBrowserFile file)

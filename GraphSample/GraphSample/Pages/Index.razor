@@ -329,6 +329,7 @@
 
 <AuthorizeView>
     <Authorized>
+        @* Get time to greet users *@
         @if (DateTime.UtcNow.Hour >= 6 && DateTime.UtcNow.Hour < 11)
         {
             var name = context?.User?.Identity?.Name;
@@ -373,8 +374,8 @@
                         string mailId = mail.Id;
                         string url = "overview/mailid=" + mailId;
                         <a href=@url>
-                            @* link to the *@
-                            <div class="email" href="https://localhost:7067/overview/menu">
+                            @* !!!!! link to the !!!!!*@
+                            <div class="email" href="https://localhost:7067/overview/menu"> 
                                 @if (mail.Subject.Length != 0)
                                 {
                                     <h3>@mail.Subject</h3>
@@ -482,92 +483,18 @@
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
         await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
-        //await RerunToDo();
-        //await RerunCal();
         await RerunEmail();
         await BeginTeams();
     }
 
-    public async Task BeginToDos()
-    {
-        if (count > 0)
-        {
-            var toDoList = await graphClient.Me.Todo.Lists.GetAsync(
-            config =>
-            {
-                config.QueryParameters.Top = 5;
-            }
-            );
-            toDos = toDoList?.Value ?? new List<TodoTaskList>();
-            foreach (var item in toDos)
-            {
-                if (item == null)
-                {
-                    throw new ArgumentNullException(nameof(item));
-                }
-                var resultTasks = await graphClient.Me.Todo.Lists[item.Id].Tasks.GetAsync();
-                var key = item.DisplayName + "|" + item.Id;
-                TaskLists[key] = resultTasks;
-            }
-        }
-    }
-
-    public async Task RerunToDo()
-    {
-        await BeginToDos();
-    }
-
-    public async Task BeginCal()
-    {
-        if (count > 0)
-        {
-            userTimeZone = user.GetUserGraphTimeZone() ?? "UTC";
-
-            if (authenticationStateTask == null)
-            {
-                throw new AuthenticationException(
-                "Unable to access authentication state");
-            }
-            var graphTimeZone = user.GetUserGraphTimeZone();
-            dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-            DateTime currentDate = DateTime.Now.Date;
-            DateTime nextDay = currentDate.AddDays(1).Date;
-            DateTime endDateTime = nextDay.AddSeconds(-1);
-
-            var eventPage = await graphClient.Me
-            .CalendarView
-            .GetAsync(config =>
-            {
-                // Send user time zone in request so date/time in
-                // response will be in preferred time zone
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{graphTimeZone}\"");
-                // Specifies the start and end of the view on the calendar
-                // Translates to: ?startDateTime=""&endDateTime=""
-                config.QueryParameters.StartDateTime = currentDate.ToString("o");
-                config.QueryParameters.EndDateTime = endDateTime.ToString("o");
-                // Get max 50 per request
-                config.QueryParameters.Top = 50;
-                // Only return fields app will use
-                config.QueryParameters.Select = new[] { "subject", "organizer", "start", "end" };
-                // Order results chronologically
-                config.QueryParameters.Orderby = new[] { "start/dateTime" };
-            });
-
-            events = eventPage?.Value ?? new List<Event>();
-        }
-    }
-
-    public async Task RerunCal()
-    {
-        await BeginCal();
-    }
     public async Task BeginEmail()
     {
-        // Get the user
+        // Get the user emails
         if (count > 0)
         {
-            await Task.Delay(1000);
             var graphTimeZone = user.GetUserGraphTimeZone();
+            Console.WriteLine("graphTimeZone");
+            Console.WriteLine(graphTimeZone);
             dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
 
             //Get mail from inbox
@@ -587,61 +514,28 @@
 
     public async Task RerunEmail()
     {
-        await BeginEmail();
-        StateHasChanged();
-    }
+        while (true)
+        {
+            await BeginEmail();
 
-    public async Task CompleteTask(string ListId, string TaskId)
-    {
+            StateHasChanged();
+            
+            // Wait 30 seconds before running again
+            await Task.Delay(TimeSpan.FromSeconds(30));
+        }
 
-        var requestBody = new TodoTask
-            {
-                Status = Microsoft.Graph.Models.TaskStatus.Completed
-            };
-        var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
-
-        await BeginToDos();
-        Console.WriteLine(result.Status);
-        StateHasChanged();
-
-    }
-
-    public async Task DeleteTask(string ListId, string TaskId)
-    {
-
-        await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].DeleteAsync();
-        await BeginToDos();
-        StateHasChanged();
-
-    }
-
-    public async Task UnDoTask(string ListId, string TaskId)
-    {
-        var requestBody = new TodoTask
-            {
-                Status = Microsoft.Graph.Models.TaskStatus.NotStarted
-            };
-        var result = await graphClient.Me.Todo.Lists[ListId].Tasks[TaskId].PatchAsync(requestBody);
-
-        await BeginToDos();
-        Console.WriteLine(result.Status);
-        StateHasChanged();
-        //NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 
     public async Task BeginTeams()
     {
         if (count > 0)
         {
-
             var teamsPage = await graphClient.Me.JoinedTeams
             .GetAsync();
 
             teams = teamsPage.Value;
-
-            //var res = await graphClient.Teams[teamsPage.Value.Id].Channels.GetAsync();
-
-            //Console.WriteLine(teamsPage.Value.Count);
         }
     }
+
+    
 }
