@@ -16,7 +16,7 @@
 <style>
     .grid-container {
         display: grid;
-        grid-template-columns: 700px 450px;
+        grid-template-columns: 700px 550px;
         grid-template-rows: 500px 500px;
         gap: 20px;
         padding-left: 20px;
@@ -156,6 +156,34 @@
         border: 2px solid black;
         padding: 1% 1% 1% 1%;
     }
+
+    .sum-btn {
+        margin: 10px;
+        background-color: #1D6F42;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+    }
+
+        .onenote-btn {
+        margin: 10px;
+        background-color: #AE4BD5;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+    }
+
+    .sum-btn:hover {
+        background-color: #1a673d;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .onenote-btn:hover {
+        background-color: #a246c7;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    }
 </style>
 
 
@@ -278,7 +306,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Organizer</th>
+                            <th>Organiser</th>
                             <th>Subject</th>
                             <th>Start Day</th>
                             @* <th>End Day</th> *@
@@ -312,18 +340,39 @@
 
                                 else
                                 {
-                                    <FluentTooltip Anchor="default3" Position=TooltipPosition.Top Delay=50>
-                                        Didn't attend? Summarize this call
-                                    </FluentTooltip>
-                                    <tr class="event-OnlineMeeting" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
-                                        <td>@e?.Organizer?.EmailAddress?.Name</td>
-                                        <td>@e?.Subject</td>
-                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                     <FluentTooltip Anchor="default3" Position=TooltipPosition.Top Delay=50>
+                                        Couldn't attend? Summarise this call
+                                        </FluentTooltip>
+                                    <FluentTooltip Anchor="default4" Position=TooltipPosition.Top Delay=50>
+                                        Write To One Note
+                                        </FluentTooltip>
+                                    
+                                    <tr class="event-OnlineMeeting" id="default3" >
+                                                <td>@e?.Organizer?.EmailAddress?.Name</td>
+                                                <td>@e?.Subject</td>
+                                                <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
+                                                <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                  <div style="display: flex; align-items: center;">
+                                        <i class="fa fa-trash-o" style="font-size: 20px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                        <button class="sum-btn" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+                                            <path fill="currentColor" d="m227.32 73.37l-44.69-44.68a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h168a8 8 0 0 0 0-16H115.32l112-112a16 16 0 0 0 0-22.63ZM136 75.31L152.69 92L68 176.69L51.31 160ZM48 208v-28.69L76.69 208Zm48-3.31L79.32 188L164 103.31L180.69 120Zm96-96L147.32 64l24-24L216 84.69Z" />
+                                            </svg>
+                                        </button>
+                                        <button class="onenote-btn" id="default4">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                                            <path fill="#733781" d="M16.621 2.326h1.9v2.547c2.976.114 5.988-.242 8.942.2c.1.337.216.671.328 1c.75.134 1.959.041 2.077 1.059a28.973 28.973 0 0 1-.048 5.606a22.957 22.957 0 0 1-.057 5.962a21.112 21.112 0 0 1 .1 5.52c-.137.989-1.31.919-2.051 1.059a4.73 4.73 0 0 1-.378 1.549a3.8 3.8 0 0 1-1.921.3c-2.331-.022-4.662-.013-6.99-.013v2.547h-1.991C11.7 28.787 6.846 27.976 2 27.13V4.876c4.875-.849 9.75-1.682 14.621-2.55Z" />
+                                            <path fill="#fff" d="M18.523 5.821h8.271v1.266c.731 0 1.463.016 2.2.048c.041 1.673.057 3.345-.013 5.018c-.728.025-1.46.038-2.185.041v13.985h-8.271v-2.55h6.042v-1.266h-6.042v-1.6h6.042v-1.266h-6.042V17.9h6.042v-1.266h-6.042v-1.6h6.039v-1.266h-6.042v-1.6h6.042v-1.266h-6.042v-1.6h6.042V8.036h-6.042V5.821Zm-6.697 4.846c.633-.035 1.269-.07 1.908-.1V21.1c-.687-.029-1.367-.067-2.048-.1c-1.266-2.433-2.636-4.811-3.86-7.266c.07 2.353.029 4.71.035 7.063c-.579-.038-1.151-.073-1.727-.108q.014-4.846 0-9.7l1.965-.1c1.243 2.277 2.506 4.544 3.714 6.843c.026-2.355 0-4.712.013-7.065Z" />
+                                            <path fill="#fff" d="M27.742 13.122c.413.016.827.035 1.243.054a65.438 65.438 0 0 1-.01 5.012c-.413.019-.824.038-1.234.054q-.004-2.562.001-5.12Zm0 6.039c.413.019.83.041 1.25.064a89.23 89.23 0 0 1 0 4.989l-1.25.076q-.005-2.566 0-5.129Z" />
+                                            </svg>
+                                        </button>
+                                    </div>
 
-                                        <i class="fa fa-trash-o" style="font-size:22px"
-                                           @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
-                                    </tr>
+                                  
+                                  
+                                  </tr>
+                                                
+                                   
 
                                 }
 
@@ -344,6 +393,7 @@
 
                 else
                 {
+                    @* <button>Write to One Note</button> *@
                     @summary
                 }
             </div>
@@ -401,7 +451,10 @@
         var dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
         var eventPage = await graphClient.Me
             .Calendar.Events
-            .GetAsync();
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+            });
         @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
         events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
 
@@ -669,7 +722,10 @@
         graphClient = clientFactory.GetAuthenticatedClient();
         var eventPage = await graphClient.Me
             .Calendar.Events
-            .GetAsync();
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+            });
         events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
         await LoadCalendar();
         return events.ToList();
