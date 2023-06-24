@@ -39,16 +39,21 @@
     private GraphServiceClient? graphClient;
 
     [Inject]
-    protected IAccessTokenProvider AccessTokenProvider { get; set; }
+    protected IAccessTokenProvider? AccessTokenProvider { get; set; }
     protected string? AccessToken { get; private set; }
     public int count = 0;
-    public System.Security.Claims.ClaimsPrincipal user { get; set; }
-    GraphSample.ReusableComponents.UniversalSearch NavBarSearch;
+    public System.Security.Claims.ClaimsPrincipal? user { get; set; }
+    GraphSample.ReusableComponents.UniversalSearch? NavBarSearch;
 
     [JSInvokable]
     private async Task<String> GetAccessToken()
     {
         return this.AccessToken;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        NavBarSearch?.CloseDialog();
     }
 
     protected override async Task OnInitializedAsync()
@@ -64,9 +69,9 @@
             throw new AuthenticationException(
             "Unable to access authentication state");
         }
+        NavBarSearch?.CloseDialog();
         user = (await authenticationStateTask).User;
         graphClient = clientFactory.GetAuthenticatedClient();
-        NavBarSearch.CloseDialog();
         await JSRuntime.InvokeVoidAsync("mgtInterop.configureProvider", AccessToken);
     }
 }
