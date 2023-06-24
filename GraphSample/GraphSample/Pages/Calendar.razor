@@ -192,7 +192,7 @@
     <Authorized>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="GetFreeSchedule">Get Free Schedule</button> *@
+        <button class="btn btn-primary" style="margin-left: 20px;" @onclick="SuggeestMeetingTimes">Suggested Meeting Times</button>
         <div id="popupContainer">
             <div id="popupContent">
                 <h2 style="color: #0078d4 !important;">Add Event</h2>
@@ -202,7 +202,7 @@
                         <input @bind="subject" id="subject" class="form-control" />
                     </div>
                     <div class="mb-3">
-                        <label for="attendees">Attendees</label>
+                        <label for="attendees">Attendees, seperate by ";"</label>
                         <input @bind="attendees" id="attendees" class="form-control" />
                     </div>
                     <div class="row">
@@ -731,50 +731,66 @@
         await LoadCalendar();
         return events.ToList();
     }
-
-    @* get free schedule *@
-
-    public async Task GetFreeSchedule()
-    {
-        // Code snippets are only available for the latest version. Current version is 5.x
-
-        var graphClient = clientFactory.GetAuthenticatedClient();
-
-        @* turn this into a string list seperated by commas *@
+    
+    public List<string> meetingTimesSuggestions = new List<string>();
+    public async Task FindMeetingTimes(){
         var attendeesArray = attendees.Split(';');
-        var schedulesTemp = new List<string>();
-        foreach (string attendee in attendeesArray)
+        var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
+        foreach (var attendee in attendeesArray)
         {
-            schedulesTemp.Add(attendee.Trim());
-        };
-
-
-
-
-        var requestBody = new Microsoft.Graph.Beta.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
-        {
-
-            Schedules = schedulesTemp,
-
-
-            StartTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            attendeesList.Add(new Microsoft.Graph.Beta.Models.AttendeeBase
             {
-                DateTime = start.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            EndTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = end.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            AvailabilityViewInterval = 60,
-        };
-        var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
+                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
+                {
+                    Address = attendee.Trim()
+                },
+                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
+            });
+        }
+        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
+
         {
-            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
-        });
+            Attendees = attendeesList,
+            TimeConstraint = new Microsoft.Graph.Beta.Models.TimeConstraint
+            {
+                Timeslots = new List<Microsoft.Graph.Beta.Models.TimeSlot>
+                {
+                    new Microsoft.Graph.Beta.Models.TimeSlot
+                    {
+                        Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        {
+                            DateTime = start.ToString("o"),
+                            TimeZone = userTimeZone
+                        },
+                        End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        {
+                            DateTime = end.ToString("o"),
+                            TimeZone = userTimeZone
+                        }
+                    }
+                }
+            },
+            MeetingDuration = new Microsoft.Graph.Beta.Duration
+            {
+                Time = "PT1H"
+            },
+            MaxCandidates = 5,
+            ReturnSuggestionReasons = true,
+            MinimumAttendeePercentage = 100
+        };
+        var meetingTimeSuggestionsResult = 
+            await graphClient
+                .Me
+                .FindMeetingTimes(meetingTimeSuggestionsRequestBody)
+                .Request()
+                .PostAsync();
+        foreach(var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions){
+            meetingTimesSuggestions
+            .Add(suggestion.MeetingTimeSlot.Start.DateTime);
+        }
+        StateHasChanged();
     }
-
+  
 
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
@@ -1030,7 +1046,7 @@
         var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
         Console.WriteLine("Done");
-    } *@
+    }
 
 
 }
