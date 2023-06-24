@@ -8,6 +8,7 @@
 @using Microsoft.Graph.Beta
 
 
+
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
 
@@ -344,7 +345,7 @@
                                         Couldn't attend? Summarise this call
                                         </FluentTooltip>
                                     <FluentTooltip Anchor="default4" Position=TooltipPosition.Top Delay=50>
-                                        Write To One Note
+                                        To OneNote
                                         </FluentTooltip>
                                     
                                     <tr class="event-OnlineMeeting" id="default3" >
@@ -952,6 +953,84 @@
             yield return currentChunk.ToString();
         }
     }
+
+    @* public bool isWriting;
+    public bool noSummary { get; set; } = true;
+    public string fileName = "";
+
+
+     private async Task WriteToOneNote()
+    {
+        if (summary == "")
+        {
+            noSummary = true;
+            return;
+        }
+        noSummary = false;
+        if (fileName == "")
+        {
+            fileName = "summary";
+        }
+        isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
+        var user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new Notebook
+        {
+            //set the displayName to the name of the uploaded file witha unique ID
+            DisplayName = $"{fileName} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
+        };
+        var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
+
+        // Get the ID of the newly created notebook
+        var notebookId = result.Id;
+        // create a new section in the notebook
+        var section = new OnenoteSection
+        {
+            DisplayName = "Summarised Notes"
+        };
+        var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
+        // Get the ID of the newly created section
+        var sectionId = sectionResult.Id;
+
+        // Create the title of the page
+        string pageTitle = $"Summary of {fileName}";
+
+        // Create the HTML body content
+        string htmlContent = "<!DOCTYPE html>\n" +
+                              "<html>\n" +
+                              "    <head>\n" +
+                              "         <title>" + pageTitle + "</title>\n" +
+                              "         <meta name=\"" + pageTitle + $"\" content=\"{DateTime.Now.ToString("yyyy-MM-dd")}T{DateTime.Now.ToString("HH:mm:ss")}Z\" />\n" +
+                              "     </head>\n" +
+                              "     <body>\n" +
+                              "         <p>" + summary + "</p>\n" +
+                              "     </body>\n" +
+                              "</html>";
+
+        // Convert the HTML string to a byte array using UTF-8 encoding
+        byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
+
+        // Create multipart object with the relevant content
+        var multipartContent = new MultipartFormDataContent();
+        var htmlString = htmlContent;
+        var presentation = new StringContent(htmlString, Encoding.UTF8, "text/html");
+        multipartContent.Add(presentation, "Presentation");//needs a name
+
+        // We can add more httpcontent instance here if we wish to
+
+        // create a request information instance and make a request.
+        var requestInformation = graphClient.Me.Onenote.Sections[sectionId].Pages.ToGetRequestInformation();
+        requestInformation.Headers.Add("Content-Type", multipartContent.Headers.ContentType.ToString());
+        requestInformation.HttpMethod = Method.POST;
+        requestInformation.Content = await multipartContent.ReadAsStreamAsync();
+        var errorMapping = new Dictionary<string, ParsableFactory<IParsable>> {
+              {"4XX", ODataError.CreateFromDiscriminatorValue},
+              {"5XX", ODataError.CreateFromDiscriminatorValue},
+            };
+        var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
+        isWriting = false; // Set the flag to indicate that writing to OneNote is complete
+        Console.WriteLine("Done");
+    } *@
 
 
 }
