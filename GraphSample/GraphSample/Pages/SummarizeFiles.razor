@@ -2,6 +2,7 @@
 
 @using System.Security.Authentication
 @using System.IO;
+@using System.Text.RegularExpressions 
 @using GrapeCity.Documents.Pdf;
 @using DocumentFormat.OpenXml.Packaging;
 @using Azure
@@ -18,7 +19,6 @@
 
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
-@*@inject ILogger<SummariseFiles> Logger*@
 @inject GraphSample.AI.OpenAIService OpenAIService
 
 
@@ -115,12 +115,6 @@
 
 @code{
 
-    //ToDo:
-    //    1.  Return tuple instead for PDF/DOC/ppt to refactor
-    //    2. Apply error handling to GetContent so folders not clicked
-    //    3. Clean up the AI function too bulky
-
-
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
     private FluentDialog? MyFluentDialog;
@@ -152,6 +146,7 @@
         if (tab.Text == "Upload from OneDrive")
         {
             uploadMethod = false;
+            data_response.Clear();
             await listFiles();
         }
     }
@@ -175,17 +170,15 @@
     }
 
     protected override async Task OnInitializedAsync()
+
     {
+        data_response.Clear();
         await listFiles();
     }
 
-    private async void OnOpen()
+    private void OnOpen()
     {
         MyFluentDialog!.Show();
-        Console.WriteLine("Clicked");
-        //uploadMethod = false;
-        //await listFiles();
-
     }
 
     private void OnDismiss(DialogEventArgs args)
@@ -213,11 +206,8 @@
     }
 
 
-    // apply error handling to not click on folders
-    // Can do regex to check if path is folder
     protected void GetContent(string path, string name)
     {
-        Console.WriteLine("Clicked on: " + path);
         itemId = path;
         fileName = name;
         MyFluentDialog!.Hide();
@@ -532,10 +522,19 @@
         // List children in the drive
         var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
         Console.WriteLine("Getting files...");
-        data_response = files.Value;
-        StateHasChanged();
 
-        // The type of files is Microsoft.Graph.Models.DriveItem
+        foreach (var file in files.Value)
+        {
+            string pattern = @"^.+\.[^.]+$";
+            bool isMatch = Regex.IsMatch(file.Name, pattern);
+            if (isMatch == true)
+            {
+                data_response.Add(file);
+            }
+
+        }
+
+        StateHasChanged();
     }
 
     private async Task WriteToOneNote()
