@@ -636,13 +636,28 @@
             .Filter = modifiedLink;
         });
 
-        var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
+        var transcripts2 = 
+            await graphClient
+            .Users[me.Id]
+            .OnlineMeetings[meetingInfo.Value[0].Id]
+            .Transcripts
+            .GetAsync();
 
 
-        var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.ToGetRequestInformation();
+        var requestInformation = 
+            graphClient
+            .Users[me.Id]
+            .OnlineMeetings[meetingInfo.Value[0].Id]
+            .Transcripts[transcripts2.Value[0].Id]
+            .Content
+            .ToGetRequestInformation();
+        
         requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
         requestInformation.QueryParameters.Add("format", "text/vtt");
-        var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+        var content2 = 
+            await graphClient
+            .RequestAdapter
+            .SendPrimitiveAsync<Stream>(requestInformation);
 
         var string2 = ConvertWebVttStreamToString(content2);
         return string2;
