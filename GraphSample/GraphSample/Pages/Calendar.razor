@@ -649,6 +649,14 @@
         }
     }
 
+     public string ConvertWebVttStreamToString(Stream? stream)
+        {
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                return reader.ReadToEnd();
+            }
+        }
+
     protected async Task<string> SummaryHelperFunction(string meetingLink){
          var originalString = "JoinWebUrl eq '1234'";
         string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
@@ -691,7 +699,7 @@
             .RequestAdapter
             .SendPrimitiveAsync<Stream>(requestInformation);
 
-        var string2 = sharedFunctions.ConvertWebVttStreamToString(content2);
+        var string2 = ConvertWebVttStreamToString(content2);
         return string2;
         
     }

@@ -8,17 +8,7 @@ namespace GraphSample.SharedFns
 {
     public class SharedFunctions
     {
-        public FluentDialog? MyFluentDialog;
-
-        public string ConvertWebVttStreamToString(Stream? stream)
-        {
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
-        }
-
-
+    
          public string FormatIso8601DateTime(string? iso8601DateTime, string? dateTimeFormat)
     {
         if (string.IsNullOrEmpty(iso8601DateTime))
