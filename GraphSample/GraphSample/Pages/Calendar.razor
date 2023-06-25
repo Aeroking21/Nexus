@@ -25,7 +25,8 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
       
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="GetFreeSchedule">Get Free Schedule</button> *@
+        <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button>
+        
         <div id="popupContainer">
             <div id="popupContent">
                 <h2 style="color: #0078d4 !important;">Add Event</h2>
@@ -593,6 +594,66 @@
         await LoadCalendar();
         return events.ToList();
     }
+
+     public List<string> meetingTimesSuggestions = new List<string>();
+    public async Task FindMeetingTimes(){
+        var attendeesArray = attendees.Split(';');
+        var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
+        foreach (var attendee in attendeesArray)
+        {
+            attendeesList.Add(new Microsoft.Graph.Beta.Models.AttendeeBase
+            {
+                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
+                {
+                    Address = attendee.Trim()
+                },
+                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
+            });
+        }
+        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
+
+        {
+            Attendees = attendeesList,
+            TimeConstraint = new Microsoft.Graph.Beta.Models.TimeConstraint
+            {
+                Timeslots = new List<Microsoft.Graph.Beta.Models.TimeSlot>
+                {
+                    new Microsoft.Graph.Beta.Models.TimeSlot
+                    {
+                        Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        {
+                            DateTime = start.ToString("o"),
+                            TimeZone = userTimeZone
+                        },
+                        End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        {
+                            DateTime = end.ToString("o"),
+                            TimeZone = userTimeZone
+                        }
+                    }
+                }
+            },
+            MeetingDuration = new Microsoft.Graph.Beta.Duration
+            {
+                Time = "PT1H"
+            },
+            MaxCandidates = 5,
+            ReturnSuggestionReasons = true,
+            MinimumAttendeePercentage = 100
+        };
+        var meetingTimeSuggestionsResult = 
+            await graphClient
+                .Me
+                .FindMeetingTimes(meetingTimeSuggestionsRequestBody)
+                .Request()
+                .PostAsync();
+        foreach(var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions){
+            meetingTimesSuggestions
+            .Add(suggestion.MeetingTimeSlot.Start.DateTime);
+        }
+        StateHasChanged();
+    }
+  
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
 
