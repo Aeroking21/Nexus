@@ -1,0 +1,302 @@
+    .grid-container {
+        display: grid;
+        grid-template-columns: 48% 48%;
+        grid-template-rows: 300px 300px;
+        gap: 20px;
+        padding-left: 20px;
+    }
+
+    @media (max-width: 767px) {
+        .grid-container {
+            grid-template-columns: 1fr; /* Display a single column on screens up to 767px */
+            grid-template-rows: auto; /* Reset the rows to adjust automatically */
+            padding-left: 0; /* Remove the left padding */
+        }
+    }
+
+    .grid-item {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        font-size: 1.1rem;
+        height: 100%;
+        width: 100%;
+        overflow-y: auto;
+        margin-bottom: 0%;
+        padding-right: 5px;
+        position: relative;
+        font-family: 'Pavanam', sans-serif;
+    }
+
+    .grid-item::-webkit-scrollbar {
+        width: 10px;
+        height: 70%;
+        background-color: transparent;
+        height: calc(100% - 20px);
+    }
+
+    .grid-item::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 1.5rem;
+    }
+
+    .grid-item::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .grid-container .grid-item a {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+        font-size: 1.5rem;
+    }
+
+    .grid-container .grid-item a:hover {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+    }
+
+    .grid-container .grid-item a:active {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+    }
+
+    .lists {
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        background-color: #005C97;
+        padding: 3px;
+        border-radius: 3px;
+        margin-bottom: 2%;
+        font-size: small;
+    }
+
+    .glass-container {
+        background: none !important;
+    }
+
+    .tasks {
+        display: flex;
+        justify-content: space-between;
+    }
+
+
+    .default-button {
+        background-color: #0072b9;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        border-radius: 1rem;
+        padding: 5px;
+        margin: 5px;
+        color: white;
+        height: 30px;
+        width: 70px;
+    }
+
+    .default-button:hover {
+        background-color: rgb(64, 165, 216);
+    }
+
+    .clicked-button:hover {
+        background-color: rgb(64, 165, 216);
+    }
+
+    .subject h3 {
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+        float: left;
+    }
+
+    .organizer {
+        font-size: 0.8rem;
+        float: left;
+        clear: both;
+    }
+
+    .time {
+        font-size: 0.8rem;
+        float: right;
+    }
+
+    .cal {
+        border: 1px solid rgba(190, 190, 190, 0.8);
+        background-color: --webkit-linear-gradient(#005C97, #c9c9db);
+        padding: 5px;
+        border-radius: 1rem;
+        margin-bottom: 2%;
+        height: 60px;
+    }
+
+    .cal:hover {
+        box-shadow: 0 3px 7px rgb(64, 165, 216);
+    }
+
+    .head {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+
+    }
+
+    .group {
+        display: block;
+        width: 100%;
+    }
+
+
+    h4 {
+        font-weight: bold;
+    }
+
+    .email {
+        padding: 10px;
+        margin: 8px 4px;
+        text-align: left;
+        border-radius: 1rem;
+        background: white;
+        border: 1px solid rgba(190, 190, 190, 0.8);
+    }
+
+    .email:hover {
+        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        margin: 8px 4px;
+    }
+
+    .email h3 {
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+    }
+
+    .email h4 {
+        font-size: 10px;
+        margin-top: 0px;
+        margin-bottom: 4px;
+
+    }
+
+    .email .preview {
+        font-size: 13px;
+        text-overflow: ellipsis;
+        word-wrap: break-word;
+        overflow: hidden;
+        max-height: 2.8em;
+        line-height: 1.4em;
+    }
+
+
+    h1 {
+        font-size: 55px !important;
+        background: white;
+        padding-left: 30px;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    body {
+        font-family: 'Segoe UI', SegoeUI, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .team-circle {
+        width: 130px;
+        height: 100px;
+        border-radius: 0.35rem;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(13.4px);
+        -webkit-backdrop-filter: blur(13.4px);
+    }
+
+    .grid-container-v2 {
+        display: grid;        
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-gap: 10px;
+        padding: 10px;
+        justify-content: center;
+        align-items: center;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 800px;
+    }
+   @media (max-width: 1023px) {
+        .grid-container-v2 {
+           grid-template-columns: 1fr 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .grid-container-v2 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+
+    @media (max-width: 400px) {
+         .grid-container-v2 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px !important;
+        z-index: 3;
+    }
+    
+    .square {
+        width: 150px;
+        height: 150px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 10px;
+    }
+
+    .icon {
+        font-size: 40px;
+        color: #0078d4;
+        margin-bottom: 10px;
+    }
+
+    .label {
+        color: #0078d4;
+        font-weight: bold;
+        font-size: 18px;
+        text-align: center;
+    }
+
+    mgt-todo {
+    --tasks-new-button-background: #4385C7;
+       --tasks-background-color: white;
+       --background-color-sub1: none;
+       --tasks-header-padding: 0px;
+       --tasks-title-padding: 0px;
+    }
+
+    .welcome {
+        font-size: 1.6rem;
+
+        font-family: 'Pavanam', sans-serif;
+        color: black;
+        position: relative;
+        left: 20px !important;
+        top: 0px !important;
+    }
+

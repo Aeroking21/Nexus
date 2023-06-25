@@ -6,6 +6,11 @@
 @using Azure.AI.OpenAI
 @using System.Text
 @using Microsoft.Graph.Beta
+@using Microsoft.Graph.Beta.Models
+@using Microsoft.Graph.Beta.Models.ODataErrors
+@using Microsoft.Kiota.Abstractions
+@using Microsoft.Kiota.Abstractions.Serialization
+
 
 
 
@@ -14,183 +19,11 @@
 
 @inject GraphSampleBeta.Graph.GraphClientFactoryBeta clientFactory
 
-<style>
-    .grid-container {
-        display: grid;
-        grid-template-columns: 700px 550px;
-        grid-template-rows: 500px 500px;
-        gap: 20px;
-        padding-left: 20px;
-        margin-top: 20px;
-        margin-bottom: 20px;
-        height: 70vh;
-    }
-
-
-    @@media (max-width: 850px) {
-        .grid-container {
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Shrink the grid items */
-            grid-template-rows: auto; /* Reset the rows to adjust automatically */
-            padding-left: 0; /* Remove the left padding */
-            margin-left: 0; /* Center everything */
-            justify-items: center;
-            align-items: center;
-            height: 100%;
-            
-        }
-    }
-
-    .grid-item {
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-        padding: 15px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        height: 100%;
-        width: 100%;
-        overflow-y: auto;
-        margin-bottom: 0%;
-        padding-right: 5px;
-        position: relative;
-        font-family: 'Pavanam', sans-serif;
-    }
-
-        .grid-item::-webkit-scrollbar {
-            width: 10px;
-            height: 70%;
-            background-color: transparent;
-            height: calc(100% - 20px);
-        }
-
-        .grid-item::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 1.5rem;
-        }
-
-            .grid-item::-webkit-scrollbar-thumb:hover {
-                background-color: rgba(255, 255, 255, 0.9);
-            }
-
-    .grid-container .grid-item a {
-        color: rgb(0, 0, 0);
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
-
-        .grid-container .grid-item a:hover {
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-        }
-
-        .grid-container .grid-item a:active {
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-        }
-
-
-    .calendar-table {
-        width: 100%;
-        text-align: center;
-    }
-
-        .calendar-table thead {
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .calendar-table .day {
-            margin: 2px;
-            cursor: pointer;
-            background-color: rgba(255, 255, 255, 0.3);
-            /*            border-radius: 10px;*/
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .calendar-table td {
-            padding: 30px;
-            vertical-align: middle;
-        }
-
-        .calendar-table .day:hover {
-            background-color: #A2CFFA;
-        }
-
-        .calendar-table .day.selected {
-            background-color: #A2CFFA;
-        }
-
-    .event-row:hover {
-        background-color: #A2CFFA;
-    }
-
-    #popupContainer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: none;
-        z-index: 3;
-    }
-
-    #popupContent {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: #fff;
-        padding: 20px;
-        width: 400px;
-    }
-
-    .event-OnlineMeeting {
-        border: 2px solid green;
-    }
-
-    .dropdown-Calendar {
-        max-height: 95%;
-        overflow: scroll;
-        max-width: 99%;
-        border: 2px solid black;
-        padding: 1% 1% 1% 1%;
-    }
-
-    .sum-btn {
-        margin: 10px;
-        background-color: #1D6F42;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-        .onenote-btn {
-        margin: 10px;
-        background-color: #AE4BD5;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-    .sum-btn:hover {
-        background-color: #1a673d;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .onenote-btn:hover {
-        background-color: #a246c7;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-    }
-</style>
-
-
 <AuthorizeView>
     <Authorized>
+       
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+      
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
         @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="GetFreeSchedule">Get Free Schedule</button> *@
         <div id="popupContainer">
@@ -349,10 +182,10 @@
                                         </FluentTooltip>
                                     
                                     <tr class="event-OnlineMeeting" id="default3" >
-                                                <td>@e?.Organizer?.EmailAddress?.Name</td>
-                                                <td>@e?.Subject</td>
-                                                <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                                <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                                <td style="padding-top: 27px;" >@e?.Organizer?.EmailAddress?.Name</td>
+                                                <td style="padding-top: 27px;" >@e?.Subject</td>
+                                                <td style="padding-top: 27px;" >@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
+                                                <td style="padding-top: 27px;" >@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
                                   <div style="display: flex; align-items: center;">
                                         <i class="fa fa-trash-o" style="font-size: 20px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
                                         <button class="sum-btn" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
@@ -360,7 +193,7 @@
                                             <path fill="currentColor" d="m227.32 73.37l-44.69-44.68a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h168a8 8 0 0 0 0-16H115.32l112-112a16 16 0 0 0 0-22.63ZM136 75.31L152.69 92L68 176.69L51.31 160ZM48 208v-28.69L76.69 208Zm48-3.31L79.32 188L164 103.31L180.69 120Zm96-96L147.32 64l24-24L216 84.69Z" />
                                             </svg>
                                         </button>
-                                        <button class="onenote-btn" id="default4">
+                                        <button class="onenote-btn" id="default4" @onclick="() => WriteToOneNote(e.OnlineMeeting.JoinUrl)">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
                                             <path fill="#733781" d="M16.621 2.326h1.9v2.547c2.976.114 5.988-.242 8.942.2c.1.337.216.671.328 1c.75.134 1.959.041 2.077 1.059a28.973 28.973 0 0 1-.048 5.606a22.957 22.957 0 0 1-.057 5.962a21.112 21.112 0 0 1 .1 5.52c-.137.989-1.31.919-2.051 1.059a4.73 4.73 0 0 1-.378 1.549a3.8 3.8 0 0 1-1.921.3c-2.331-.022-4.662-.013-6.99-.013v2.547h-1.991C11.7 28.787 6.846 27.976 2 27.13V4.876c4.875-.849 9.75-1.682 14.621-2.55Z" />
                                             <path fill="#fff" d="M18.523 5.821h8.271v1.266c.731 0 1.463.016 2.2.048c.041 1.673.057 3.345-.013 5.018c-.728.025-1.46.038-2.185.041v13.985h-8.271v-2.55h6.042v-1.266h-6.042v-1.6h6.042v-1.266h-6.042V17.9h6.042v-1.266h-6.042v-1.6h6.039v-1.266h-6.042v-1.6h6.042v-1.266h-6.042v-1.6h6.042V8.036h-6.042V5.821Zm-6.697 4.846c.633-.035 1.269-.07 1.908-.1V21.1c-.687-.029-1.367-.067-2.048-.1c-1.266-2.433-2.636-4.811-3.86-7.266c.07 2.353.029 4.71.035 7.063c-.579-.038-1.151-.073-1.727-.108q.014-4.846 0-9.7l1.965-.1c1.243 2.277 2.506 4.544 3.714 6.843c.026-2.355 0-4.712.013-7.065Z" />
@@ -399,6 +232,10 @@
                 }
             </div>
         </FluentDialog>
+
+        <div class="chat-bot">
+            <Chat />
+        </div>
 
     </Authorized>
     <NotAuthorized>
@@ -446,23 +283,30 @@
             throw new AuthenticationException(
             "Unable to access authentication state");
         }
-        var user = (await authenticationStateTask).User;
-        userTimeZone = (await authenticationStateTask).User.GetUserGraphTimeZone() ?? "UTC";
-        graphClient = clientFactory.GetAuthenticatedClient();
-        var dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-        var eventPage = await graphClient.Me
+        var user = 
+            (await authenticationStateTask)
+            .User;
+        userTimeZone = 
+            (await authenticationStateTask)
+            .User
+            .GetUserGraphTimeZone() ?? "UTC";
+        graphClient = 
+            clientFactory
+            .GetAuthenticatedClient();
+        var dateTimeFormat =
+             $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+        var eventPage = 
+            await graphClient
+            .Me
             .Calendar.Events
             .GetAsync(config =>
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
-        events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
-
-        foreach (var e in events)
-        {
-            Console.WriteLine(e.ToString());
-        }
+        
+        events = 
+            eventPage?
+            .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
 
         await base.OnInitializedAsync();
         await LoadCalendar();
@@ -471,9 +315,14 @@
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
-        TimeZoneInfo userTimeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
-        int diff = System.DayOfWeek.Sunday - today.DayOfWeek;
-        var unspecifiedStart = DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
+        TimeZoneInfo userTimeZone = 
+            TZConvert
+            .GetTimeZoneInfo(timeZoneId);
+        int diff = 
+            System.DayOfWeek.Sunday - today.DayOfWeek;
+        var unspecifiedStart = 
+            DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
+        
         return TimeZoneInfo.ConvertTimeToUtc(unspecifiedStart, userTimeZone);
     }
 
@@ -484,7 +333,9 @@
             return string.Empty;
         }
         // Load into a DateTime
-        var dateTime = DateTime.Parse(iso8601DateTime);
+        var dateTime = 
+            DateTime
+            .Parse(iso8601DateTime);
         if (!string.IsNullOrWhiteSpace(dateTimeFormat))
         {
             // Format it using the user's settings
@@ -565,11 +416,15 @@
         days = new List<CalendarDay>();
 
         int numberOfEmptyDays = CalculateNumberOfEmptyDays();
-        days.AddRange(GenerateEmptyDays(numberOfEmptyDays));
+        
+        days
+        .AddRange(GenerateEmptyDays(numberOfEmptyDays));
 
-        days.AddRange(GenerateMonthDays());
+        days
+        .AddRange(GenerateMonthDays());
 
-        rowsCount = CalculateRowsCount(days.Count);
+        rowsCount = 
+            CalculateRowsCount(days.Count);
 
         foreach (var day in days)
         {
@@ -635,7 +490,11 @@
     public async Task<List<Microsoft.Graph.Beta.Models.Event>> deleteItem(List<Microsoft.Graph.Beta.Models.Event> e, Microsoft.Graph.Beta.Models.Event item)
     {
         e.Remove(item);
-        await graphClient.Me.Events[item.Id].DeleteAsync();
+        await graphClient
+        .Me
+        .Events[item.Id]
+        .DeleteAsync();
+
         StateHasChanged();
         return e;
     }
@@ -727,55 +586,13 @@
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+        events = 
+            eventPage?
+            .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+        
         await LoadCalendar();
         return events.ToList();
     }
-
-    @* get free schedule *@
-
-    public async Task GetFreeSchedule()
-    {
-        // Code snippets are only available for the latest version. Current version is 5.x
-
-        var graphClient = clientFactory.GetAuthenticatedClient();
-
-        @* turn this into a string list seperated by commas *@
-        var attendeesArray = attendees.Split(';');
-        var schedulesTemp = new List<string>();
-        foreach (string attendee in attendeesArray)
-        {
-            schedulesTemp.Add(attendee.Trim());
-        };
-
-
-
-
-        var requestBody = new Microsoft.Graph.Beta.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
-        {
-
-            Schedules = schedulesTemp,
-
-
-            StartTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = start.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            EndTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = end.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            AvailabilityViewInterval = 60,
-        };
-        var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
-        {
-            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
-        });
-    }
-
-
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
 
@@ -800,35 +617,59 @@
         }
     }
 
-
-    protected async void GetContent(string meetingLink)
-    {
-        OnOpen();
-        var originalString = "JoinWebUrl eq '1234'";
+    protected async Task<string> SummaryHelperFunction(string meetingLink){
+         var originalString = "JoinWebUrl eq '1234'";
         string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
 
         Console.WriteLine(modifiedLink);
 
-        var me = await graphClient.Me.GetAsync();
+        var me = 
+            await 
+            graphClient
+            .Me
+            .GetAsync();
 
         var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
         {
-            requestConfiguration.QueryParameters.Filter = modifiedLink;
+            requestConfiguration
+            .QueryParameters
+            .Filter = modifiedLink;
         });
 
-        var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
+        var transcripts2 = 
+            await graphClient
+            .Users[me.Id]
+            .OnlineMeetings[meetingInfo.Value[0].Id]
+            .Transcripts
+            .GetAsync();
 
 
-        var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.ToGetRequestInformation();
+        var requestInformation = 
+            graphClient
+            .Users[me.Id]
+            .OnlineMeetings[meetingInfo.Value[0].Id]
+            .Transcripts[transcripts2.Value[0].Id]
+            .Content
+            .ToGetRequestInformation();
+        
         requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
         requestInformation.QueryParameters.Add("format", "text/vtt");
-        var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+        var content2 = 
+            await graphClient
+            .RequestAdapter
+            .SendPrimitiveAsync<Stream>(requestInformation);
 
         var string2 = ConvertWebVttStreamToString(content2);
-
+        return string2;
+        
+    }
+    protected async void GetContent(string meetingLink)
+    {
+        OnOpen();
+        string string2;
+        string2 = await SummaryHelperFunction(meetingLink);
         await SummarizeText(string2);
         StateHasChanged();
-        //Console.WriteLine(summary);
     }
 
 
@@ -893,7 +734,10 @@
 
             summaries.Add(completionFinish);
             string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionsResponseFinish2 = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, finish2);
             var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
 
             summaries.Add(completionFinish2);
@@ -904,20 +748,44 @@
         {
             summaries.Clear();
 
-            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            string prompt = 
+                $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
 
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
+            var completionsResponse = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = 
+                completionsResponse
+                .Value
+                .Choices[0]
+                .Text;
 
             summaries.Add(completion);
-            string finish = $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            string finish = 
+                $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = 
+                completionsResponseFinish
+                .Value
+                .Choices[0]
+                .Text;
 
             summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            string finish2 = 
+                $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 =
+                 await OpenAIService
+                 .client
+                 .GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = 
+                completionsResponseFinish2
+                .Value
+                .Choices[0]
+                .Text;
 
             summaries.Add(completionFinish2);
         }
@@ -954,15 +822,21 @@
         }
     }
 
-    @* public bool isWriting;
+    public bool isWriting;
     public bool noSummary { get; set; } = true;
     public string fileName = "";
 
 
-     private async Task WriteToOneNote()
+     private async Task WriteToOneNote(string meetingLink)
     {
+
+        string string2; 
+        string2 = await SummaryHelperFunction(meetingLink);
+        await SummarizeText(string2);
+
         if (summary == "")
         {
+            Console.WriteLine("No summary to write to OneNote");
             noSummary = true;
             return;
         }
@@ -1030,7 +904,7 @@
         var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
         Console.WriteLine("Done");
-    } *@
+    } 
 
 
 }

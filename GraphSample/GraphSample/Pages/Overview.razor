@@ -11,9 +11,9 @@
 <AuthorizeView>
     <Authorized>
             <link href="https://cdn.jsdelivr.net/npm/@@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
-            <link href="GraphSample.styles.css" rel="stylesheet">
+            @* <link href="GraphSample.styles.css" rel="stylesheet">
             <link href="Overview.razor.css" rel="stylesheet">
-            <link rel="stylesheet" href="~/@(nameof(GraphSample)).styles.css" />
+            <link rel="stylesheet" href="~/@(nameof(GraphSample)).styles.css" /> *@
 
             <div class="groupSec">
                 <div class="seeGroups" style="margin-top: 10px;">
@@ -321,6 +321,11 @@
                 </div>
             </div>
 
+            
+            <div class="chat-bot">
+                <Chat />
+            </div>
+
     </Authorized>
 
     <NotAuthorized>
@@ -329,10 +334,6 @@
 
 </AuthorizeView>
 
-
-<div class="chat-bot">
-    <Chat />
-</div>
 
 @code{
     [Parameter]

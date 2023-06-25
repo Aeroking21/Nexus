@@ -13,7 +13,7 @@
     /* put this search bar in line with the nav bar */
     position: fixed;
     top: 30px;
-    left: 11rem;
+    left: 13rem;
     z-index: 4;
 
 }
