@@ -283,23 +283,30 @@
             throw new AuthenticationException(
             "Unable to access authentication state");
         }
-        var user = (await authenticationStateTask).User;
-        userTimeZone = (await authenticationStateTask).User.GetUserGraphTimeZone() ?? "UTC";
-        graphClient = clientFactory.GetAuthenticatedClient();
-        var dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-        var eventPage = await graphClient.Me
+        var user = 
+            (await authenticationStateTask)
+            .User;
+        userTimeZone = 
+            (await authenticationStateTask)
+            .User
+            .GetUserGraphTimeZone() ?? "UTC";
+        graphClient = 
+            clientFactory
+            .GetAuthenticatedClient();
+        var dateTimeFormat =
+             $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+        var eventPage = 
+            await graphClient
+            .Me
             .Calendar.Events
             .GetAsync(config =>
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
-        events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
-
-        foreach (var e in events)
-        {
-            Console.WriteLine(e.ToString());
-        }
+        
+        events = 
+            eventPage?
+            .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
 
         await base.OnInitializedAsync();
         await LoadCalendar();
@@ -308,9 +315,14 @@
 
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
-        TimeZoneInfo userTimeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
-        int diff = System.DayOfWeek.Sunday - today.DayOfWeek;
-        var unspecifiedStart = DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
+        TimeZoneInfo userTimeZone = 
+            TZConvert
+            .GetTimeZoneInfo(timeZoneId);
+        int diff = 
+            System.DayOfWeek.Sunday - today.DayOfWeek;
+        var unspecifiedStart = 
+            DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
+        
         return TimeZoneInfo.ConvertTimeToUtc(unspecifiedStart, userTimeZone);
     }
 
@@ -321,7 +333,9 @@
             return string.Empty;
         }
         // Load into a DateTime
-        var dateTime = DateTime.Parse(iso8601DateTime);
+        var dateTime = 
+            DateTime
+            .Parse(iso8601DateTime);
         if (!string.IsNullOrWhiteSpace(dateTimeFormat))
         {
             // Format it using the user's settings
@@ -402,11 +416,15 @@
         days = new List<CalendarDay>();
 
         int numberOfEmptyDays = CalculateNumberOfEmptyDays();
-        days.AddRange(GenerateEmptyDays(numberOfEmptyDays));
+        
+        days
+        .AddRange(GenerateEmptyDays(numberOfEmptyDays));
 
-        days.AddRange(GenerateMonthDays());
+        days
+        .AddRange(GenerateMonthDays());
 
-        rowsCount = CalculateRowsCount(days.Count);
+        rowsCount = 
+            CalculateRowsCount(days.Count);
 
         foreach (var day in days)
         {
@@ -472,7 +490,11 @@
     public async Task<List<Microsoft.Graph.Beta.Models.Event>> deleteItem(List<Microsoft.Graph.Beta.Models.Event> e, Microsoft.Graph.Beta.Models.Event item)
     {
         e.Remove(item);
-        await graphClient.Me.Events[item.Id].DeleteAsync();
+        await graphClient
+        .Me
+        .Events[item.Id]
+        .DeleteAsync();
+
         StateHasChanged();
         return e;
     }
@@ -564,7 +586,10 @@
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        events = eventPage?.Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+        events = 
+            eventPage?
+            .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+        
         await LoadCalendar();
         return events.ToList();
     }
@@ -598,11 +623,17 @@
 
         Console.WriteLine(modifiedLink);
 
-        var me = await graphClient.Me.GetAsync();
+        var me = 
+            await 
+            graphClient
+            .Me
+            .GetAsync();
 
         var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
         {
-            requestConfiguration.QueryParameters.Filter = modifiedLink;
+            requestConfiguration
+            .QueryParameters
+            .Filter = modifiedLink;
         });
 
         var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
