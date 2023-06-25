@@ -1,0 +1,182 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: 700px 550px;
+    grid-template-rows: 500px 500px;
+    gap: 20px;
+    padding-left: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    height: 70vh;
+}
+
+
+@media (max-width: 850px) {
+    .grid-container {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        /* Shrink the grid items */
+        grid-template-rows: auto;
+        /* Reset the rows to adjust automatically */
+        padding-left: 0;
+        /* Remove the left padding */
+        margin-left: 0;
+        /* Center everything */
+        justify-items: center;
+        align-items: center;
+        height: 100%;
+
+    }
+}
+
+.grid-item {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    margin-bottom: 0%;
+    padding-right: 5px;
+    position: relative;
+    font-family: 'Pavanam', sans-serif;
+}
+
+.grid-item::-webkit-scrollbar {
+    width: 10px;
+    height: 70%;
+    background-color: transparent;
+    height: calc(100% - 20px);
+}
+
+.grid-item::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 1.5rem;
+}
+
+.grid-item::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.grid-container .grid-item a {
+    color: rgb(0, 0, 0);
+    text-decoration: none;
+    font-size: 1.5rem;
+}
+
+.grid-container .grid-item a:hover {
+    color: rgb(0, 0, 0);
+    text-decoration: none;
+}
+
+.grid-container .grid-item a:active {
+    color: rgb(0, 0, 0);
+    text-decoration: none;
+}
+
+
+.calendar-table {
+    width: 100%;
+    text-align: center;
+}
+
+.calendar-table thead {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.calendar-table .day {
+    margin: 2px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.3);
+    /*            border-radius: 10px;*/
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-table td {
+    padding: 30px;
+    vertical-align: middle;
+}
+
+.calendar-table .day:hover {
+    background-color: #A2CFFA;
+}
+
+.calendar-table .day.selected {
+    background-color: #A2CFFA;
+}
+
+.event-row:hover {
+    background-color: #A2CFFA;
+}
+
+#popupContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 3;
+}
+
+#popupContent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    width: 400px;
+}
+
+.event-OnlineMeeting {
+    border: 2px solid green;
+}
+
+.dropdown-Calendar {
+    max-height: 95%;
+    overflow: scroll;
+    max-width: 99%;
+    border: 2px solid black;
+    padding: 1% 1% 1% 1%;
+}
+
+.sum-btn {
+    margin: 10px;
+    background-color: #1D6F42;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+.onenote-btn {
+    margin: 10px;
+    background-color: #AE4BD5;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+.sum-btn:hover {
+    background-color: #1a673d;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.onenote-btn:hover {
+    background-color: #a246c7;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+
+.chat-bot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 3;
+}

@@ -1,0 +1,631 @@
+
+    .chat-bot{
+        position: fixed;
+        bottom: 20px;
+        right: 20px !important;
+        z-index: 3;
+    }
+
+    .dashboard-class {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        border-radius: 0.7rem;
+        position: absolute;
+        left: 5vh;
+        right: 5vh;
+        max-height: 85vh !important;
+        top: 15vh;
+        padding-bottom: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .assessments-container {
+        border: 1px solid transparent;
+        border-right: none;
+        height: 75px;
+        width: 100%;
+        overflow-x: visible;
+        position: relative;
+        white-space: nowrap;
+        padding-bottom: 14px;
+    }
+
+    .pane {
+        width: 300px;
+        height: 74px;
+        border: 2px solid #ccc;
+        border-radius: 10px;
+        display: -moz-inline-box;
+        display: inline-block;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+        .pane.statusPending {
+            background-color: rgba(255, 255, 0, 0.5);
+        }
+
+        .pane.statusPending-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            rgba(255, 255, 0, 0.3) 5px,
+                                            rgba(255, 255, 0, 0.3) 10px
+                                            ); 
+        }
+
+        .pane.statusPassed {
+            background-color: rgba(0, 255, 0, 0.5);
+        }
+
+        .pane.statusPassed-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            rgba(0, 255, 0, 0.3) 5px,
+                                            rgba(0, 255, 0, 0.3) 10px
+                                            ); 
+        }
+
+        .pane.statusScheduled {
+            background-color: rgba(50, 50, 255, 0.5);
+        }
+
+        .pane.statusScheduled-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            rgba(50, 50, 255, 0.3) 5px,
+                                            rgba(50, 50, 255, 0.3) 10px
+                                            ); 
+        }
+
+        .pane.statusFailed {
+            background-color: #8080808b;
+        }
+
+        .pane.statusFailed-archived {
+            background: repeating-linear-gradient(
+                                            45deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 5px,
+                                            #8080808b 5px,
+                                            #8080808b 10px
+                                            ); 
+        }
+
+    .email-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        height: 75px;
+        width: 100%;
+        overflow-y: scroll;
+        overflow-x: scroll;
+    }
+
+    .add-button {
+        margin-right: 0.5em;
+        cursor: pointer;
+        color: green;
+    }
+
+    .remove-button {
+        cursor: pointer;
+        color: red;
+        margin-left: 0.5em;
+    }
+
+    .remove-asessment-button {
+        position: absolute;
+        cursor: pointer;
+        color: red;
+        margin-left: 0.5em;
+        right: 3px;
+    }
+
+    .timeline-icon {
+        margin-left: 0.2em;
+    }
+
+    .red-button {
+        background-color: red;
+        color: white;
+    }
+
+
+    .inner-container {
+        display: flex;
+        width: 100%;
+        overflow-y: scroll;
+        max-height: 77vh !important;
+    }
+
+    .restricted-inner-container {
+        display: flex;
+        width: 100%;
+        overflow-y: scroll;
+        max-height: 77vh !important;
+        width: 20% !important;
+    }
+
+
+    .outer-container {
+        display: flex;
+        width: 100%;
+        max-height: 77vh !important;
+    }
+
+    .right-inner-container {
+        display: flex;
+        width: 100%
+    }
+
+
+    .header-container {
+        display: flex;
+        align-items: center;
+        min-height: fit-content;
+        width: 100%;
+    }
+
+    .calendar-header-container {
+        display: flex;
+        align-items: center;
+        height: 50px;
+        width: 100%;
+    }
+
+    .main-div {
+        flex: 1;
+    }
+
+    .left-div {
+        width: 20%;
+        border: 0px solid #ccc;
+        border-radius: 0px;
+    }
+
+    .restricted-left-div {
+        width: 100%;
+        border: 0px solid #ccc;
+        border-radius: 0px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .right-div {
+        width: 80%;
+    }
+
+    .right-left-div {
+        width: 20%;
+        border: 0px solid #ccc;
+        border-radius: 3px;
+    }
+
+    .right-right-div {
+        width: 80%;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        border: 0px solid #ccc;
+        border-radius: 3px;
+        display: flex;
+    }
+
+    .right-emails-div {
+        width: 100%;
+        border: 2px solid #d3d3d3;
+        border-radius: 3px;
+        height: 77vh !important;
+    }
+
+    .right-emails-scrollable-div {
+        width: 100%;
+        border-top: 2px solid #d3d3d3;
+        border-radius: 0 0 3px 3px;
+        overflow-y: scroll;
+        height: 72vh !important;
+    }
+
+    .email-body {
+        word-wrap: break-word;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 15px;
+    }
+
+    .email-body tr {
+        border-bottom: 0px solid grey;
+    }
+
+    .calendar-column {
+        width: 300px !important;
+        height: 100% !important;
+        border: 2px solid #656464;
+        border-radius: 3px; 
+        position: relative
+    }
+
+    .calendar-div {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+        background-color: white;
+        flex: 1;
+    }
+
+    .calendar-date {
+        width: 100%;
+        height: 50px;
+        border-bottom: 2px solid #656464;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .calendar-panes {
+        width: 300px !important;
+        height: 74px; 
+        overflow-y: scroll;
+    }
+
+    .calendar-panes-archived {
+        width: 300px !important;
+        height: 74px; 
+        overflow-y: scroll;
+        background: repeating-linear-gradient(
+                                            180deg,
+                                            #c0c0c061 ,
+                                            #c0c0c061 10px,
+                                            #A9A9A961 10px,
+                                            #A9A9A961 20px
+                                            );
+    }
+
+    .emails-search-div {
+       height: 5vh !important;
+       background-color: white;
+    }
+
+    .email-info-div {
+        position: relative;
+        height: 50px;
+        width: 100%;
+        border: 2px solid #d3d3d3;
+        border-radius: 5px;
+        background-color: whitesmoke;
+        display: flex;
+        align-items: center;
+    }
+
+        .email-info-div:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            background-color: #f0f0f0;
+            border: 3px solid grey;
+        }
+
+    .email-list-container {
+        position: absolute;
+        width: fit-content;
+        z-index: 2;
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        padding: 8px;
+        border: 1px solid #ccc;
+        background-color: buttonface;
+        border-radius: 5px;
+    }
+
+    .actions-container {
+        position: absolute;
+        z-index: 2;
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        padding: 4px;
+        border: 1px solid #ccc;
+        background-color: buttonface;
+        border-radius: 5px;
+    }
+
+    .highlight-span {
+        display: inline-block;
+        padding: 4px;
+        cursor: pointer;
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .highlighted {
+        background-color: #dddddd;
+    }
+
+    .action-item {
+        display: flex;
+        align-items: center;
+        border-radius: 5px;
+        background-color: #1b6ec2;
+        border: 1px solid grey;
+        margin-bottom: 4px;
+        position: relative;
+        justify-content: space-between;
+        width: 100%;
+        color: white;
+        font-size: 14px;
+    }
+
+        .action-item:hover {
+            background-color: #0b5ed7;
+            border-color: rgb(119, 119, 119); 
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+        }
+
+
+    .email-item-test {
+        border: 1px solid #d3d3d3;
+        border-radius: 5px;
+        background-color: #D3D3D3;
+        margin-bottom: 4px;
+        padding: 4px 8px;
+        overflow: hidden;
+        display: flex;
+    }
+
+
+    .email-address {
+        float: left;
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    .remove-icon {
+        cursor: pointer;
+        margin-left: auto;
+    }
+
+    .assessment-line {
+        border: 0px solid;
+        border-color: transparent;
+        border-radius: 5px;
+        background-color: transparent;
+        margin-bottom: 0px;
+        overflow: hidden;
+    }
+
+    .assessment-type-container {
+        float: left;
+    }
+
+    .remove-assessment-button {
+        float: right;
+        cursor: pointer;
+    }
+
+    .associated-emails-content {
+        height: 75px;
+        position: relative;
+    }
+
+    .company-content {
+        display: flex;
+        flex-wrap: wrap;
+        height: 75px;
+        overflow-y: hidden;
+        width: 100%;
+        text-align: center;
+    }
+
+    .role-content {
+        display: flex;
+        flex-wrap: wrap;
+        height: 75px;
+        width: 100%;
+        overflow-y: hidden;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .fixed-height-row-button {
+        padding: 2px 4px;
+        font-size: 14px;
+        height: 35px;
+        width: 100%;
+    }
+
+    .add-email-button {
+        padding: 2px 6px;
+        color: white;
+        font-size: 12px;
+        border-radius: 5px;
+        border: 1px solid grey; 
+        background-color: #1b6ec2;
+    }
+
+        .add-email-button:hover {
+            background-color: #0b5ed7;
+            border-color: rgb(119, 119, 119);
+        }
+
+    .show-email-addresses {
+        padding: 2px 3px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        width: 85%;
+    }
+
+    .show-email-addresses-highlighted {
+        padding: 2px 3px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #999;
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        background-color: #d3d3d3;
+        width: 85%;
+    }
+
+    .show-emails-button {
+        padding: 2px 3px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        width: 85%;
+    }
+
+    .show-emails-button-highlighted {
+        padding: 2px 3px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #999;
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        background-color: #d3d3d3;
+        width: 85%;
+    }
+
+    .add-todo-button {
+        padding: 2px 6px;
+        color: white;
+        font-size: 12px;
+        border-radius: 5px;
+        background-color: #1b6ec2;
+        border : 1px solid grey;
+        width: 100px;
+        margin-left: 20px;
+    }
+
+    .add-todo-button:hover {
+        background-color: #0b5ed7;
+        border-color: rgb(119, 119, 119);
+    }
+
+    .todo-scheduled-button {
+        padding: 2px 6px;
+        color: black;
+        font-size: 12px;
+        border-radius: 5px;
+        background-color: lightgray;
+        border: 1px solid #ccc;
+        width: 100px;
+        margin-left: 20px;
+    }
+
+    .update-date-button {
+        padding: 1px 2px;
+        color: black;
+        font-size: 14px;
+        border-radius: 5px;
+        background-color: transparent;
+        border: 1px solid #444444;
+        margin-left: 0px;
+    }
+    
+    .update-date-button:hover {
+       background-color: #1b6ec2;;
+       box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+       border: 1px solid  #1861ac;
+    }
+
+
+    .add-timeline-button {
+        padding: 5px 10px;
+        height: fit-content;
+        color: white;
+        border-radius: 3px;
+        border: 1px solid grey;
+        background-color: #1b6ec2;
+        border-color: #1861ac;
+        margin-left: 20px;
+    }
+
+    .sorting-select {
+        height: fit-content;
+        padding: 5px 10px;
+        color: white;
+        border-radius: 3px;
+        border: 1px none;
+        margin-left: 20px;
+        color: black;
+        overflow: hidden;
+    }
+
+    .mode-selection-inline {
+        display: inline-block;
+    }
+
+    .left-table {
+        border-collapse: collapse;
+        width: 100%;
+        max-height: 100%;
+        overflow: auto;
+    }
+
+        .left-table tr:first-child td {
+            border-top: 1px solid black;
+        }
+
+        .left-table tr:last-child td {
+            border-bottom: 1px solid black;
+        }
+
+    .bordered-table {
+        border-collapse: collapse;
+        background-color: white;
+        min-width: 100%;
+        height: 100%;
+        opacity: 1;
+    }
+
+        .bordered-table td {
+            border-right: 1px solid black;
+            border-left: 1px solid black;
+        }
+
+        .bordered-table tr:first-child td {
+            border-top: 1px solid black;
+        }
+
+        .bordered-table tr:last-child td {
+            border-bottom: 1px solid black;
+        }
+
+
+    tr {
+        border-bottom: 1px solid grey;
+    }
+
+    .status-select {
+        background-color: transparent;
+        border-radius: 5px;
+    }
+
+    .flex-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+        overflow-y: scroll;
+    }
+
+    .flex-container-v2 {
+        display: flex;
+        flex-direction: column; /* Stack child elements vertically */
+        align-items: flex-start; /* Align child elements to the start (left) */
+        overflow-y: scroll;
+    }
+
+    .button-row {
+    display: flex;
+    align-items: center;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .archived {   
+        background-color: #c0c0c061;                                               
+    }
