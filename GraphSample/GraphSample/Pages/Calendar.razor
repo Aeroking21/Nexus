@@ -569,51 +569,6 @@
         return events.ToList();
     }
 
-    @* get free schedule *@
-
-    public async Task GetFreeSchedule()
-    {
-        // Code snippets are only available for the latest version. Current version is 5.x
-
-        var graphClient = clientFactory.GetAuthenticatedClient();
-
-        @* turn this into a string list seperated by commas *@
-        var attendeesArray = attendees.Split(';');
-        var schedulesTemp = new List<string>();
-        foreach (string attendee in attendeesArray)
-        {
-            schedulesTemp.Add(attendee.Trim());
-        };
-
-
-
-
-        var requestBody = new Microsoft.Graph.Beta.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
-        {
-
-            Schedules = schedulesTemp,
-
-
-            StartTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = start.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            EndTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = end.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            AvailabilityViewInterval = 60,
-        };
-        var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
-        {
-            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
-        });
-    }
-
-
-
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
 
 
@@ -637,11 +592,8 @@
         }
     }
 
-
-    protected async void GetContent(string meetingLink)
-    {
-        OnOpen();
-        var originalString = "JoinWebUrl eq '1234'";
+    protected async Task<string> SummaryHelperFunction(string meetingLink){
+         var originalString = "JoinWebUrl eq '1234'";
         string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
 
         Console.WriteLine(modifiedLink);
@@ -662,10 +614,16 @@
         var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
 
         var string2 = ConvertWebVttStreamToString(content2);
-
+        return string2;
+        
+    }
+    protected async void GetContent(string meetingLink)
+    {
+        OnOpen();
+        string string2;
+        string2 = await SummaryHelperFunction(meetingLink);
         await SummarizeText(string2);
         StateHasChanged();
-        //Console.WriteLine(summary);
     }
 
 
@@ -730,7 +688,10 @@
 
             summaries.Add(completionFinish);
             string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionsResponseFinish2 = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, finish2);
             var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
 
             summaries.Add(completionFinish2);
@@ -741,20 +702,44 @@
         {
             summaries.Clear();
 
-            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            string prompt = 
+                $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
 
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
+            var completionsResponse = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = 
+                completionsResponse
+                .Value
+                .Choices[0]
+                .Text;
 
             summaries.Add(completion);
-            string finish = $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+            string finish = 
+                $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = 
+                completionsResponseFinish
+                .Value
+                .Choices[0]
+                .Text;
 
             summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+            string finish2 = 
+                $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 =
+                 await OpenAIService
+                 .client
+                 .GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = 
+                completionsResponseFinish2
+                .Value
+                .Choices[0]
+                .Text;
 
             summaries.Add(completionFinish2);
         }
@@ -799,24 +784,10 @@
      private async Task WriteToOneNote(string meetingLink)
     {
 
-        var originalString = "JoinWebUrl eq '1234'";
-        string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
-        var me = await graphClient.Me.GetAsync();
-
-        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.Filter = modifiedLink;
-        });
-        var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
-
-        var requestInformation1 = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id].Content.ToGetRequestInformation();
-                requestInformation1.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
-                requestInformation1.QueryParameters.Add("format", "text/vtt");
-        var content2 = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation1);
-
-        var string2 = ConvertWebVttStreamToString(content2);
-
+        string string2; 
+        string2 = await SummaryHelperFunction(meetingLink);
         await SummarizeText(string2);
+
         if (summary == "")
         {
             Console.WriteLine("No summary to write to OneNote");
