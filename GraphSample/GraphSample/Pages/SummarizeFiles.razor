@@ -1,7 +1,8 @@
-@page "/NotesPro"
+@page "/SmartScribe"
 
 @using System.Security.Authentication
 @using System.IO;
+@using System.Text.RegularExpressions 
 @using GrapeCity.Documents.Pdf;
 @using DocumentFormat.OpenXml.Packaging;
 @using Azure
@@ -112,12 +113,6 @@
 
 @code{
 
-    //ToDo:
-    //    1.  Return tuple instead for PDF/DOC/ppt to refactor
-    //    2. Apply error handling to GetContent so folders not clicked
-    //    3. Clean up the AI function too bulky
-
-
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
     private FluentDialog? MyFluentDialog;
@@ -149,6 +144,7 @@
         if (tab.Text == "Upload from OneDrive")
         {
             uploadMethod = false;
+            data_response.Clear();
             await listFiles();
         }
     }
@@ -172,17 +168,15 @@
     }
 
     protected override async Task OnInitializedAsync()
+
     {
+        data_response.Clear();
         await listFiles();
     }
 
-    private async void OnOpen()
+    private void OnOpen()
     {
         MyFluentDialog!.Show();
-        Console.WriteLine("Clicked");
-        //uploadMethod = false;
-        //await listFiles();
-
     }
 
     private void OnDismiss(DialogEventArgs args)
@@ -210,11 +204,8 @@
     }
 
 
-    // apply error handling to not click on folders
-    // Can do regex to check if path is folder
     protected void GetContent(string path, string name)
     {
-        Console.WriteLine("Clicked on: " + path);
         itemId = path;
         fileName = name;
         MyFluentDialog!.Hide();
@@ -247,7 +238,7 @@
             var file = loadedFile[0];
             Stream stream = await ConvertToStream(file);
             fileName = file.Name;
-            content = ExtractTextFromStream(stream);
+            content = ExtractTextFromStream(stream, fileName);
 
             Console.WriteLine("Extracted text");
         }
@@ -262,9 +253,9 @@
 
             var user = (await authenticationStateTask).User;
             var contentStream = await graphClient.Drives[driveId].Items[itemId].Content.GetAsync();
-            content = ExtractTextFromStream(contentStream);
             var fileItem = await graphClient.Drives[driveId].Items[itemId].GetAsync();
             fileName = fileItem.Name;
+            content = ExtractTextFromStream(contentStream, fileName);
 
             Console.WriteLine("Got text response");
         }
@@ -394,21 +385,24 @@
     }
 
     // Maybe return tuple instead
-    protected string ExtractTextFromStream(Stream input)
+    protected string ExtractTextFromStream(Stream input, string fileName)
     {
         string text = "";
+        string pdf = @"^.+\.pdf$";
+        string ppt = @"^.+\.pptx$";
+        string doc = @"^.+\.docx$";
 
-        if (IsPDF(input))
+        if (Regex.IsMatch(fileName, pdf))
         {
             text = ExtractTextFromPDF(input);
             Console.WriteLine("Is PDF");
         }
-        else if (IsWordDocument(input))
+        else if (Regex.IsMatch(fileName, doc))
         {
             text = ExtractTextFromWord(input);
             Console.WriteLine("Is Word");
         }
-        else if (IsPowerPointDocument(input))
+        else if (Regex.IsMatch(fileName, ppt))
         {
             text = ExtractTextFromPowerPoint(input);
             Console.WriteLine("Is PPT");
@@ -417,19 +411,6 @@
         return text;
     }
 
-    private bool IsPDF(Stream stream)
-    {
-        try
-        {
-            var document = new GcPdfDocument();
-            document.Load(stream);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     public string ExtractTextFromPDF(Stream stream)
     {
@@ -439,21 +420,6 @@
         var text = document.GetText();
 
         return text;
-    }
-
-    private bool IsWordDocument(Stream stream)
-    {
-        try
-        {
-            using (var document = WordprocessingDocument.Open(stream, false))
-            {
-                return true;
-            }
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private string ExtractTextFromWord(Stream stream)
@@ -467,21 +433,6 @@
         }
 
         return text;
-    }
-
-    private bool IsPowerPointDocument(Stream stream)
-    {
-        try
-        {
-            using (var presentation = PresentationDocument.Open(stream, false))
-            {
-                return true;
-            }
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private string ExtractTextFromPowerPoint(Stream stream)
@@ -529,10 +480,18 @@
         // List children in the drive
         var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
         Console.WriteLine("Getting files...");
-        data_response = files.Value;
-        StateHasChanged();
 
-        // The type of files is Microsoft.Graph.Models.DriveItem
+        foreach (var file in files.Value)
+        {
+            string pattern = @"^.+\.(pdf|docx|pptx)$";
+            if (Regex.IsMatch(file.Name, pattern) == true)
+            {
+                data_response.Add(file);
+            }
+
+        }
+
+        StateHasChanged();
     }
 
     private async Task WriteToOneNote()
