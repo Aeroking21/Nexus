@@ -13,7 +13,7 @@
 
 
 
-
+@inject GraphSample.SharedFns.SharedFunctions sharedFunctions
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 @inject GraphSample.AI.OpenAIService OpenAIService
 
@@ -25,7 +25,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
       
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-        <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button>
+        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button> *@
         
         <div id="popupContainer">
             <div id="popupContent">
@@ -165,8 +165,8 @@
                                     <tr class="event-row">
                                         <td>@e?.Organizer?.EmailAddress?.Name</td>
                                         <td>@e?.Subject</td>
-                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                        <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                        <td>@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[0..10]</td>
+                                        <td>@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[11..16]</td>
 
                                         <i class="fa fa-trash-o" style="font-size:22px"
                                            @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
@@ -185,8 +185,8 @@
                                     <tr class="event-OnlineMeeting" id="default3" >
                                                 <td style="padding-top: 27px;" >@e?.Organizer?.EmailAddress?.Name</td>
                                                 <td style="padding-top: 27px;" >@e?.Subject</td>
-                                                <td style="padding-top: 27px;" >@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                                <td style="padding-top: 27px;" >@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                                <td style="padding-top: 27px;" >@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[0..10]</td>
+                                                <td style="padding-top: 27px;" >@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[11..16]</td>
                                   <div style="display: flex; align-items: center;">
                                         <i class="fa fa-trash-o" style="font-size: 20px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
                                         <button class="sum-btn" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
@@ -277,6 +277,8 @@
     private FluentDialog? MyFluentDialog;
 
     @* ---------------------------------initilaisation ------------------------------------------- *@
+
+    
     protected override async Task OnInitializedAsync()
     {
         if (authenticationStateTask == null)
@@ -314,39 +316,9 @@
         StateHasChanged();
     }
 
-    private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
-    {
-        TimeZoneInfo userTimeZone = 
-            TZConvert
-            .GetTimeZoneInfo(timeZoneId);
-        int diff = 
-            System.DayOfWeek.Sunday - today.DayOfWeek;
-        var unspecifiedStart = 
-            DateTime.SpecifyKind(today.AddDays(diff), DateTimeKind.Unspecified);
-        
-        return TimeZoneInfo.ConvertTimeToUtc(unspecifiedStart, userTimeZone);
-    }
 
-    private string FormatIso8601DateTime(string? iso8601DateTime)
-    {
-        if (string.IsNullOrEmpty(iso8601DateTime))
-        {
-            return string.Empty;
-        }
-        // Load into a DateTime
-        var dateTime = 
-            DateTime
-            .Parse(iso8601DateTime);
-        if (!string.IsNullOrWhiteSpace(dateTimeFormat))
-        {
-            // Format it using the user's settings
-            return dateTime.ToString(dateTimeFormat);
-        }
 
-        // Fallback to return original value
-        return iso8601DateTime;
-    }
-
+    
 
 
     @* -----------------------------building and making calendar ----------------------------------------- *@
@@ -596,7 +568,7 @@
     }
 
      public List<string> meetingTimesSuggestions = new List<string>();
-    public async Task FindMeetingTimes(){
+    @* public async Task FindMeetingTimes(){
         var attendeesArray = attendees.Split(';');
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
         foreach (var attendee in attendeesArray)
@@ -653,7 +625,7 @@
         }
         StateHasChanged();
     }
-  
+   *@
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
 
@@ -663,12 +635,11 @@
         if (firstRender)
             MyFluentDialog!.Hide();
     }
-
-
-    private void OnOpen()
+    public void OnOpen()
     {
-        MyFluentDialog!.Show();
+        MyFluentDialog?.Show();
     }
+
 
     private void OnDismiss(DialogEventArgs args)
     {
@@ -720,7 +691,7 @@
             .RequestAdapter
             .SendPrimitiveAsync<Stream>(requestInformation);
 
-        var string2 = ConvertWebVttStreamToString(content2);
+        var string2 = sharedFunctions.ConvertWebVttStreamToString(content2);
         return string2;
         
     }
@@ -734,13 +705,7 @@
     }
 
 
-    protected string ConvertWebVttStreamToString(Stream? stream)
-    {
-        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-        {
-            return reader.ReadToEnd();
-        }
-    }
+  
 
     // Event handler for the "Summarize" button click
     protected async Task SummarizeText(string content)

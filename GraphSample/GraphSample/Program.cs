@@ -42,6 +42,7 @@ builder.Services.AddScoped<GraphClientFactory>();
 builder.Services.AddScoped<GraphClientFactoryBeta>();
 builder.Services.AddScoped<IBackendApiService, BackendApiService>();
 builder.Services.AddScoped<GraphSample.AI.OpenAIService>();
+builder.Services.AddScoped<GraphSample.SharedFns.SharedFunctions>();
 
 builder.Services.AddScoped<InputPopup>();
 builder.Services.AddBlazoredModal();
