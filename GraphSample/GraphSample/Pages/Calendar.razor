@@ -14,185 +14,13 @@
 
 @inject GraphSampleBeta.Graph.GraphClientFactoryBeta clientFactory
 
-<style>
-    .grid-container {
-        display: grid;
-        grid-template-columns: 700px 550px;
-        grid-template-rows: 500px 500px;
-        gap: 20px;
-        padding-left: 20px;
-        margin-top: 20px;
-        margin-bottom: 20px;
-        height: 70vh;
-    }
-
-
-    @@media (max-width: 850px) {
-        .grid-container {
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Shrink the grid items */
-            grid-template-rows: auto; /* Reset the rows to adjust automatically */
-            padding-left: 0; /* Remove the left padding */
-            margin-left: 0; /* Center everything */
-            justify-items: center;
-            align-items: center;
-            height: 100%;
-            
-        }
-    }
-
-    .grid-item {
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-        padding: 15px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        height: 100%;
-        width: 100%;
-        overflow-y: auto;
-        margin-bottom: 0%;
-        padding-right: 5px;
-        position: relative;
-        font-family: 'Pavanam', sans-serif;
-    }
-
-        .grid-item::-webkit-scrollbar {
-            width: 10px;
-            height: 70%;
-            background-color: transparent;
-            height: calc(100% - 20px);
-        }
-
-        .grid-item::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 1.5rem;
-        }
-
-            .grid-item::-webkit-scrollbar-thumb:hover {
-                background-color: rgba(255, 255, 255, 0.9);
-            }
-
-    .grid-container .grid-item a {
-        color: rgb(0, 0, 0);
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
-
-        .grid-container .grid-item a:hover {
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-        }
-
-        .grid-container .grid-item a:active {
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-        }
-
-
-    .calendar-table {
-        width: 100%;
-        text-align: center;
-    }
-
-        .calendar-table thead {
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .calendar-table .day {
-            margin: 2px;
-            cursor: pointer;
-            background-color: rgba(255, 255, 255, 0.3);
-            /*            border-radius: 10px;*/
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .calendar-table td {
-            padding: 30px;
-            vertical-align: middle;
-        }
-
-        .calendar-table .day:hover {
-            background-color: #A2CFFA;
-        }
-
-        .calendar-table .day.selected {
-            background-color: #A2CFFA;
-        }
-
-    .event-row:hover {
-        background-color: #A2CFFA;
-    }
-
-    #popupContainer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: none;
-        z-index: 3;
-    }
-
-    #popupContent {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: #fff;
-        padding: 20px;
-        width: 400px;
-    }
-
-    .event-OnlineMeeting {
-        border: 2px solid green;
-    }
-
-    .dropdown-Calendar {
-        max-height: 95%;
-        overflow: scroll;
-        max-width: 99%;
-        border: 2px solid black;
-        padding: 1% 1% 1% 1%;
-    }
-
-    .sum-btn {
-        margin: 10px;
-        background-color: #1D6F42;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-        .onenote-btn {
-        margin: 10px;
-        background-color: #AE4BD5;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-    .sum-btn:hover {
-        background-color: #1a673d;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .onenote-btn:hover {
-        background-color: #a246c7;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-    }
-</style>
-
-
 <AuthorizeView>
     <Authorized>
+       
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+      
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-        <button class="btn btn-primary" style="margin-left: 20px;" @onclick="SuggeestMeetingTimes">Suggested Meeting Times</button>
+        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="GetFreeSchedule">Get Free Schedule</button> *@
         <div id="popupContainer">
             <div id="popupContent">
                 <h2 style="color: #0078d4 !important;">Add Event</h2>
@@ -202,7 +30,7 @@
                         <input @bind="subject" id="subject" class="form-control" />
                     </div>
                     <div class="mb-3">
-                        <label for="attendees">Attendees, seperate by ";"</label>
+                        <label for="attendees">Attendees</label>
                         <input @bind="attendees" id="attendees" class="form-control" />
                     </div>
                     <div class="row">
@@ -349,10 +177,10 @@
                                         </FluentTooltip>
                                     
                                     <tr class="event-OnlineMeeting" id="default3" >
-                                                <td>@e?.Organizer?.EmailAddress?.Name</td>
-                                                <td>@e?.Subject</td>
-                                                <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
-                                                <td>@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
+                                                <td style="padding-top: 27px;" >@e?.Organizer?.EmailAddress?.Name</td>
+                                                <td style="padding-top: 27px;" >@e?.Subject</td>
+                                                <td style="padding-top: 27px;" >@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[0..10]</td>
+                                                <td style="padding-top: 27px;" >@FormatIso8601DateTime(e?.Start?.DateTime).ToString()[11..16]</td>
                                   <div style="display: flex; align-items: center;">
                                         <i class="fa fa-trash-o" style="font-size: 20px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
                                         <button class="sum-btn" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
@@ -399,6 +227,10 @@
                 }
             </div>
         </FluentDialog>
+
+        <div class="chat-bot">
+            <Chat />
+        </div>
 
     </Authorized>
     <NotAuthorized>
@@ -731,66 +563,50 @@
         await LoadCalendar();
         return events.ToList();
     }
-    
-    public List<string> meetingTimesSuggestions = new List<string>();
-    public async Task FindMeetingTimes(){
-        var attendeesArray = attendees.Split(';');
-        var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
-        foreach (var attendee in attendeesArray)
-        {
-            attendeesList.Add(new Microsoft.Graph.Beta.Models.AttendeeBase
-            {
-                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
-                {
-                    Address = attendee.Trim()
-                },
-                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
-            });
-        }
-        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
 
+    @* get free schedule *@
+
+    public async Task GetFreeSchedule()
+    {
+        // Code snippets are only available for the latest version. Current version is 5.x
+
+        var graphClient = clientFactory.GetAuthenticatedClient();
+
+        @* turn this into a string list seperated by commas *@
+        var attendeesArray = attendees.Split(';');
+        var schedulesTemp = new List<string>();
+        foreach (string attendee in attendeesArray)
         {
-            Attendees = attendeesList,
-            TimeConstraint = new Microsoft.Graph.Beta.Models.TimeConstraint
-            {
-                Timeslots = new List<Microsoft.Graph.Beta.Models.TimeSlot>
-                {
-                    new Microsoft.Graph.Beta.Models.TimeSlot
-                    {
-                        Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-                        {
-                            DateTime = start.ToString("o"),
-                            TimeZone = userTimeZone
-                        },
-                        End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-                        {
-                            DateTime = end.ToString("o"),
-                            TimeZone = userTimeZone
-                        }
-                    }
-                }
-            },
-            MeetingDuration = new Microsoft.Graph.Beta.Duration
-            {
-                Time = "PT1H"
-            },
-            MaxCandidates = 5,
-            ReturnSuggestionReasons = true,
-            MinimumAttendeePercentage = 100
+            schedulesTemp.Add(attendee.Trim());
         };
-        var meetingTimeSuggestionsResult = 
-            await graphClient
-                .Me
-                .FindMeetingTimes(meetingTimeSuggestionsRequestBody)
-                .Request()
-                .PostAsync();
-        foreach(var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions){
-            meetingTimesSuggestions
-            .Add(suggestion.MeetingTimeSlot.Start.DateTime);
-        }
-        StateHasChanged();
+
+
+
+
+        var requestBody = new Microsoft.Graph.Beta.Me.Calendar.GetSchedule.GetSchedulePostRequestBody
+        {
+
+            Schedules = schedulesTemp,
+
+
+            StartTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = start.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            EndTime = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = end.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            AvailabilityViewInterval = 60,
+        };
+        var result = await graphClient.Me.Calendar.GetSchedule.PostAsync(requestBody, (requestConfiguration) =>
+        {
+            requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+        });
     }
-  
+
 
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
@@ -1046,7 +862,7 @@
         var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
         Console.WriteLine("Done");
-    }
+    } *@
 
 
 }
