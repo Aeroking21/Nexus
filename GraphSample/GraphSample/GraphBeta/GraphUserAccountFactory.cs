@@ -76,25 +76,6 @@ namespace GraphSampleBeta.Graph
 
             claimsPrincipal.AddUserGraphInfo(user);
 
-            // Get user's photo
-            // GET /me/photos/48x48/$value
-            try
-            {
-                var photo = await graphClient.Me
-                .Photos["48x48"]  // Smallest standard size
-                .Content
-                .GetAsync();
-
-                claimsPrincipal.AddUserGraphPhoto(photo);
-            }
-            catch (ODataError err)
-            {
-                Console.WriteLine($"Photo error: ${err?.Error?.Code}");
-                if (err?.Error?.Code != "ImageNotFound")
-                {
-                    throw err ?? new Exception("Unknown error getting user photo.");
-                }
-            }
         }
     }
 }

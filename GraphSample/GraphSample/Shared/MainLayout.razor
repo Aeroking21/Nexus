@@ -51,6 +51,11 @@
         return this.AccessToken;
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        NavBarSearch.CloseDialog();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         var tokenResult = await AccessTokenProvider.RequestAccessToken();
