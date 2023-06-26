@@ -1,1 +1,996 @@
+@page "/calendar"
+@using System.Security.Authentication
+@using TimeZoneConverter
+@using System.IO;
+@using Azure
+@using Azure.AI.OpenAI
+@using System.Text
+@using Microsoft.Graph.Beta
+@using Microsoft.Graph.Beta.Models
+@using Microsoft.Graph.Beta.Models.ODataErrors
+@using Microsoft.Kiota.Abstractions
+@using Microsoft.Kiota.Abstractions.Serialization
 
+
+
+@inject GraphSample.SharedFns.SharedFunctions sharedFunctions
+@inject GraphSample.Graph.GraphClientFactory clientFactory
+@inject GraphSample.AI.OpenAIService OpenAIService
+
+@inject GraphSampleBeta.Graph.GraphClientFactoryBeta clientFactory
+
+<AuthorizeView>
+    <Authorized>
+       
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+      
+        <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
+        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button> *@
+        
+        <div id="popupContainer">
+            <div id="popupContent">
+                <h2 style="color: #0078d4 !important;">Add Event</h2>
+                <form>
+                    <div class="mb-3">
+                        <label for="subject">Subject</label>
+                        <input @bind="subject" id="subject" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="attendees">Attendees</label>
+                        <input @bind="attendees" id="attendees" class="form-control" />
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="start">Start</label>
+                                <input @bind="start" type="datetime-local" id="date" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="end">End</label>
+                                <input @bind="end" type="datetime-local" id="end" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="body">Body</label>
+                        <textarea @bind="body" id="body" class="form-control"></textarea>
+                    </div>
+                </form>
+                <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
+                <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
+            </div>
+        </div>
+        <div class="grid-container">
+            <div class="grid-item">
+                <div class="display-month">
+                    <h2 style="color: #0078d4;">@MonthToText() @year</h2>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-primary" @onclick="PreviousMonth">Previous</button>
+                        <button class="btn btn-primary" @onclick="Today">Today</button>
+                        <button class="btn btn-primary" @onclick="NextMonth">Next</button>
+                    </div>
+                    <table class="calendar-table">
+                        <thead>
+                            <tr>
+                                <th>Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int r = 0; r < rowsCount; r++)
+                            {
+                                <tr>
+                                    @foreach (var item in days.Skip(r * 7).Take(7))
+                                    {
+                                        if (item.Date == DateTime.Now.Date)
+                                        {
+                                            <td class="day text-white" style="background-color: #1b6ec2"
+                                                @onclick="() => getEventsOfSelectedDay(item)">
+                                                <b>@DayTemplate(item)</b>
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
+                                            {
+                                                <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)</td>
+                                            }
+                                            else
+                                            {
+                                                if (item.Date.ToString()[0..10] == selectedDay.Date.ToString()[0..10])
+                                                {
+                                                    <td class="day selected" @onclick="() => getEventsOfSelectedDay(item)">
+                                                        @DayTemplate(item)
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td class="day" @onclick="() => getEventsOfSelectedDay(item)">@DayTemplate(item)</td>
+                                                }
+                                            }
+                                        }
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="grid-item">
+                @if (selectedDay.Date == DateTime.Now.Date)
+                {
+                    <h2 style="color: #0078d4 !important;">Events for today</h2>
+                }
+                else if (selectedDay.Date.ToString()[0..10] == "01/01/0001")
+                {
+
+                    <h2 style="color: #0078d4 !important;">Events</h2>
+                }
+                else
+                {
+                    <h2 style="color: #0078d4 !important;">Events for @selectedDay.Date.ToString()[0..10]</h2>
+                }
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Organiser</th>
+                            <th>Subject</th>
+                            <th>Start Day</th>
+                            @* <th>End Day</th> *@
+                            <th>Start Time</th>
+                            @* <th>End Time</th> *@
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (getEventsOfSelectedDay(selectedDay).Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4">No events for this day</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var e in getEventsOfSelectedDay(selectedDay))
+                            {
+                                if (!(bool)e.IsOnlineMeeting)
+                                {
+                                    <tr class="event-row">
+                                        <td>@e?.Organizer?.EmailAddress?.Name</td>
+                                        <td>@e?.Subject</td>
+                                        <td>@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[0..10]</td>
+                                        <td>@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[11..16]</td>
+
+                                        <i class="fa fa-trash-o" style="font-size:22px"
+                                           @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                    </tr>
+                                }
+
+                                else
+                                {
+                                     <FluentTooltip Anchor="default3" Position=TooltipPosition.Top Delay=50>
+                                        Couldn't attend? Summarise this call
+                                        </FluentTooltip>
+                                    <FluentTooltip Anchor="default4" Position=TooltipPosition.Top Delay=50>
+                                        To OneNote
+                                        </FluentTooltip>
+                                    
+                                    <tr class="event-OnlineMeeting" id="default3" >
+                                                <td style="padding-top: 27px;" >@e?.Organizer?.EmailAddress?.Name</td>
+                                                <td style="padding-top: 27px;" >@e?.Subject</td>
+                                                <td style="padding-top: 27px;" >@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[0..10]</td>
+                                                <td style="padding-top: 27px;" >@sharedFunctions.FormatIso8601DateTime(e?.Start?.DateTime, dateTimeFormat).ToString()[11..16]</td>
+                                  <div style="display: flex; align-items: center;">
+                                        <i class="fa fa-trash-o" style="font-size: 20px" @onclick="() => deleteItem((getEventsOfSelectedDay(selectedDay)), e)"></i>
+                                        <button class="sum-btn" @onclick="() => GetContent(e.OnlineMeeting.JoinUrl)" id="default3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+                                            <path fill="currentColor" d="m227.32 73.37l-44.69-44.68a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h168a8 8 0 0 0 0-16H115.32l112-112a16 16 0 0 0 0-22.63ZM136 75.31L152.69 92L68 176.69L51.31 160ZM48 208v-28.69L76.69 208Zm48-3.31L79.32 188L164 103.31L180.69 120Zm96-96L147.32 64l24-24L216 84.69Z" />
+                                            </svg>
+                                        </button>
+                                        <button class="onenote-btn" id="default4" @onclick="() => WriteToOneNote(e.OnlineMeeting.JoinUrl)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                                            <path fill="#733781" d="M16.621 2.326h1.9v2.547c2.976.114 5.988-.242 8.942.2c.1.337.216.671.328 1c.75.134 1.959.041 2.077 1.059a28.973 28.973 0 0 1-.048 5.606a22.957 22.957 0 0 1-.057 5.962a21.112 21.112 0 0 1 .1 5.52c-.137.989-1.31.919-2.051 1.059a4.73 4.73 0 0 1-.378 1.549a3.8 3.8 0 0 1-1.921.3c-2.331-.022-4.662-.013-6.99-.013v2.547h-1.991C11.7 28.787 6.846 27.976 2 27.13V4.876c4.875-.849 9.75-1.682 14.621-2.55Z" />
+                                            <path fill="#fff" d="M18.523 5.821h8.271v1.266c.731 0 1.463.016 2.2.048c.041 1.673.057 3.345-.013 5.018c-.728.025-1.46.038-2.185.041v13.985h-8.271v-2.55h6.042v-1.266h-6.042v-1.6h6.042v-1.266h-6.042V17.9h6.042v-1.266h-6.042v-1.6h6.039v-1.266h-6.042v-1.6h6.042v-1.266h-6.042v-1.6h6.042V8.036h-6.042V5.821Zm-6.697 4.846c.633-.035 1.269-.07 1.908-.1V21.1c-.687-.029-1.367-.067-2.048-.1c-1.266-2.433-2.636-4.811-3.86-7.266c.07 2.353.029 4.71.035 7.063c-.579-.038-1.151-.073-1.727-.108q.014-4.846 0-9.7l1.965-.1c1.243 2.277 2.506 4.544 3.714 6.843c.026-2.355 0-4.712.013-7.065Z" />
+                                            <path fill="#fff" d="M27.742 13.122c.413.016.827.035 1.243.054a65.438 65.438 0 0 1-.01 5.012c-.413.019-.824.038-1.234.054q-.004-2.562.001-5.12Zm0 6.039c.413.019.83.041 1.25.064a89.23 89.23 0 0 1 0 4.989l-1.25.076q-.005-2.566 0-5.129Z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                  
+                                  
+                                  </tr>
+                                                
+                                   
+
+                                }
+
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <FluentDialog @ref="MyFluentDialog" aria-label="Simple dialog" Modal=true @ondialogdismiss=OnDismiss>
+            <div class="dropdown-Calendar">
+                @if (string.IsNullOrEmpty(summary))
+                {
+                    <FluentProgressRing></FluentProgressRing>
+                }
+
+                else
+                {
+                    @* <button>Write to One Note</button> *@
+                    @summary
+                }
+            </div>
+        </FluentDialog>
+
+        <div class="chat-bot">
+            <Chat />
+        </div>
+
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    @* --------------------------------------defintiions and calendar ------------------------ *@
+    public class CalendarDay
+    {
+        public int DayNumber { get; set; }
+        public DateTime Date { get; set; }
+        public bool IsEmpty { get; set; }
+        public List<Microsoft.Graph.Beta.Models.Event> dayEvents { get; set; } = new List<Microsoft.Graph.Beta.Models.Event>();
+    }
+
+    private List<CalendarDay> days = new List<CalendarDay>();
+    private int year = DateTime.Now.Year;
+    private int month = DateTime.Now.Month;
+    private int rowsCount = 0;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    private GraphServiceClient? graphClient;
+    public IList<Microsoft.Graph.Beta.Models.Event> events = new List<Microsoft.Graph.Beta.Models.Event>();
+    private string? dateTimeFormat;
+    public CalendarDay selectedDay = new CalendarDay();
+
+    public string subject { get; set; } = "";
+    private string attendees { get; set; } = string.Empty;
+    private DateTime start = new DateTime(DateTime.Today.Ticks);
+    private DateTime end = new DateTime(DateTime.Today.Ticks);
+    private string body = string.Empty;
+    private string userTimeZone = string.Empty;
+    protected string summary = "";
+    private FluentDialog? MyFluentDialog;
+
+    @* ---------------------------------initilaisation ------------------------------------------- *@
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (authenticationStateTask == null)
+        {
+            throw new AuthenticationException(
+            "Unable to access authentication state");
+        }
+        var user = 
+            (await authenticationStateTask)
+            .User;
+        userTimeZone = 
+            (await authenticationStateTask)
+            .User
+            .GetUserGraphTimeZone() ?? "UTC";
+        graphClient = 
+            clientFactory
+            .GetAuthenticatedClient();
+        var dateTimeFormat =
+             $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
+         @* var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
+            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+        });
+
+        var pageIterator = 
+            Microsoft.Graph.PageIterator<Microsoft.Graph.Beta.Models.Event>
+            .CreatePageIterator(
+        graphClient,
+        eventPage,
+        // Callback executed for each item in
+        // the collection
+        (msg) =>
+        {
+            Console.WriteLine(msg.Subject);
+            events.Add(msg);
+            return true;
+        },
+        // Used to configure subsequent page
+        // requests
+        (req) =>
+        {
+            // Re-add the header to subsequent requests
+            req.Headers.Add("Prefer", "outlook.body-content-type=\"text\"");
+            return req;
+        });
+        await pageIterator.IterateAsync(); *@
+
+        var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
+            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+            requestConfiguration.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+
+        });
+
+        var pageIterator = Microsoft.Graph.PageIterator<Microsoft.Graph.Beta.Models.Event, Microsoft.Graph.Beta.Models.EventCollectionResponse>
+            .CreatePageIterator(
+            graphClient,
+            eventPage,
+            (msg) =>
+            {
+                Console.WriteLine(msg.Subject);
+                events.Add(msg);
+                return true;
+            },
+            (req) =>
+            {
+                req.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+                return req;
+            }
+            );
+        await pageIterator.IterateAsync();
+
+
+
+
+// Print the subject of each event
+foreach (var eventItem in events)
+{
+    Console.WriteLine(eventItem.Subject);
+}
+
+
+        await base.OnInitializedAsync();
+        await LoadCalendar();
+        StateHasChanged();
+    }
+
+
+
+    
+
+
+    @* -----------------------------building and making calendar ----------------------------------------- *@
+
+    [Parameter]
+    public RenderFragment<CalendarDay> DayTemplate { get; set; } = DefaultDayTemplate;
+    private static RenderFragment<CalendarDay> DefaultDayTemplate = (day) => builder =>
+    {
+        if (day.DayNumber != 0)
+        {
+            builder.OpenElement(1, "div"); // Create a container div for the day
+
+            builder.OpenElement(2, "div"); // Create a div for the day number
+            builder.AddContent(3, day.DayNumber);
+            builder.CloseElement();
+
+            // Display the events for the day
+            if (day.dayEvents != null)
+            {
+                if (day.dayEvents.Count > 0)
+                {
+                    builder.OpenElement(4, "div"); // Create a div for ellipses
+                    builder.AddContent(5, "...");
+                    builder.CloseElement();
+                }
+            }
+            builder.CloseElement(); // Close the container div
+        }
+    };
+    public async Task LoadCalendar()
+    {
+        List<CalendarDay> GenerateEmptyDays(int numberOfEmptyDays)
+        {
+            return Enumerable.Range(0, numberOfEmptyDays)
+            .Select(_ => new CalendarDay { DayNumber = 0, IsEmpty = true })
+            .ToList();
+        }
+
+        List<CalendarDay> GenerateMonthDays()
+        {
+            int numberOfDaysInMonth = DateTime.DaysInMonth(year, month);
+
+            return Enumerable.Range(1, numberOfDaysInMonth)
+            .Select(day => new CalendarDay
+            {
+                DayNumber = day,
+                IsEmpty = false,
+                Date = new DateTime(year, month, day),
+                dayEvents = new List<Microsoft.Graph.Beta.Models.Event>()
+            })
+            .ToList();
+        }
+
+        int CalculateNumberOfEmptyDays()
+        {
+            var firstDayDate = new DateTime(year, month, 1);
+            int weekDayNumber = (int)firstDayDate.DayOfWeek;
+            return weekDayNumber == 7 ? 0 : weekDayNumber;
+        }
+
+        int CalculateRowsCount(int totalDays)
+        {
+            return totalDays % 7 == 0
+            ? totalDays / 7
+            : Convert.ToInt32(totalDays / 7) + 1;
+        }
+
+        days = new List<CalendarDay>();
+
+        int numberOfEmptyDays = CalculateNumberOfEmptyDays();
+        
+        days
+        .AddRange(GenerateEmptyDays(numberOfEmptyDays));
+
+        days
+        .AddRange(GenerateMonthDays());
+
+        rowsCount = 
+            CalculateRowsCount(days.Count);
+
+        foreach (var day in days)
+        {
+            day.dayEvents = getEventsofToday(day);
+        }
+    }
+    public string MonthToText()
+    {
+        switch (month)
+        {
+            case 1: return "January";
+            case 2: return "February";
+            case 3: return "March";
+            case 4: return "April";
+            case 5: return "May";
+            case 6: return "June";
+            case 7: return "July";
+            case 8: return "August";
+            case 9: return "September";
+            case 10: return "October";
+            case 11: return "November";
+            case 12: return "December";
+            default: return "";
+        }
+    }
+    public async Task NextMonth()
+    {
+        (int updatedMonth, int updatedYear) = month == 12
+        ? (1, year + 1)
+        : (month + 1, year);
+
+        month = updatedMonth;
+        year = updatedYear;
+
+        MonthToText();
+        await LoadCalendar();
+        StateHasChanged();
+    }
+
+    public async Task PreviousMonth()
+    {
+        (int updatedMonth, int updatedYear) = month == 1
+        ? (12, year - 1)
+        : (month - 1, year);
+
+        month = updatedMonth;
+        year = updatedYear;
+
+        await LoadCalendar();
+        StateHasChanged();
+    }
+    public async Task Today()
+    {
+        selectedDay.Date = DateTime.Now.Date;
+        selectedDay.dayEvents = getEventsofToday(selectedDay);
+        month = DateTime.Now.Month;
+        year = DateTime.Now.Year;
+        await LoadCalendar();
+        StateHasChanged();
+    }
+
+    @* --------------------------------------Events ---------------------------------------- *@
+    public async Task<List<Microsoft.Graph.Beta.Models.Event>> deleteItem(List<Microsoft.Graph.Beta.Models.Event> e, Microsoft.Graph.Beta.Models.Event item)
+    {
+        e.Remove(item);
+        await graphClient
+        .Me
+        .Events[item.Id]
+        .DeleteAsync();
+
+        StateHasChanged();
+        return e;
+    }
+
+    public List<Microsoft.Graph.Beta.Models.Event> getEventsOfSelectedDay(CalendarDay day)
+    {
+        selectedDay = day;
+        return selectedDay.dayEvents;
+    }
+
+    public List<Microsoft.Graph.Beta.Models.Event> getEventsofToday(CalendarDay day)
+    {
+        List<Microsoft.Graph.Beta.Models.Event> eventsOfDay = new List<Microsoft.Graph.Beta.Models.Event>();
+        foreach (var e in events)
+        {
+            if (((e.Start.DateTime).ToString()[0..10]).Split("-")[0] == ((day.Date).ToString()[0..10]).Split("/")[2] &&
+            ((e.Start.DateTime).ToString()[0..10]).Split("-")[1] == ((day.Date).ToString()[0..10]).Split("/")[1] &&
+            ((e.Start.DateTime).ToString()[0..10]).Split("-")[2] == ((day.Date).ToString()[0..10]).Split("/")[0])
+            {
+                eventsOfDay.Add(e);
+            }
+        }
+        return eventsOfDay;
+    }
+
+
+    @* ----------------------------------------Adding Events --------------------------- *@
+    public async Task AddEvent()
+    {
+        var newEvent = new Microsoft.Graph.Beta.Models.Event
+        {
+            Subject = subject,
+            Body = new Microsoft.Graph.Beta.Models.ItemBody
+            {
+                ContentType = Microsoft.Graph.Beta.Models.BodyType.Text,
+                Content = body
+            },
+            Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = start.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = end.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            Attendees = new List<Microsoft.Graph.Beta.Models.Attendee>()
+        };
+
+        var attendeesArray = attendees.Split(';');
+        foreach (var attendee in attendeesArray)
+        {
+            newEvent.Attendees.Add(new Microsoft.Graph.Beta.Models.Attendee
+            {
+                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
+                {
+                    Address = attendee.Trim()
+                },
+                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
+            });
+        }
+
+        try
+        {
+            await graphClient.Me
+                .Events
+                .PostAsync(newEvent);
+            events = await getEvents();
+            Console.WriteLine(userTimeZone.ToString());
+            subject = "";
+            attendees = "";
+            start = new DateTime(DateTime.Today.Ticks);
+            end = new DateTime(DateTime.Today.Ticks);
+            body = "";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    public async Task<List<Microsoft.Graph.Beta.Models.Event>> getEvents()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var eventPage = await graphClient.Me
+            .Calendar.Events
+            .GetAsync(config =>
+            {
+                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+            });
+        events = 
+            eventPage?
+            .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+        
+        await LoadCalendar();
+        return events.ToList();
+    }
+
+     public List<string> meetingTimesSuggestions = new List<string>();
+    @* public async Task FindMeetingTimes(){
+        var attendeesArray = attendees.Split(';');
+        var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
+        foreach (var attendee in attendeesArray)
+        {
+            attendeesList.Add(new Microsoft.Graph.Beta.Models.AttendeeBase
+            {
+                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
+                {
+                    Address = attendee.Trim()
+                },
+                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
+            });
+        }
+        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
+
+        {
+            Attendees = attendeesList,
+            TimeConstraint = new Microsoft.Graph.Beta.Models.TimeConstraint
+            {
+                Timeslots = new List<Microsoft.Graph.Beta.Models.TimeSlot>
+                {
+                    new Microsoft.Graph.Beta.Models.TimeSlot
+                    {
+                        Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        {
+                            DateTime = start.ToString("o"),
+                            TimeZone = userTimeZone
+                        },
+                        End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        {
+                            DateTime = end.ToString("o"),
+                            TimeZone = userTimeZone
+                        }
+                    }
+                }
+            },
+            MeetingDuration = new Microsoft.Graph.Beta.Duration
+            {
+                Time = "PT1H"
+            },
+            MaxCandidates = 5,
+            ReturnSuggestionReasons = true,
+            MinimumAttendeePercentage = 100
+        };
+        var meetingTimeSuggestionsResult = 
+            await graphClient
+                .Me
+                .FindMeetingTimes(meetingTimeSuggestionsRequestBody)
+                .Request()
+                .PostAsync();
+        foreach(var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions){
+            meetingTimesSuggestions
+            .Add(suggestion.MeetingTimeSlot.Start.DateTime);
+        }
+        StateHasChanged();
+    }
+   *@
+
+    @* ---------------------------------------- AI Transcript Function --------------------------- *@
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            MyFluentDialog!.Hide();
+    }
+    public void OnOpen()
+    {
+        MyFluentDialog?.Show();
+    }
+
+
+    private void OnDismiss(DialogEventArgs args)
+    {
+        if (args is not null && args.Reason is not null && args.Reason == "dismiss")
+        {
+            MyFluentDialog!.Hide();
+        }
+    }
+
+     public string ConvertWebVttStreamToString(Stream? stream)
+        {
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                return reader.ReadToEnd();
+            }
+        }
+
+    protected async Task<string> SummaryHelperFunction(string meetingLink){
+         var originalString = "JoinWebUrl eq '1234'";
+        string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
+
+        Console.WriteLine(modifiedLink);
+
+        var me = 
+            await 
+            graphClient
+            .Me
+            .GetAsync();
+
+        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration
+            .QueryParameters
+            .Filter = modifiedLink;
+        });
+
+        var transcripts2 = 
+            await graphClient
+            .Users[me.Id]
+            .OnlineMeetings[meetingInfo.Value[0].Id]
+            .Transcripts
+            .GetAsync();
+
+
+        var requestInformation = 
+            graphClient
+            .Users[me.Id]
+            .OnlineMeetings[meetingInfo.Value[0].Id]
+            .Transcripts[transcripts2.Value[0].Id]
+            .Content
+            .ToGetRequestInformation();
+        
+        requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
+        requestInformation.QueryParameters.Add("format", "text/vtt");
+        var content2 = 
+            await graphClient
+            .RequestAdapter
+            .SendPrimitiveAsync<Stream>(requestInformation);
+
+        var string2 = ConvertWebVttStreamToString(content2);
+        return string2;
+        
+    }
+    protected async void GetContent(string meetingLink)
+    {
+        OnOpen();
+        string string2;
+        string2 = await SummaryHelperFunction(meetingLink);
+        await SummarizeText(string2);
+        StateHasChanged();
+    }
+
+
+  
+
+    // Event handler for the "Summarize" button click
+    protected async Task SummarizeText(string content)
+    {
+
+        // Perform summarization until the overall summary is less than 3000 characters
+        var summaries = new List<string>();
+        var overallSummary = "";
+
+        // Split the content into smaller chunks
+        var chunkSize = 750; // Adjust this value as per your model's character limit
+        var chunks = SplitContentIntoChunks(content, chunkSize);
+
+        // Perform summarization for each chunk
+        foreach (var chunk in chunks)
+        {
+            string prompt = $"Provide an executive level summary for the following meeting transcript in detail, assume the person was not able to attend this meeting. Ignore any timestamps and tags:\n\n{chunk}\n";
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+
+            summaries.Add(completion);
+            string finish = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish2);
+        }
+
+        // Combine the individual summaries into an overall summary
+        overallSummary = string.Join(" ", summaries);
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        if (overallSummary.Length >= 5000)
+        {
+            summaries.Clear();
+
+            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+
+            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = completionsResponse.Value.Choices[0].Text;
+
+            summaries.Add(completion);
+            string finish = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish);
+            string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+
+            summaries.Add(completionFinish2);
+        }
+
+        //Break the loop if the overall summary exceeds 2500 characters
+        else if (overallSummary.Length <= 500)
+        {
+            summaries.Clear();
+
+            string prompt = 
+                $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+
+            var completionsResponse = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, prompt);
+            var completion = 
+                completionsResponse
+                .Value
+                .Choices[0]
+                .Text;
+
+            summaries.Add(completion);
+            string finish = 
+                $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+            var completionsResponseFinish = 
+                await OpenAIService
+                .client
+                .GetCompletionsAsync(OpenAIService.engine, finish);
+            var completionFinish = 
+                completionsResponseFinish
+                .Value
+                .Choices[0]
+                .Text;
+
+            summaries.Add(completionFinish);
+            string finish2 = 
+                $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+            var completionsResponseFinish2 =
+                 await OpenAIService
+                 .client
+                 .GetCompletionsAsync(OpenAIService.engine, finish2);
+            var completionFinish2 = 
+                completionsResponseFinish2
+                .Value
+                .Choices[0]
+                .Text;
+
+            summaries.Add(completionFinish2);
+        }
+
+        overallSummary = string.Join(" ", summaries);
+        summaries.Clear();
+        summary = overallSummary;
+        Console.WriteLine("Generated AI summary");
+
+    }
+
+    // Helper method to split the content into smaller chunks
+    private IEnumerable<string> SplitContentIntoChunks(string content, int chunkSize)
+    {
+        var sentences = content.Split('.', '!', '?');
+        var currentChunk = new StringBuilder();
+
+        foreach (var sentence in sentences)
+        {
+            if (currentChunk.Length + sentence.Length + 1 <= chunkSize)
+            {
+                currentChunk.Append(sentence).Append('.');
+            }
+            else
+            {
+                yield return currentChunk.ToString();
+                currentChunk.Clear().Append(sentence).Append('.');
+            }
+        }
+
+        if (currentChunk.Length > 0)
+        {
+            yield return currentChunk.ToString();
+        }
+    }
+
+    public bool isWriting;
+    public bool noSummary { get; set; } = true;
+    public string fileName = "";
+
+
+     private async Task WriteToOneNote(string meetingLink)
+    {
+
+        string string2; 
+        string2 = await SummaryHelperFunction(meetingLink);
+        await SummarizeText(string2);
+
+        if (summary == "")
+        {
+            Console.WriteLine("No summary to write to OneNote");
+            noSummary = true;
+            return;
+        }
+        noSummary = false;
+        if (fileName == "")
+        {
+            fileName = "summary";
+        }
+        isWriting = true; // Set the flag to indicate that writing to OneNote is in progress
+        var user = (await authenticationStateTask).User;
+        graphClient = clientFactory.GetAuthenticatedClient();
+        var requestBody = new Notebook
+        {
+            //set the displayName to the name of the uploaded file witha unique ID
+            DisplayName = $"{fileName} {DateTime.Now.ToString("yyyyMMddHHmmss")}"
+        };
+        var result = await graphClient.Me.Onenote.Notebooks.PostAsync(requestBody);
+
+        // Get the ID of the newly created notebook
+        var notebookId = result.Id;
+        // create a new section in the notebook
+        var section = new OnenoteSection
+        {
+            DisplayName = "Summarised Notes"
+        };
+        var sectionResult = await graphClient.Me.Onenote.Notebooks[notebookId].Sections.PostAsync(section);
+        // Get the ID of the newly created section
+        var sectionId = sectionResult.Id;
+
+        // Create the title of the page
+        string pageTitle = $"Summary of {fileName}";
+
+        // Create the HTML body content
+        string htmlContent = "<!DOCTYPE html>\n" +
+                              "<html>\n" +
+                              "    <head>\n" +
+                              "         <title>" + pageTitle + "</title>\n" +
+                              "         <meta name=\"" + pageTitle + $"\" content=\"{DateTime.Now.ToString("yyyy-MM-dd")}T{DateTime.Now.ToString("HH:mm:ss")}Z\" />\n" +
+                              "     </head>\n" +
+                              "     <body>\n" +
+                              "         <p>" + summary + "</p>\n" +
+                              "     </body>\n" +
+                              "</html>";
+
+        // Convert the HTML string to a byte array using UTF-8 encoding
+        byte[] contentBytes = Encoding.UTF8.GetBytes(htmlContent);
+
+        // Create multipart object with the relevant content
+        var multipartContent = new MultipartFormDataContent();
+        var htmlString = htmlContent;
+        var presentation = new StringContent(htmlString, Encoding.UTF8, "text/html");
+        multipartContent.Add(presentation, "Presentation");//needs a name
+
+        // We can add more httpcontent instance here if we wish to
+
+        // create a request information instance and make a request.
+        var requestInformation = graphClient.Me.Onenote.Sections[sectionId].Pages.ToGetRequestInformation();
+        requestInformation.Headers.Add("Content-Type", multipartContent.Headers.ContentType.ToString());
+        requestInformation.HttpMethod = Method.POST;
+        requestInformation.Content = await multipartContent.ReadAsStreamAsync();
+        var errorMapping = new Dictionary<string, ParsableFactory<IParsable>> {
+              {"4XX", ODataError.CreateFromDiscriminatorValue},
+              {"5XX", ODataError.CreateFromDiscriminatorValue},
+            };
+        var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
+        isWriting = false; // Set the flag to indicate that writing to OneNote is complete
+        Console.WriteLine("Done");
+    } 
+
+
+}
