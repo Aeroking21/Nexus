@@ -614,16 +614,18 @@ foreach (var eventItem in events)
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        events = 
+        events =
             eventPage?
             .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
-        
+
         await LoadCalendar();
         return events.ToList();
     }
 
-     public List<string> meetingTimesSuggestions = new List<string>();
-    @* public async Task FindMeetingTimes(){
+    public List<string> meetingTimesSuggestions = new List<string>();
+
+    public async Task FindMeetingTimes()
+    {
         var attendeesArray = attendees.Split(';');
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
         foreach (var attendee in attendeesArray)
@@ -637,50 +639,48 @@ foreach (var eventItem in events)
                 Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
             });
         }
-        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
 
+        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
         {
             Attendees = attendeesList,
-            TimeConstraint = new Microsoft.Graph.Beta.Models.TimeConstraint
+            TimeConstraint = new TimeConstraint
             {
-                Timeslots = new List<Microsoft.Graph.Beta.Models.TimeSlot>
+                ActivityDomain = ActivityDomain.Work,
+                TimeSlots = new List<TimeSlot>
                 {
-                    new Microsoft.Graph.Beta.Models.TimeSlot
+                    new TimeSlot
                     {
-                        Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        Start = new DateTimeTimeZone
                         {
                             DateTime = start.ToString("o"),
-                            TimeZone = userTimeZone
+                            TimeZone = userTimeZone,
                         },
-                        End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        End = new DateTimeTimeZone
                         {
                             DateTime = end.ToString("o"),
                             TimeZone = userTimeZone
-                        }
-                    }
-                }
-            },
-            MeetingDuration = new Microsoft.Graph.Beta.Duration
-            {
-                Time = "PT1H"
+                        },
+                    },
+                },
             },
             MaxCandidates = 5,
+            MeetingDuration = TimeSpan.Parse("PT1H"),
             ReturnSuggestionReasons = true,
-            MinimumAttendeePercentage = 100
+            MinimumAttendeePercentage = 100,
         };
-        var meetingTimeSuggestionsResult = 
-            await graphClient
-                .Me
-                .FindMeetingTimes(meetingTimeSuggestionsRequestBody)
-                .Request()
-                .PostAsync();
-        foreach(var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions){
+
+        var meetingTimeSuggestionsResult = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody);
+
+   
+        foreach (var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions)
+        {
             meetingTimesSuggestions
             .Add(suggestion.MeetingTimeSlot.Start.DateTime);
         }
+
         StateHasChanged();
     }
-   *@
+
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
 
@@ -704,60 +704,54 @@ foreach (var eventItem in events)
         }
     }
 
-     public string ConvertWebVttStreamToString(Stream? stream)
+    public string ConvertWebVttStreamToString(Stream? stream)
+    {
+        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
         {
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
+            return reader.ReadToEnd();
         }
+    }
 
     protected async Task<string> SummaryHelperFunction(string meetingLink){
-         var originalString = "JoinWebUrl eq '1234'";
+        var originalString = "JoinWebUrl eq '1234'";
         string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
 
-        Console.WriteLine(modifiedLink);
-
-        var me = 
-            await 
-            graphClient
-            .Me
-            .GetAsync();
-
-        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        try
         {
-            requestConfiguration
-            .QueryParameters
-            .Filter = modifiedLink;
-        });
+            var me = await graphClient.Me.GetAsync();
 
-        var transcripts2 = 
-            await graphClient
-            .Users[me.Id]
-            .OnlineMeetings[meetingInfo.Value[0].Id]
-            .Transcripts
-            .GetAsync();
+            var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration
+                .QueryParameters
+                .Filter = modifiedLink;
+            });
 
+            var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
 
-        var requestInformation = 
-            graphClient
-            .Users[me.Id]
-            .OnlineMeetings[meetingInfo.Value[0].Id]
-            .Transcripts[transcripts2.Value[0].Id]
-            .Content
-            .ToGetRequestInformation();
-        
-        requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
-        requestInformation.QueryParameters.Add("format", "text/vtt");
-        var content2 = 
-            await graphClient
-            .RequestAdapter
-            .SendPrimitiveAsync<Stream>(requestInformation);
+            var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id]
+                .Content
+                .ToGetRequestInformation();
 
-        var string2 = ConvertWebVttStreamToString(content2);
-        return string2;
-        
+            requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
+            requestInformation.QueryParameters.Add("format", "text/vtt");
+
+            var transcript_stream = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+
+            var transcript_content = ConvertWebVttStreamToString(transcript_stream);
+
+            return transcript_content;
+        }
+
+        catch
+        {
+            Console.WriteLine("Unable to get Transcript");
+        }
+
+        return "Unable to get Transcript";
+
     }
+
     protected async void GetContent(string meetingLink)
     {
         OnOpen();
@@ -869,10 +863,10 @@ foreach (var eventItem in events)
     public string fileName = "";
 
 
-     private async Task WriteToOneNote(string meetingLink)
+    private async Task WriteToOneNote(string meetingLink)
     {
 
-        string string2; 
+        string string2;
         string2 = await SummaryHelperFunction(meetingLink);
         await summariseText(string2);
 
@@ -946,7 +940,7 @@ foreach (var eventItem in events)
         var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
         Console.WriteLine("Done");
-    } 
+    }
 
 
 }
