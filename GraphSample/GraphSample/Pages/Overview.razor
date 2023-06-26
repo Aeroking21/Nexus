@@ -691,9 +691,37 @@
         config.QueryParameters.Orderby = new[] { "start/dateTime" };
     });*/
 
-        var eventPage = await graphClient.Me.Calendar.Events.GetAsync();
+        @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
 
-        myEvents = eventPage?.Value ?? new List<Event>();
+          var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
+            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+        });
+
+        var pageIterator = 
+            PageIterator<Event, EventCollectionResponse>
+            .CreatePageIterator(
+        graphClient,
+        eventPage,
+        // Callback executed for each item in
+        // the collection
+        (msg) =>
+        {
+            Console.WriteLine(msg.Subject);
+            myEvents.Add(msg);
+            return true;
+        },
+        // Used to configure subsequent page
+        // requests
+        (req) =>
+        {
+            // Re-add the header to subsequent requests
+            req.Headers.Add("Prefer", "outlook.body-content-type=\"text\"");
+            return req;
+        });
+        await pageIterator.IterateAsync();
+
     }
 
     /*
