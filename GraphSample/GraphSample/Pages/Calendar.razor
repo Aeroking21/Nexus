@@ -763,18 +763,32 @@ foreach (var eventItem in events)
         OnOpen();
         string string2;
         string2 = await SummaryHelperFunction(meetingLink);
-        await SummarizeText(string2);
+        await summariseText(string2);
         StateHasChanged();
     }
 
+    private async Task<List<string>> callOpenAI(string prompt)
+    {
+        var summaries = new List<string>();
+        var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+        var completion = completionsResponse.Value.Choices[0].Text;
+        summaries.Add(completion);
+        string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+        var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+        var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+        summaries.Add(completionFinish);
+        string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+        var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+        var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+        summaries.Add(completionFinish2);
+        return summaries;
+    }
 
-  
-
-    // Event handler for the "Summarize" button click
-    protected async Task SummarizeText(string content)
+    // Event handler for the "summarise" button click
+    protected async Task summariseText(string content)
     {
 
-        // Perform summarization until the overall summary is less than 3000 characters
+        // Perform summarisation until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
 
@@ -782,25 +796,14 @@ foreach (var eventItem in events)
         var chunkSize = 750; // Adjust this value as per your model's character limit
         var chunks = SplitContentIntoChunks(content, chunkSize);
 
-        // Perform summarization for each chunk
+        // Perform summarisation for each chunk
         foreach (var chunk in chunks)
         {
             string prompt = $"Provide an executive level summary for the following meeting transcript in detail, assume the person was not able to attend this meeting. Ignore any timestamps and tags:\n\n{chunk}\n";
-
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
-
-            summaries.Add(completion);
-            string finish = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-
-            summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
-
-            summaries.Add(completionFinish2);
+            var completionFinish = await callOpenAI(prompt);
+            summaries.Add(completionFinish[0]);
+            summaries.Add(completionFinish[1]);
+            summaries.Add(completionFinish[2]);
         }
 
         // Combine the individual summaries into an overall summary
@@ -812,24 +815,10 @@ foreach (var eventItem in events)
             summaries.Clear();
 
             string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
-
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
-
-            summaries.Add(completion);
-            string finish = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-
-            summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = 
-                await OpenAIService
-                .client
-                .GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
-
-            summaries.Add(completionFinish2);
+            var completionFinish = await callOpenAI(prompt);
+            summaries.Add(completionFinish[0]);
+            summaries.Add(completionFinish[1]);
+            summaries.Add(completionFinish[2]);
         }
 
         //Break the loop if the overall summary exceeds 2500 characters
@@ -837,48 +826,12 @@ foreach (var eventItem in events)
         {
             summaries.Clear();
 
-            string prompt = 
-                $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
-
-            var completionsResponse = 
-                await OpenAIService
-                .client
-                .GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = 
-                completionsResponse
-                .Value
-                .Choices[0]
-                .Text;
-
-            summaries.Add(completion);
-            string finish = 
-                $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = 
-                await OpenAIService
-                .client
-                .GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = 
-                completionsResponseFinish
-                .Value
-                .Choices[0]
-                .Text;
-
-            summaries.Add(completionFinish);
-            string finish2 = 
-                $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 =
-                 await OpenAIService
-                 .client
-                 .GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = 
-                completionsResponseFinish2
-                .Value
-                .Choices[0]
-                .Text;
-
-            summaries.Add(completionFinish2);
+            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+            var completionFinish = await callOpenAI(prompt);
+            summaries.Add(completionFinish[0]);
+            summaries.Add(completionFinish[1]);
+            summaries.Add(completionFinish[2]);
         }
-
         overallSummary = string.Join(" ", summaries);
         summaries.Clear();
         summary = overallSummary;
@@ -921,7 +874,7 @@ foreach (var eventItem in events)
 
         string string2; 
         string2 = await SummaryHelperFunction(meetingLink);
-        await SummarizeText(string2);
+        await summariseText(string2);
 
         if (summary == "")
         {
