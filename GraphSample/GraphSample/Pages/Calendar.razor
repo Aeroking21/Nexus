@@ -298,18 +298,70 @@
             .GetAuthenticatedClient();
         var dateTimeFormat =
              $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-        var eventPage = 
-            await graphClient
-            .Me
-            .Calendar.Events
-            .GetAsync(config =>
+         @* var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
+            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+        });
+
+        var pageIterator = 
+            Microsoft.Graph.PageIterator<Microsoft.Graph.Beta.Models.Event>
+            .CreatePageIterator(
+        graphClient,
+        eventPage,
+        // Callback executed for each item in
+        // the collection
+        (msg) =>
+        {
+            Console.WriteLine(msg.Subject);
+            events.Add(msg);
+            return true;
+        },
+        // Used to configure subsequent page
+        // requests
+        (req) =>
+        {
+            // Re-add the header to subsequent requests
+            req.Headers.Add("Prefer", "outlook.body-content-type=\"text\"");
+            return req;
+        });
+        await pageIterator.IterateAsync(); *@
+
+        var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
+        {
+            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
+            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+            requestConfiguration.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+
+        });
+
+        var pageIterator = Microsoft.Graph.PageIterator<Microsoft.Graph.Beta.Models.Event, Microsoft.Graph.Beta.Models.EventCollectionResponse>
+            .CreatePageIterator(
+            graphClient,
+            eventPage,
+            (msg) =>
             {
-                config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
-            });
-        
-        events = 
-            eventPage?
-            .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
+                Console.WriteLine(msg.Subject);
+                events.Add(msg);
+                return true;
+            },
+            (req) =>
+            {
+                req.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
+                return req;
+            }
+            );
+        await pageIterator.IterateAsync();
+
+
+
+
+// Print the subject of each event
+foreach (var eventItem in events)
+{
+    Console.WriteLine(eventItem.Subject);
+}
+
 
         await base.OnInitializedAsync();
         await LoadCalendar();
@@ -341,7 +393,10 @@
                 if (day.dayEvents.Count > 0)
                 {
                     builder.OpenElement(4, "div"); // Create a div for ellipses
-                    builder.AddContent(5, "...");
+                    // make the ellipses grey highlight that's in line with content 3 : day number
+                    @* builder.AddContent(5, "..."); *@
+                    builder.AddAttribute(5, "style", "background-color: orange; border-radius: 50%; width: 10px; height: 10px; margin: 0 auto;");
+
                     builder.CloseElement();
                 }
             }
