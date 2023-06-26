@@ -211,56 +211,59 @@
                                         <ul class="nestedMessages">
                                             @foreach (var convo in myConvos)
                                             {
-                                                <li class="teamMessageBlock">
-                                                    <div class="teamChatInital">
-                                                        <div class="details">
-                                                            <div class="teamChatName">@convo?.From?.User?.DisplayName</div>
-                                                            <div>@convo?.CreatedDateTime</div>
-                                                            @if (convo?.DeletedDateTime != null)
-                                                            {<div class="teamChatContent"><i>This message has been deleted</i></div> }
-                                                            else
-                                                            { <div class="teamChatContent">@((MarkupString)convo?.Body?.Content)</div>}
-                                                        </div>
+                                                @if(convo?.MessageType.ToString() == "Message")
+                                                {
+                                                    <li class="teamMessageBlock">
+                                                        <div class="teamChatInital">
+                                                            <div class="details">
+                                                                <div class="teamChatName">@convo?.From?.User?.DisplayName</div>
+                                                                <div>@convo?.CreatedDateTime</div>
+                                                                @if (convo?.DeletedDateTime != null)
+                                                                {<div class="teamChatContent"><i>This message has been deleted</i></div> }
+                                                                else
+                                                                { <div class="teamChatContent">@((MarkupString)convo?.Body?.Content)</div>}
+                                                            </div>
 
-                                                        <div class="interact">
-                                                            @if (convo?.From.User.Id == myID)
-                                                            {
-                                                                <button class="btn2 btn-delete2" @onclick="() => delChannelMessage(convo)">
-                                                                    <span class="mdi mdi-delete mdi-16px"></span>
-                                                                    <span class="mdi mdi-delete-empty mdi-16px"></span>
-                                                                </button>
-                                                            }
-                                                            <button class="btn2 btn-delete2" @onclick="() => replyToChannelMsg(true)">
-                                                                <span class="mdi mdi-reply-outline mdi-16px"></span>
-                                                                <span class="mdi mdi-reply mdi-16px"></span>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <ul>
-                                                        @foreach (var reply in myReplies)
-                                                        {
-                                                            @foreach(var subreply in reply.Reverse())
-                                                            {
-                                                                @if(convo.Id == subreply["replyToId"].ToString())
+                                                            <div class="interact">
+                                                                @if (convo?.From.User.Id == myID)
                                                                 {
-                                                                    <li>
-                                                                        <div class="teamReplySection">
-                                                                            <div class="teamChatName">@subreply?["from"]?["user"]?["displayName"]</div>
+                                                                    <button class="btn2 btn-delete2" @onclick="() => delChannelMessage(convo)">
+                                                                        <span class="mdi mdi-delete mdi-16px"></span>
+                                                                        <span class="mdi mdi-delete-empty mdi-16px"></span>
+                                                                    </button>
+                                                                }
+                                                                <button class="btn2 btn-delete2" @onclick="() => replyToChannelMsg(true)">
+                                                                    <span class="mdi mdi-reply-outline mdi-16px"></span>
+                                                                    <span class="mdi mdi-reply mdi-16px"></span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <ul>
+                                                            @foreach (var reply in myReplies)
+                                                            {
+                                                                @foreach(var subreply in reply.Reverse())
+                                                                {
+                                                                    @if(convo.Id == subreply["replyToId"].ToString())
+                                                                    {
+                                                                        <li>
+                                                                            <div class="teamReplySection">
+                                                                                <div class="teamChatName">@subreply?["from"]?["user"]?["displayName"]</div>
 
-                                                                            <div>@subreply?["createdDateTime"]</div>
+                                                                                <div>@subreply?["createdDateTime"]</div>
 
-                                                                            @if (subreply?["deletedDateTime"].ToString() != "")
-                                                                            {<div class="teamChatContent"><i>This message has been deleted</i></div> }
-                                                                            else
-                                                                            { <div class="teamChatContent">@((MarkupString)(subreply?["body"]?["content"]).ToString())</div>}
+                                                                                @if (subreply?["deletedDateTime"].ToString() != "")
+                                                                                {<div class="teamChatContent"><i>This message has been deleted</i></div> }
+                                                                                else
+                                                                                { <div class="teamChatContent">@((MarkupString)(subreply?["body"]?["content"]).ToString())</div>}
 
-                                                                        </div>
-                                                                    </li>
+                                                                            </div>
+                                                                        </li>
+                                                                    }
                                                                 }
                                                             }
-                                                        }
-                                                    </ul>
-                                                </li>
+                                                        </ul>
+                                                    </li>
+                                                }
                                             }
                                         </ul>
                                         <div class="teamInteract" hidden="@(!newChannelMessageBool)">
@@ -578,8 +581,6 @@
         public IList<ChatMessage>? replies { get; set; }
     }
 
-    private IList<messageBlock> fullPage = new List<messageBlock>();
-
     private IList<ChatMessage> myConvos = new List<ChatMessage>();
     private IList<JToken> myReplies = new List<JToken>();
 
@@ -854,6 +855,8 @@
     {
         currentTeam = (currentTeam == teamsChat) ? null : teamsChat;
         currentChannel = null;
+        myConvos.Clear();
+        myReplies.Clear();
         await getChannels();
         StateHasChanged();
     }
@@ -862,6 +865,8 @@
     private async void ToggleChannel(Channel channelChat)
     {
         currentChannel = (currentChannel == channelChat) ? null : channelChat;
+        myConvos.Clear();
+        myReplies.Clear();
         await displayChannelData();
         StateHasChanged();
     }
