@@ -393,7 +393,10 @@ foreach (var eventItem in events)
                 if (day.dayEvents.Count > 0)
                 {
                     builder.OpenElement(4, "div"); // Create a div for ellipses
-                    builder.AddContent(5, "...");
+                    // make the ellipses grey highlight that's in line with content 3 : day number
+                    @* builder.AddContent(5, "..."); *@
+                    builder.AddAttribute(5, "style", "background-color: orange; border-radius: 50%; width: 10px; height: 10px; margin: 0 auto;");
+
                     builder.CloseElement();
                 }
             }
