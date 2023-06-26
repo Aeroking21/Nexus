@@ -224,7 +224,7 @@
     {
         summary = "";
         var content = "";
-        isSummarising = true; // Set the flag to indicate that summarization is in progress
+        isSummarising = true; // Set the flag to indicate that summarisation is in progress
 
         if (uploadMethod)
         {
@@ -286,7 +286,7 @@
     // Event handler for the "Summarise" button click
     protected async Task SummariseText(string content){
 
-        // Perform summarization until the overall summary is less than 3000 characters
+        // Perform summarisation until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
         Console.WriteLine("Inside ai: " + content);
@@ -295,7 +295,7 @@
         var chunkSize = 750; // Adjust this value as per your model's character limit
         var chunks = SplitContentIntoChunks(content, chunkSize);
 
-        // Perform summarization for each chunk
+        // Perform summarisation for each chunk
         foreach (var chunk in chunks){
             string prompt = $"Summarise the following text in a professional and business like manner and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
             var completionFinish = await callOpenAI(prompt);
@@ -309,14 +309,20 @@
         //if (overallSummary.Length >= 5000){
         //    summaries.Clear();
         //    string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
-        //    summaries = await callOpenAI(prompt);
+        //    var completionFinish = await callOpenAI(prompt);
+        //    summaries.Add(completionFinish[0]);
+        //    summaries.Add(completionFinish[1]);
+        //    summaries.Add(completionFinish[2]);
         //}
 
         //Break the loop if the overall summary exceeds 2500 characters
         //else if (overallSummary.Length <= 500){
         //    summaries.Clear();
         //    string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
-        //    summaries = await callOpenAI(prompt);
+        //    var completionFinish = await callOpenAI(prompt);
+        //    summaries.Add(completionFinish[0]);
+        //    summaries.Add(completionFinish[1]);
+        //    summaries.Add(completionFinish[2]);
         //}
         overallSummary = string.Join(" ", summaries);
         summaries.Clear();
