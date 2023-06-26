@@ -274,18 +274,18 @@
                         @* CHATS TAB *@
                         <FluentTabPanel>
                             <div class="chatsPage">
-                                <div class="mypChats">
+                                <div class="myChats">
                                     @foreach (var myChat in myChats)
                                     {
                                         @if(myChat?.Topic == null)
                                         {
-                                            <div class="chatSelectBox">
+                                            <div class="chatSelectBox" @onclick="() => ToggleChat(myChat)">
                                                 <div class="chatName">@myChat?.ChatType</div>
                                             </div>
                                         }
                                         else
                                         {
-                                            <div class="chatSelectBox">
+                                            <div class="chatSelectBox" @onclick="() => ToggleChat(myChat)">
                                                 <div class="chatName">@myChat?.Topic</div>
                                             </div>
                                         }
@@ -293,7 +293,15 @@
                                 </div>
 
                                 <div class="myChatBar">
-
+                                    <li>
+                                        @foreach (var thisChat in myChatReplies)
+                                        {
+                                            <ul>
+                                                <div>thisChat?.From?.User?.DisplayName</div>
+                                                <div>@((MarkupString)thisChat?.Body?.Content)</div>
+                                            </ul>
+                                        }
+                                    </li>
                                 </div>
 
                             </div>
@@ -363,9 +371,9 @@
         await refreshContent(4);
     }
 
-    /*
-    * REFRESH EVERY 10s
-    */
+/*
+* REFRESH EVERY 10s
+*/
     private static System.Timers.Timer _timer;
     private int counter = 60;
 
@@ -416,9 +424,9 @@
         StateHasChanged();
     }
 
-    /*
-    * Refresh the screen
-    */
+/*
+* Refresh the screen
+*/
     public async Task refreshContent(int page)
     {
         if (page == 0)      { await getMail(mailQuery); }
@@ -440,9 +448,9 @@
         StateHasChanged();
     }
 
-    /*
-    * GET MAIL EVENTS
-    */
+/*
+* GET MAIL EVENTS
+*/
     /* MAIL LIST */
     private IList<Message> myMessages = new List<Message>();
 
@@ -516,9 +524,9 @@
         await refreshContent(0);
     }
 
-    /*
-    * GET TEAM EVENTS
-    */
+/*
+* GET TEAM EVENTS
+*/
     /* TEAMS LIST */
     private IList<Team> myTeams = new List<Team>();
 
@@ -530,9 +538,9 @@
         myTeams = teamPage?.Value ?? new List<Team>();
     }
 
-    /*
-    * GET CHANNEL EVENTS
-    */
+/*
+* GET CHANNEL EVENTS
+*/
     /* CHANNEL LIST */
     private IList<Channel> myChannels = new List<Channel>();
 
@@ -544,9 +552,9 @@
         myChannels = channelPage?.Value ?? new List<Channel>();
     }
 
-    /*
-    * GET ALL CHANNEL CHATS
-    */
+/*
+* GET ALL CHANNEL CHATS
+*/
     public class messageBlock
     {
         public ChatMessage? mainMessage { get; set; }
@@ -633,9 +641,9 @@
         await refreshContent(1);
     }
 
-    /*
-    * GET PERSONAL CHATS
-    */
+/*
+* GET PERSONAL CHATS
+*/
     /* CHAT LIST */
     private IList<Microsoft.Graph.Models.Chat> myChats = new List<Microsoft.Graph.Models.Chat>();
     private IList<ChatMessage> myChatReplies = new List<ChatMessage>();
@@ -645,19 +653,22 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         var chatPage = await graphClient.Me.Chats.GetAsync();
-
         myChats = chatPage?.Value ?? new List<Microsoft.Graph.Models.Chat>();
-
-        foreach (var c in myChats)
-        {
-
-        }
     }
 
+    public async Task getChatReplies()
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+        Console.WriteLine("I get here?");
+        var thisChat = await graphClient.Me.Chats[currentChat.Id].Messages.GetAsync();
 
-    /*
-    * GET CALENDAR EVENTS
-    */
+
+        myChatReplies = thisChat?.Value ?? new List<ChatMessage>();
+    }
+
+/*
+* GET CALENDAR EVENTS
+*/
     /* EVENTS LIST */
     private IList<Event> myEvents = new List<Event>();
 
@@ -695,9 +706,9 @@
         myEvents = eventPage?.Value ?? new List<Event>();
     }
 
-    /*
-    * NEW GROUP ADDED - UPDATE ASYNC
-    */
+/*
+* NEW GROUP ADDED - UPDATE ASYNC
+*/
     public string mailQuery { get; set; } = "All";
     public string teamQuery { get; set; } = "All";
     public string calQuery { get; set; } = "All";
@@ -725,9 +736,9 @@
         }
     }
 
-    /*
-    * DATE-TIME STUFF
-    */
+/*
+* DATE-TIME STUFF
+*/
     private DateTime GetUtcStartOfWeekInTimeZone(DateTime today, string timeZoneId)
     {
         // Time zone returned by Graph could be Windows or IANA style
@@ -764,16 +775,16 @@
         return iso8601DateTime;
     }
 
-    /*
-    * HANDLE WHICH TAB IS BEING PRESENTED
-    */
+/*
+* HANDLE WHICH TAB IS BEING PRESENTED
+*/
     string? myActiveId;
     FluentTab? changedto;
     private void HandleOnTabChange(FluentTab tab) { changedto = tab; }
 
-    /*
-    * SHOW THE DETAILS OF THE CURRENT EMAIL/TEAM/CHANNEL/CHAT
-    */
+/*
+* SHOW THE DETAILS OF THE CURRENT EMAIL/TEAM/CHANNEL/CHAT
+*/
     private Message currentEmail { get; set; } = null;
     private async void ToggleMail(Message email)
     {
@@ -814,16 +825,18 @@
         StateHasChanged();
     }
 
-    private Chat currentChat { get; set; } = null;
-    private void ToggleChat(Chat chat)
+    private Microsoft.Graph.Models.Chat currentChat { get; set; } = null;
+    private async void ToggleChat(Microsoft.Graph.Models.Chat chat)
     {
         currentChat = (currentChat == chat) ? null : chat;
+        await getChatReplies();
+        StateHasChanged();
     }
 
-    /*
-    * ALL INPUT BOXES TO CREATE GROUPS
-    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-    */
+/*
+* ALL INPUT BOXES TO CREATE GROUPS
+* GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+*/
     FluentSearch? mailSearchTest;
     FluentSearch? teamSearchTest;
     FluentSearch? calSearchTest;
@@ -908,10 +921,10 @@
         }
     }
 
-    /*
-    * CREATE LOCAL CLASS TO STORE GROUPS.
-    * ALSO SEND TO API MONGO DB
-    */
+/*
+* CREATE LOCAL CLASS TO STORE GROUPS.
+* ALSO SEND TO API MONGO DB
+*/
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -931,6 +944,4 @@
             myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
         }
     }
-
-
 }
