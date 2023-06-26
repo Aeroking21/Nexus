@@ -1,7 +1,8 @@
-@page "/NotesPro"
+@page "/SmartScribe"
 
 @using System.Security.Authentication
 @using System.IO;
+@using System.Text.RegularExpressions 
 @using GrapeCity.Documents.Pdf;
 @using DocumentFormat.OpenXml.Packaging;
 @using Azure
@@ -18,137 +19,6 @@
 
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
-@*@inject ILogger<SummariseFiles> Logger*@
-@inject GraphSample.AI.OpenAIService OpenAIService
-
-<style>
-
-    h3, p {
-        padding: 1% 1% 1% 1%;
-
-    }
-    .containerFiles {
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        height: 86vh;
-        width: 96vw;
-        font-family: 'Pavanam', sans-serif;
-    }
-
-    .dropdown-contentMGT {
-        max-height: 330px;
-        overflow-y: scroll;
-        max-width: 99%;
-    }
-
-    @* make the scroll bar glass *@
-    .dropdown-contentMGT::-webkit-scrollbar {
-        width: 10px;
-        height: 70%;
-        background-color: transparent;
-        height: calc(100% - 20px);
-    }
-
-    .dropdown-contentMGT::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.7);
-        border-radius: 1.5rem;
-    }
-
-    .dropdown-contentMGT::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
-
-    .textbox {
-        min-height: 50vh;
-        min-width: 50vw;
-        max-height: 50vh;
-        max-width: 100vw;
-        background-color: ghostwhite;
-        color: black;
-        overflow: scroll;
-        border-radius: 0.25rem;
-    }
-
-    .textbox::-webkit-scrollbar {
-        width: 10px;
-        height: 70%;
-        background-color: transparent;
-        height: calc(100% - 20px);
-    }
-
-    .textbox::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.7);
-        border-radius: 1.5rem;
-    }
-
-    .textbox::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
-
-    .chat-bot {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 3;
-    }
-
-    .dropzone {
-        border: 3px dashed gray;
-        padding: 3rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #eee;
-        box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
-        color: #444;
-        font-size: 1.5rem;
-        cursor: pointer;
-        position: relative;
-        height: 310px;
-    }
-
-    .dropzone:hover {
-        background-color: #f3f3f3;
-        color: #333;
-    }
-
-    .sum-btn {
-        margin: 10px;
-        background-color: #1D6F42;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-    .onenote-btn {
-        margin: 10px;
-        background-color: #AE4BD5;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-    .sum-btn:hover {
-        background-color: #1a673d;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .onenote-btn:hover {
-        background-color: #a246c7;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .file-label {
-        margin: 10px;
-        font-size: 20px;
-        font-weight: bold;
-    }
-</style>
 
 
 <AuthorizeView>
@@ -243,12 +113,6 @@
 
 @code{
 
-    //ToDo:
-    //    1.  Return tuple instead for PDF/DOC/ppt to refactor
-    //    2. Apply error handling to GetContent so folders not clicked
-    //    3. Clean up the AI function too bulky
-
-
     [CascadingParameter]
     protected Task<AuthenticationState>? authenticationStateTask { get; set; }
     private FluentDialog? MyFluentDialog;
@@ -280,6 +144,7 @@
         if (tab.Text == "Upload from OneDrive")
         {
             uploadMethod = false;
+            data_response.Clear();
             await listFiles();
         }
     }
@@ -303,17 +168,15 @@
     }
 
     protected override async Task OnInitializedAsync()
+
     {
+        data_response.Clear();
         await listFiles();
     }
 
-    private async void OnOpen()
+    private void OnOpen()
     {
         MyFluentDialog!.Show();
-        Console.WriteLine("Clicked");
-        //uploadMethod = false;
-        //await listFiles();
-
     }
 
     private void OnDismiss(DialogEventArgs args)
@@ -335,17 +198,15 @@
             loadedFile.Add(file);
             fileName = file.Name;
         }
+        uploadMethod = true;
 
         isLoading = false;
         MyFluentDialog!.Hide();
     }
 
 
-    // apply error handling to not click on folders
-    // Can do regex to check if path is folder
     protected void GetContent(string path, string name)
     {
-        Console.WriteLine("Clicked on: " + path);
         itemId = path;
         fileName = name;
         MyFluentDialog!.Hide();
@@ -364,7 +225,7 @@
     {
         summary = "";
         var content = "";
-        isSummarising = true; // Set the flag to indicate that summarization is in progress
+        isSummarising = true; // Set the flag to indicate that summarisation is in progress
 
         if (uploadMethod)
         {
@@ -378,7 +239,7 @@
             var file = loadedFile[0];
             Stream stream = await ConvertToStream(file);
             fileName = file.Name;
-            content = ExtractTextFromStream(stream);
+            content = ExtractTextFromStream(stream, fileName);
 
             Console.WriteLine("Extracted text");
         }
@@ -393,9 +254,9 @@
 
             var user = (await authenticationStateTask).User;
             var contentStream = await graphClient.Drives[driveId].Items[itemId].Content.GetAsync();
-            content = ExtractTextFromStream(contentStream);
             var fileItem = await graphClient.Drives[driveId].Items[itemId].GetAsync();
             fileName = fileItem.Name;
+            content = ExtractTextFromStream(contentStream, fileName);
 
             Console.WriteLine("Got text response");
         }
@@ -407,12 +268,26 @@
         Console.WriteLine(summary);
     }
 
+    private async Task<List<string>> callOpenAI(string prompt){
+        var summaries = new List<string>();
+        var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
+        var completion = completionsResponse.Value.Choices[0].Text;
+        summaries.Add(completion);
+        string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
+        var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
+        var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
+        summaries.Add(completionFinish);
+        string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
+        var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
+        var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
+        summaries.Add(completionFinish2);
+        return summaries;
+    }
 
     // Event handler for the "Summarise" button click
-    protected async Task SummariseText(string content)
-    {
+    protected async Task SummariseText(string content){
 
-        // Perform summarization until the overall summary is less than 3000 characters
+        // Perform summarisation until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
         Console.WriteLine("Inside ai: " + content);
@@ -421,77 +296,35 @@
         var chunkSize = 750; // Adjust this value as per your model's character limit
         var chunks = SplitContentIntoChunks(content, chunkSize);
 
-        // Perform summarization for each chunk
-        foreach (var chunk in chunks)
-        {
+        // Perform summarisation for each chunk
+        foreach (var chunk in chunks){
             string prompt = $"Summarise the following text in a professional and business like manner and in extreme detail (Include any equations mentioned):\n\n{chunk}\n";
-            //Console.Write($"Input: {prompt}\n");
-
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completion}\n");
-            summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completionFinish}\n");
-            summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completionFinish}\n");
-            summaries.Add(completionFinish2);
+            var completionFinish = await callOpenAI(prompt);
+            summaries.Add(completionFinish[0]);
+            summaries.Add(completionFinish[1]);
+            summaries.Add(completionFinish[2]);
         }
-
         // Combine the individual summaries into an overall summary
-        overallSummary = string.Join(" ", summaries);
+        //overallSummary = string.Join(" ", summaries);
+        //Break the loop if the overall summary exceeds 2500 characters
+        //if (overallSummary.Length >= 5000){
+        //    summaries.Clear();
+        //    string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
+        //    var completionFinish = await callOpenAI(prompt);
+        //    summaries.Add(completionFinish[0]);
+        //    summaries.Add(completionFinish[1]);
+        //    summaries.Add(completionFinish[2]);
+        //}
 
         //Break the loop if the overall summary exceeds 2500 characters
-        if (overallSummary.Length >= 5000)
-        {
-            summaries.Clear();
-
-            string prompt = $"This summary is slightly too long, please rewrite without losing any detail but in a more concise way:\n\n{overallSummary}\n";
-            //Console.Write($"Input: {prompt}\n");
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completion}");
-            summaries.Add(completion);
-            string finish = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completionFinish}\n");
-            summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completionFinish}\n");
-            summaries.Add(completionFinish2);
-        }
-
-        //Break the loop if the overall summary exceeds 2500 characters
-        else if (overallSummary.Length <= 500)
-        {
-            summaries.Clear();
-
-            string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
-            //Console.Write($"Input: {prompt}\n");
-            var completionsResponse = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, prompt);
-            var completion = completionsResponse.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completion}");
-            summaries.Add(completion);
-            string finish = $"Keep summarising:\n\n{prompt}\n\nGave summary:\n\n{completion}";
-            var completionsResponseFinish = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish);
-            var completionFinish = completionsResponseFinish.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completionFinish}\n");
-            summaries.Add(completionFinish);
-            string finish2 = $"Keep summarising in extreme detail:\n\n{prompt}\n\nGave summary:\n\n{completionFinish}";
-            var completionsResponseFinish2 = await OpenAIService.client.GetCompletionsAsync(OpenAIService.engine, finish2);
-            var completionFinish2 = completionsResponseFinish2.Value.Choices[0].Text;
-            //Console.Write($"Completion: {completionFinish}\n");
-            summaries.Add(completionFinish2);
-        }
-
+        //else if (overallSummary.Length <= 500){
+        //    summaries.Clear();
+        //    string prompt = $"This summary is slightly too short, please rewrite without losing any detail but in a more easy to understand way, including any extra details that would help:\n\n{overallSummary}\n";
+        //    var completionFinish = await callOpenAI(prompt);
+        //    summaries.Add(completionFinish[0]);
+        //    summaries.Add(completionFinish[1]);
+        //    summaries.Add(completionFinish[2]);
+        //}
         overallSummary = string.Join(" ", summaries);
         summaries.Clear();
         summary = overallSummary;
@@ -525,21 +358,24 @@
     }
 
     // Maybe return tuple instead
-    protected string ExtractTextFromStream(Stream input)
+    protected string ExtractTextFromStream(Stream input, string fileName)
     {
         string text = "";
+        string pdf = @"^.+\.pdf$";
+        string ppt = @"^.+\.pptx$";
+        string doc = @"^.+\.docx$";
 
-        if (IsPDF(input))
+        if (Regex.IsMatch(fileName, pdf))
         {
             text = ExtractTextFromPDF(input);
             Console.WriteLine("Is PDF");
         }
-        else if (IsWordDocument(input))
+        else if (Regex.IsMatch(fileName, doc))
         {
             text = ExtractTextFromWord(input);
             Console.WriteLine("Is Word");
         }
-        else if (IsPowerPointDocument(input))
+        else if (Regex.IsMatch(fileName, ppt))
         {
             text = ExtractTextFromPowerPoint(input);
             Console.WriteLine("Is PPT");
@@ -548,19 +384,6 @@
         return text;
     }
 
-    private bool IsPDF(Stream stream)
-    {
-        try
-        {
-            var document = new GcPdfDocument();
-            document.Load(stream);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     public string ExtractTextFromPDF(Stream stream)
     {
@@ -570,21 +393,6 @@
         var text = document.GetText();
 
         return text;
-    }
-
-    private bool IsWordDocument(Stream stream)
-    {
-        try
-        {
-            using (var document = WordprocessingDocument.Open(stream, false))
-            {
-                return true;
-            }
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private string ExtractTextFromWord(Stream stream)
@@ -598,21 +406,6 @@
         }
 
         return text;
-    }
-
-    private bool IsPowerPointDocument(Stream stream)
-    {
-        try
-        {
-            using (var presentation = PresentationDocument.Open(stream, false))
-            {
-                return true;
-            }
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private string ExtractTextFromPowerPoint(Stream stream)
@@ -660,10 +453,18 @@
         // List children in the drive
         var files = await graphClient.Drives[driveId].Items["root"].Children.GetAsync();
         Console.WriteLine("Getting files...");
-        data_response = files.Value;
-        StateHasChanged();
 
-        // The type of files is Microsoft.Graph.Models.DriveItem
+        foreach (var file in files.Value)
+        {
+            string pattern = @"^.+\.(pdf|docx|pptx)$";
+            if (Regex.IsMatch(file.Name, pattern) == true)
+            {
+                data_response.Add(file);
+            }
+
+        }
+
+        StateHasChanged();
     }
 
     private async Task WriteToOneNote()
