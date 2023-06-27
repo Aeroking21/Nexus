@@ -4,9 +4,11 @@
 @using Microsoft.Graph.Models
 @using TimeZoneConverter
 @using Microsoft.Fast.Components.FluentUI
+@using BlazorFluentUI
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq;
 @using System.Text.Json;
+@using System.ComponentModel.DataAnnotations
 
 @inject GraphSample.Graph.GraphClientFactory clientFactory
 
@@ -27,7 +29,6 @@
                         <FluentOption Value="@(group.mailName+';'+group.teamName+';'+group.calName)">@group.Name</FluentOption>
                     }
                 </FluentSelect>
-
             </div>
 
             <div class="addGroup">
@@ -37,44 +38,41 @@
                         <FluentTextField Style="z-index: 20;" @bind-Value=placename Placeholder="Group Name"></FluentTextField>
                     </div>
 
-                    <div class="searchBoxes" style="margin:10px;">
-                        <FluentSearch @ref=mailSearchTest
-                                      @oninput=handleMailSearchInput
-                                      @onchange=handleMailSearchInput
-                                      @bind-Value="@mailListValue"
-                                      Placeholder="Mailing account" />
-                        <br />
-                        <FluentListbox Items=@mailResults TOption="string" SelectedOptionChanged="@(e => mailListValue = (e != defaultResultsText ? e : string.Empty) )" />
+                    <div class="searchBoxes" style="margin: 10px;">
+                        <FluentCombobox Items=@mailOptions
+                                        OptionText="@(i => i.Text)"
+                                        OptionValue="@(i => i.Value)"
+                                        OptionSelected="@(i => i.Selected)"
+                                        @bind-SelectedOption="@selectedMailOption"
+                                        @bind-Value="@mailValue" />
                     </div>
 
                     <div class="searchBoxes" style="margin: 10px;">
-                        <FluentSearch @ref=teamSearchTest
-                                      @oninput=handleTeamSearchInput
-                                      @onchange=handleTeamSearchInput
-                                      @bind-Value="@teamNameValue"
-                                      Placeholder="Team Chat" />
-                        <br />
-                        <FluentListbox Items=@teamResults TOption="string" SelectedOptionChanged="@(e => teamNameValue = (e != defaultResultsText ? e : string.Empty) )" />
+                        <FluentCombobox Items=@teamOptions
+                                        OptionText="@(i => i.Text)"
+                                        OptionValue="@(i => i.Value)"
+                                        OptionSelected="@(i => i.Selected)"
+                                        @bind-SelectedOption="@selectedTeamOption"
+                                        @bind-Value="@teamValue" />
                     </div>
 
                     <div class="searchBoxes" style="margin: 10px;">
-                        <FluentSearch @ref=calSearchTest
-                                      @oninput=handleCalSearchInput
-                                      @onchange=handleCalSearchInput
-                                      @bind-Value="@calendarValue"
-                                      Placeholder="Calendar" />
-                        <br />
-                        <FluentListbox Items=@calResults TOption="string" SelectedOptionChanged="@(e => calendarValue = (e != defaultResultsText ? e : string.Empty) )" />
+                        <FluentCombobox Items=@calOptions
+                                        OptionText="@(i => i.Text)"
+                                        OptionValue="@(i => i.Value)"
+                                        OptionSelected="@(i => i.Selected)"
+                                        @bind-SelectedOption="@selectedCalOption"
+                                        @bind-Value="@calValue" />
                     </div>
                 </div>
 
                 <div class="groupAdd" style="margin: 10px;">
-                    <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailListValue, teamNameValue, calendarValue)">Add Filter</FluentButton>
+                    <FluentButton Appearance="Appearance.Accent" @onclick="() => addToGroup(mailValue, teamValue, calValue)">Add Filter</FluentButton>
                 </div>
             </div>
         </div>
 
-
+   
         <div class="mainContent">
             <div class="emailTeamsSection">
                 <FluentTabs ActiveId="myActiveId" OnTabChange="HandleOnTabChange">
@@ -211,7 +209,7 @@
                                         <ul class="nestedMessages">
                                             @foreach (var convo in myConvos)
                                             {
-                                                @if(convo?.MessageType.ToString() == "Message")
+                                                @if (convo?.MessageType.ToString() == "Message")
                                                 {
                                                     <li class="teamMessageBlock">
                                                         <div class="teamChatInital">
@@ -241,9 +239,9 @@
                                                         <ul>
                                                             @foreach (var reply in myReplies)
                                                             {
-                                                                @foreach(var subreply in reply.Reverse())
+                                                                @foreach (var subreply in reply.Reverse())
                                                                 {
-                                                                    @if(convo.Id == subreply["replyToId"].ToString())
+                                                                    @if (convo.Id == subreply["replyToId"].ToString())
                                                                     {
                                                                         <li>
                                                                             <div class="teamReplySection">
@@ -293,7 +291,7 @@
                     @* CHATS TAB *@
                     <FluentTabPanel>
                         <div class="chatsPage">
-                            <div class="myChats">
+                            <div class="mypChats">
                                 @foreach (var myChat in myChats)
                                 {
                                     @if (myChat?.Topic == null)
@@ -311,43 +309,69 @@
                                 }
                             </div>
 
-                            <div class="myChatBar">
-                            @foreach (var thisChat in myChatReplies)
-                            {
-                                <ul>
-                                    <div>thisChat?.From?.User?.DisplayName</div>
-                                    <div>@((MarkupString)thisChat?.Body?.Content)</div>
-                                </ul>
-                            }
+                            <div class="pChatBar">
+                                @foreach (var myChat in myChats)
+                                {
+                                    @if (myChat?.Topic == null)
+                                    {
+                                        <div class="chatSelectBox" @onclick="() => ToggleChat(myChat)">
+                                            <div class="chatName">@myChat?.ChatType</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="chatSelectBox" @onclick="() => ToggleChat(myChat)">
+                                            <div class="chatName">@myChat?.Topic</div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                            <div class="pChatBar">
+                                @foreach (var thisChat in myChatReplies)
+                                {
+                                    @if (@thisChat?.From?.User?.Id == myID)
+                                    {
+                                        <div class="isend">
+                                            <div>@thisChat?.From?.User?.DisplayName</div>
+                                            <div>@((MarkupString)thisChat?.Body?.Content)</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="theysend">
+                                            <div>@thisChat?.From?.User?.DisplayName</div>
+                                            <div>@((MarkupString)thisChat?.Body?.Content)</div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </FluentTabPanel>
+                </FluentTabs>
+            </div>
+
+            <div class="calendarSection">
+                @foreach (var calendarEvent in myEvents)
+                {
+                    <div class="event">
+                        <p class="subject">@calendarEvent?.Subject</p>
+
+                        <div class="timing">
+                            <p class="date">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime).Substring(0, 10)</p>
+                            <p class="time">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime).Substring(11, 5) - @FormatIso8601DateTime(calendarEvent?.Start?.DateTime).Substring(11, 5)</p>
                         </div>
 
+                        <p class="organiser">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
+
                     </div>
-
-                </FluentTabPanel>
-            </FluentTabs>
-        </div>
-
-        <div class="calendarSection">
-            @foreach (var calendarEvent in myEvents)
-            {
-                <div class="event">
-                    <p class="subject">@calendarEvent?.Subject</p>
-
-                    <div class="timing">
-                        <p class="date">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime).Substring(0, 10)</p>
-                        <p class="time">@FormatIso8601DateTime(calendarEvent?.Start?.DateTime).Substring(11, 5) - @FormatIso8601DateTime(calendarEvent?.Start?.DateTime).Substring(11, 5)</p>
-                    </div>
-
-                    <p class="organiser">@calendarEvent?.Organizer?.EmailAddress?.Name</p>
-
-                </div>
-            }
-        </div>
-        </div>
-            
-            <div class="chat-bot">
-                <Chat />
+                }
             </div>
+        </div>
+
+        <div class="chat-bot">
+            <Chat />
+        </div>
 
     </Authorized>
 
@@ -697,9 +721,7 @@
     public async Task getChatReplies()
     {
         graphClient = clientFactory.GetAuthenticatedClient();
-        Console.WriteLine("I get here?");
         var thisChat = await graphClient.Me.Chats[currentChat.Id].Messages.GetAsync();
-
 
         myChatReplies = thisChat?.Value ?? new List<ChatMessage>();
     }
@@ -741,10 +763,11 @@
 
         @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
 
-        var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
+        var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync(config =>
         {
-            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
-            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+            config.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
+            config.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
+            config.QueryParameters.Top = 15;
         });
 
         var pageIterator =
@@ -905,97 +928,10 @@
     }
 
     /*
-    * ALL INPUT BOXES TO CREATE GROUPS
-    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
-    */
-    FluentSearch? mailSearchTest;
-    FluentSearch? teamSearchTest;
-    FluentSearch? calSearchTest;
-    string? mailListValue = string.Empty;
-    string? teamNameValue = string.Empty;
-    string? calendarValue = string.Empty;
-
-    List<string> searchData = new()
-{
-        "ajp20@7qp7mb.onmicrosoft.com",
-        "Brendon",
-        "Charmaine",
-        "Indraneel",
-        "Konstantinos",
-        "Mahanoor"
-    };
-
-    List<string> mailResults = defaultResults();
-    List<string> teamResults = defaultResults();
-    List<string> calResults = defaultResults();
-    static string defaultResultsText = "no results";
-
-    static List<string> defaultResults()
-    {
-        return new() { defaultResultsText };
-    }
-
-    void handleMailSearchInput(ChangeEventArgs args)
-    {
-        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
-        {
-            string searchTerm = args.Value.ToString()!.ToLower();
-
-            if (searchTerm.Length > 0)
-            {
-                List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0) { mailResults = temp; }
-            }
-        }
-        else
-        {
-            mailResults = defaultResults();
-            mailListValue = string.Empty;
-        }
-    }
-
-    void handleTeamSearchInput(ChangeEventArgs args)
-    {
-        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
-        {
-            string searchTerm = args.Value.ToString()!.ToLower();
-
-            if (searchTerm.Length > 0)
-            {
-                List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0) { teamResults = temp; }
-            }
-        }
-        else
-        {
-            teamResults = defaultResults();
-            teamNameValue = string.Empty;
-        }
-    }
-
-    void handleCalSearchInput(ChangeEventArgs args)
-    {
-        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
-        {
-            string searchTerm = args.Value.ToString()!.ToLower();
-
-            if (searchTerm.Length > 0)
-            {
-                List<string> temp = searchData.Where(str => str.ToLower().Contains(searchTerm)).Select(str => str).ToList();
-                if (temp.Count() > 0) { calResults = temp; }
-            }
-        }
-        else
-        {
-            calResults = defaultResults();
-            calendarValue = string.Empty;
-        }
-    }
-
-    /*
     * CREATE LOCAL CLASS TO STORE GROUPS.
     * ALSO SEND TO API MONGO DB
     */
+
     public class GroupItem
     {
         public string? Name { get; set; }
@@ -1008,6 +944,43 @@
     string? selectedGroupValue;
     private List<GroupItem> myGroups = new();
 
+
+    /*
+    * ALL INPUT BOXES TO CREATE GROUPS
+    * GETTING DATA FROM GRAPH TO FILL SEARCH BOXES
+    */
+
+    string? mailValue;
+    Option<string> selectedMailOption = default!;
+    string? teamValue;
+    Option<string> selectedTeamOption = default!;
+    string? calValue;
+    Option<string> selectedCalOption = default!;
+
+    List<Option<string>> mailOptions = new()
+    {
+        { new Option<string> { Value = "1", Text = "One" } },
+        { new Option<string> { Value = "2", Text = "Two"} },
+        { new Option<string> { Value = "3", Text = "Three" } }
+
+    };
+
+    List<Option<string>> teamOptions = new()
+    {
+        { new Option<string> { Value = "1", Text = "One" } },
+        { new Option<string> { Value = "2", Text = "Two"} },
+        { new Option<string> { Value = "3", Text = "Three" } }
+
+    };
+
+    List<Option<string>> calOptions = new()
+    {
+        { new Option<string> { Value = "1", Text = "One" } },
+        { new Option<string> { Value = "2", Text = "Two"} },
+        { new Option<string> { Value = "3", Text = "Three" } }
+
+    };
+
     void addToGroup(string m, string t, string c)
     {
         if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
@@ -1015,4 +988,5 @@
             myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
         }
     }
+
 }

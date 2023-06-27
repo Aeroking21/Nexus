@@ -544,8 +544,6 @@ $delete2-red: red;
     margin-left: 10px;
 }
 
-
-
 /* make scroll bar glassmorphism */
 .teamChatBar::-webkit-scrollbar {
     width: 10px;
@@ -648,6 +646,7 @@ $delete2-red: red;
     margin-left: 0px;
     padding-top: 5px;
 }
+
 @media only screen and (max-width: 600px) {
     .mypChats {
         width: 30%;
@@ -675,8 +674,11 @@ $delete2-red: red;
     max-width: 90%;
 }
 
-.myChatBar {
-    width: 80%;
+.pChatBar {
+    width: 20%;
+    height: 100%;
+    margin-left: 0px;
+    padding-top: 5px;
 }
 
 
