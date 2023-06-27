@@ -25,7 +25,6 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
       
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button> *@
         
         <div id="popupContainer">
             <div id="popupContent">
@@ -59,6 +58,10 @@
                     </div>
                 </form>
                 <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
+                <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button>
+              
+
+
                 <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
             </div>
         </div>
@@ -622,10 +625,11 @@ foreach (var eventItem in events)
         return events.ToList();
     }
 
-    public List<string> meetingTimesSuggestions = new List<string>();
+    public List<string> meetSuggestions = new List<string>();
 
     public async Task FindMeetingTimes()
     {
+        Console.WriteLine("FindMeetingTimes");   
         var attendeesArray = attendees.Split(';');
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
         foreach (var attendee in attendeesArray)
@@ -642,7 +646,17 @@ foreach (var eventItem in events)
 
         var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
         {
-            Attendees = attendeesList,
+            Attendees = new List<AttendeeBase>
+            {
+                new AttendeeBase
+                {
+                    Type = AttendeeType.Required,
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = "ccl19@7qp7mb.onmicrosoft.com",
+                    },
+                },
+            },
             TimeConstraint = new TimeConstraint
             {
                 ActivityDomain = ActivityDomain.Work,
@@ -664,20 +678,30 @@ foreach (var eventItem in events)
                 },
             },
             MaxCandidates = 5,
-            MeetingDuration = TimeSpan.Parse("PT1H"),
+            @* MeetingDuration = TimeSpan.Parse("PT1H"), *@
             ReturnSuggestionReasons = true,
             MinimumAttendeePercentage = 100,
         };
 
-        var meetingTimeSuggestionsResult = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody);
+        var result = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody, (requestConfiguration) =>
+            {
+                requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+            });
+        @* var meetingTimeSuggestionsResult = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody); *@
 
-   
-        foreach (var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions)
+        Console.WriteLine("FindMeetingTimes result");
+        foreach (var suggestion in result.MeetingTimeSuggestions)
         {
-            meetingTimesSuggestions
+            meetSuggestions
             .Add(suggestion.MeetingTimeSlot.Start.DateTime);
         }
 
+        @* print meetSuggestions to console *@
+        Console.WriteLine("siggestion length : " + meetSuggestions.Count);
+        foreach (var suggestion in meetSuggestions)
+        {
+            Console.WriteLine(suggestion.ToString());
+        }
         StateHasChanged();
     }
 
