@@ -29,6 +29,8 @@
         <div id="popupContainer">
             <div id="popupContent">
                 <h2 style="color: #0078d4 !important;">Add Event</h2>
+                <div class="row">
+                <div class="column">
                 <form>
                     <div class="mb-3">
                         <label for="subject">Subject</label>
@@ -38,31 +40,43 @@
                         <label for="attendees">Attendees</label>
                         <input @bind="attendees" id="attendees" class="form-control" />
                     </div>
-                    <div class="row">
-                        <div class="col">
-                            <div class="mb-3">
+                        <div class="mb-3">
                                 <label for="start">Start</label>
                                 <input @bind="start" type="datetime-local" id="date" class="form-control" />
-                            </div>
                         </div>
-                        <div class="col">
                             <div class="mb-3">
                                 <label for="end">End</label>
                                 <input @bind="end" type="datetime-local" id="end" class="form-control" />
-                            </div>
-                        </div>
-                    </div>
+                        </div>                       
                     <div class="mb-3">
                         <label for="body">Body</label>
                         <textarea @bind="body" id="body" class="form-control"></textarea>
                     </div>
                 </form>
+                </div>
+                <div class="column">
                 <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
                 <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button>
-              
-
-
+                <div class="contained">
+                @if (meetSuggestions.Count != 0){                 
+                    foreach (var suggestion in meetSuggestions)
+                        {
+                            <span>
+                                 <div class="card-suggestion">
+                                    <h5 class="title">Suggestion</h5>
+                                    <p class="duration" > 
+                                        <span class="start">Start: @(suggestion.Item1) </span>
+                                        <span class="end">End: @(suggestion.Item2) </span>
+                                    </p>
+                                    <p class="availability">Available: everyone &#10003;</p>
+                                </div>
+                            </span>
+                        } 
+                }
+                </div>
                 <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
+                </div>
+                </div>
             </div>
         </div>
         <div class="grid-container">
@@ -301,34 +315,7 @@
             .GetAuthenticatedClient();
         var dateTimeFormat =
              $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-         @* var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
-            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
-        });
 
-        var pageIterator = 
-            Microsoft.Graph.PageIterator<Microsoft.Graph.Beta.Models.Event>
-            .CreatePageIterator(
-        graphClient,
-        eventPage,
-        // Callback executed for each item in
-        // the collection
-        (msg) =>
-        {
-            Console.WriteLine(msg.Subject);
-            events.Add(msg);
-            return true;
-        },
-        // Used to configure subsequent page
-        // requests
-        (req) =>
-        {
-            // Re-add the header to subsequent requests
-            req.Headers.Add("Prefer", "outlook.body-content-type=\"text\"");
-            return req;
-        });
-        await pageIterator.IterateAsync(); *@
 
         var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
         {
@@ -625,12 +612,14 @@ foreach (var eventItem in events)
         return events.ToList();
     }
 
-    public List<string> meetSuggestions = new List<string>();
+
+List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
 
     public async Task FindMeetingTimes()
     {
         Console.WriteLine("FindMeetingTimes");   
         var attendeesArray = attendees.Split(';');
+        Console.WriteLine(start.ToString());
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
         foreach (var attendee in attendeesArray)
         {
@@ -646,17 +635,7 @@ foreach (var eventItem in events)
 
         var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
         {
-            Attendees = new List<AttendeeBase>
-            {
-                new AttendeeBase
-                {
-                    Type = AttendeeType.Required,
-                    EmailAddress = new EmailAddress
-                    {
-                        Address = "ccl19@7qp7mb.onmicrosoft.com",
-                    },
-                },
-            },
+            Attendees = attendeesList,
             TimeConstraint = new TimeConstraint
             {
                 ActivityDomain = ActivityDomain.Work,
@@ -678,7 +657,6 @@ foreach (var eventItem in events)
                 },
             },
             MaxCandidates = 5,
-            @* MeetingDuration = TimeSpan.Parse("PT1H"), *@
             ReturnSuggestionReasons = true,
             MinimumAttendeePercentage = 100,
         };
@@ -689,19 +667,13 @@ foreach (var eventItem in events)
             });
         @* var meetingTimeSuggestionsResult = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody); *@
 
-        Console.WriteLine("FindMeetingTimes result");
         foreach (var suggestion in result.MeetingTimeSuggestions)
         {
             meetSuggestions
-            .Add(suggestion.MeetingTimeSlot.Start.DateTime);
+            .Add(new Tuple<string, string>((suggestion.MeetingTimeSlot.Start.DateTime)[12..16], (suggestion.MeetingTimeSlot.End.DateTime)[12..16]));
         }
 
-        @* print meetSuggestions to console *@
-        Console.WriteLine("siggestion length : " + meetSuggestions.Count);
-        foreach (var suggestion in meetSuggestions)
-        {
-            Console.WriteLine(suggestion.ToString());
-        }
+      
         StateHasChanged();
     }
 
