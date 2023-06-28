@@ -186,6 +186,15 @@
     background-color: #fff;
     padding: 20px;
     width: 700px;
+} 
+
+/* make this column wise on phone */
+@media (max-width: 850px) {
+    #popupContent{
+        width: 400px;
+        font-size: small;
+
+    }
 }
 
 .event-OnlineMeeting {
