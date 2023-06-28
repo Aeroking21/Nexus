@@ -34,6 +34,8 @@
     <PackageReference Include="Microsoft.Graph.Beta" Version="5.32.0-preview" />
     <PackageReference Include="Open-XML-SDK" Version="2.9.1" />
     <PackageReference Include="BlazorInputFile" Version="0.2.0" />
+    <PackageReference Include="BlazorFluentUI.CoreComponents" Version="6.0.2" />
+    <PackageReference Include="BlazorFluentUI.ListComponents" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>

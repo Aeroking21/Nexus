@@ -544,8 +544,6 @@ $delete2-red: red;
     margin-left: 10px;
 }
 
-
-
 /* make scroll bar glassmorphism */
 .teamChatBar::-webkit-scrollbar {
     width: 10px;
@@ -648,6 +646,65 @@ $delete2-red: red;
     margin-left: 0px;
     padding-top: 5px;
 }
+
+.pChatBarContainer {
+    width: 80%;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column-reverse;
+    margin-left: 10px;
+}
+
+.pChatBar {
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #cdd4d4;
+    box-shadow: 0 0 3px rgba(33, 33, 33, .2);
+}
+
+    .isend {
+        width: 40%;
+
+        font-family: 'Pavanam', sans-serif;
+
+        border-radius: 10px;
+        border: 1px solid #cdd4d4;
+        background: #ffffff;
+
+        margin-top: 20px;
+        margin-left: 60%;
+
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 10px;
+    }
+
+        .chatname {
+
+        }
+
+        .chattime {
+            padding-bottom: 5px;
+        }
+
+        .chatcontent {
+        }
+
+    .theysend {
+        width: 40%;
+
+        font-family: 'Pavanam', sans-serif;
+
+        border-radius: 10px;
+        border: 1px solid #cdd4d4;
+        background: #ffffff;
+
+        margin-top: 20px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 10px;
+    }
+
 @media only screen and (max-width: 600px) {
     .mypChats {
         width: 30%;
@@ -673,10 +730,6 @@ $delete2-red: red;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 90%;
-}
-
-.myChatBar {
-    width: 80%;
 }
 
 
