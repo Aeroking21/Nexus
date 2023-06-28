@@ -37,7 +37,7 @@
                         <input @bind="subject" id="subject" class="form-control" />
                     </div>
                     <div class="mb-3">
-                        <label for="attendees">Attendees</label>
+                        <label for="attendees">Attendees, seperate using ";"</label>
                         <input @bind="attendees" id="attendees" class="form-control" />
                     </div>
                         <div class="mb-3">
@@ -55,23 +55,29 @@
                 </form>
                 </div>
                 <div class="column">
-                <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
-                <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button>
+                <button class="btn btn-primary me-2" style="margin-bottom: 10px;" @onclick="AddEvent">Event</button>
+                <button class ="btn btn-primary me-2" style="margin-bottom: 10px;" @onclick="createOnlineMeeting">Online</button>
+                <button class="btn btn-primary" style="margin-bottom: 10px;"  @onclick="FindMeetingTimes">Suggest Meeting Times</button>
                 <div class="contained">
-                @if (meetSuggestions.Count != 0){                 
-                    foreach (var suggestion in meetSuggestions)
-                        {
-                            <span>
-                                 <div class="card-suggestion">
-                                    <h5 class="title">Suggestion</h5>
-                                    <p class="duration" > 
-                                        <span class="start">Start: @(suggestion.Item1) </span>
-                                        <span class="end">End: @(suggestion.Item2) </span>
-                                    </p>
-                                    <p class="availability">Available: everyone &#10003;</p>
-                                </div>
-                            </span>
-                        } 
+                @if (attendees == ""){
+                    <p>Enter at least 1 attendee to find meeting times.</p>
+                }
+                else{
+                    if (meetSuggestions.Count != 0){                 
+                        foreach (var suggestion in meetSuggestions)
+                            {
+                                <span>
+                                    <div class="card-suggestion">
+                                        <h5 class="title">Suggestion</h5>
+                                        <p class="duration" > 
+                                            <span class="start">Start: @(suggestion.Item1) </span>
+                                            <span class="end">End: @(suggestion.Item2) </span>
+                                        </p>
+                                        <p class="availability">Available: everyone &#10003;</p>
+                                    </div>
+                                </span>
+                            } 
+                    }
                 }
                 </div>
                 <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
@@ -358,11 +364,6 @@ foreach (var eventItem in events)
         StateHasChanged();
     }
 
-
-
-    
-
-
     @* -----------------------------building and making calendar ----------------------------------------- *@
 
     [Parameter]
@@ -595,6 +596,62 @@ foreach (var eventItem in events)
         }
     }
 
+
+        public async Task createOnlineMeeting(){
+        var newEvent = new Microsoft.Graph.Beta.Models.Event
+        {
+            Subject = subject,
+            Body = new Microsoft.Graph.Beta.Models.ItemBody
+            {
+                ContentType = Microsoft.Graph.Beta.Models.BodyType.Text,
+                Content = body
+            },
+            Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = start.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+            {
+                DateTime = end.ToString("o"),
+                TimeZone = userTimeZone
+            },
+            IsOnlineMeeting = true,
+	        OnlineMeetingProvider = OnlineMeetingProviderType.TeamsForBusiness,
+            Attendees = new List<Microsoft.Graph.Beta.Models.Attendee>()
+        };
+
+        var attendeesArray = attendees.Split(';');
+        foreach (var attendee in attendeesArray)
+        {
+            newEvent.Attendees.Add(new Microsoft.Graph.Beta.Models.Attendee
+            {
+                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
+                {
+                    Address = attendee.Trim()
+                },
+                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
+            });
+        }
+
+        try
+        {
+            await graphClient.Me
+                .Events
+                .PostAsync(newEvent);
+            events = await getEvents();
+            subject = "";
+            attendees = "";
+            start = new DateTime(DateTime.Today.Ticks);
+            end = new DateTime(DateTime.Today.Ticks);
+            body = "";
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
     public async Task<List<Microsoft.Graph.Beta.Models.Event>> getEvents()
     {
         graphClient = clientFactory.GetAuthenticatedClient();
@@ -614,10 +671,9 @@ foreach (var eventItem in events)
 
 
 List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
-
+    
     public async Task FindMeetingTimes()
     {
-        Console.WriteLine("FindMeetingTimes");   
         var attendeesArray = attendees.Split(';');
         Console.WriteLine(start.ToString());
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
@@ -665,7 +721,7 @@ List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
             {
                 requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
             });
-        @* var meetingTimeSuggestionsResult = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody); *@
+        meetSuggestions.Clear();
 
         foreach (var suggestion in result.MeetingTimeSuggestions)
         {
