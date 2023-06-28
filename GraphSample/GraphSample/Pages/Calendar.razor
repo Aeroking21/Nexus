@@ -337,7 +337,6 @@
             eventPage,
             (msg) =>
             {
-                Console.WriteLine(msg.Subject);
                 events.Add(msg);
                 return true;
             },
@@ -348,17 +347,6 @@
             }
             );
         await pageIterator.IterateAsync();
-
-
-
-
-// Print the subject of each event
-foreach (var eventItem in events)
-{
-    Console.WriteLine(eventItem.Subject);
-}
-
-
         await base.OnInitializedAsync();
         await LoadCalendar();
         StateHasChanged();
@@ -583,7 +571,6 @@ foreach (var eventItem in events)
                 .Events
                 .PostAsync(newEvent);
             events = await getEvents();
-            Console.WriteLine(userTimeZone.ToString());
             subject = "";
             attendees = "";
             start = new DateTime(DateTime.Today.Ticks);
@@ -592,7 +579,6 @@ foreach (var eventItem in events)
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
         }
     }
 
@@ -675,7 +661,6 @@ List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
     public async Task FindMeetingTimes()
     {
         var attendeesArray = attendees.Split(';');
-        Console.WriteLine(start.ToString());
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
         foreach (var attendee in attendeesArray)
         {
@@ -797,7 +782,6 @@ List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
 
         catch
         {
-            Console.WriteLine("Unable to get Transcript");
         }
 
         return "Unable to get Transcript";
@@ -881,7 +865,6 @@ List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
         overallSummary = string.Join(" ", summaries);
         summaries.Clear();
         summary = overallSummary;
-        Console.WriteLine("Generated AI summary");
 
     }
 
@@ -924,7 +907,6 @@ List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
 
         if (summary == "")
         {
-            Console.WriteLine("No summary to write to OneNote");
             noSummary = true;
             return;
         }
@@ -991,7 +973,6 @@ List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
             };
         var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
-        Console.WriteLine("Done");
     }
 
 
