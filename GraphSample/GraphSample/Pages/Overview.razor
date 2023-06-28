@@ -309,41 +309,30 @@
                                 }
                             </div>
 
-                            <div class="pChatBar">
-                                @foreach (var myChat in myChats)
+                            <div class="pChatBarContainer">
+                                @if (currentChat != null)
                                 {
-                                    @if (myChat?.Topic == null)
-                                    {
-                                        <div class="chatSelectBox" @onclick="() => ToggleChat(myChat)">
-                                            <div class="chatName">@myChat?.ChatType</div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="chatSelectBox" @onclick="() => ToggleChat(myChat)">
-                                            <div class="chatName">@myChat?.Topic</div>
-                                        </div>
-                                    }
-                                }
-                            </div>
-
-                            <div class="pChatBar">
-                                @foreach (var thisChat in myChatReplies)
-                                {
-                                    @if (@thisChat?.From?.User?.Id == myID)
-                                    {
-                                        <div class="isend">
-                                            <div>@thisChat?.From?.User?.DisplayName</div>
-                                            <div>@((MarkupString)thisChat?.Body?.Content)</div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="theysend">
-                                            <div>@thisChat?.From?.User?.DisplayName</div>
-                                            <div>@((MarkupString)thisChat?.Body?.Content)</div>
-                                        </div>
-                                    }
+                                    <div class="pChatBar">
+                                        @foreach (var thisChat in myChatReplies)
+                                        {
+                                            @if (@thisChat?.From?.User?.Id == myID)
+                                            {
+                                                <div class="isend">
+                                                    <div class="chatname">@thisChat?.From?.User?.DisplayName</div>
+                                                    <div class="chattime">@thisChat?.CreatedDateTime</div>
+                                                    <div class="chatcontent">@((MarkupString)thisChat?.Body?.Content)</div>
+                                                </div>
+                                            }
+                                            else if (@thisChat?.From?.User?.Id != null)
+                                            {
+                                                <div class="theysend">
+                                                    <div class="chatname">@thisChat?.From?.User?.DisplayName</div>
+                                                    <div class="chattime">@thisChat?.CreatedDateTime</div>
+                                                    <div class="chatcontent">@((MarkupString)thisChat?.Body?.Content)</div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -764,11 +753,11 @@
         @* var eventPage = await graphClient.Me.Calendar.Events.GetAsync(); *@
 
         var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync(config =>
-        {
-            config.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
-            config.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
-            config.QueryParameters.Top = 15;
-        });
+            {
+                config.QueryParameters.StartDateTime = "2022-06-28T19:00:00-08:00";
+                config.QueryParameters.EndDateTime = "2023-06-30T19:00:00-08:00";
+                config.QueryParameters.Top = 15;
+            });
 
         var pageIterator =
             PageIterator<Event, EventCollectionResponse>
@@ -923,7 +912,7 @@
     private async void ToggleChat(Microsoft.Graph.Models.Chat chat)
     {
         currentChat = (currentChat == chat) ? null : chat;
-        await getChatReplies();
+        if (currentChat != null) { await getChatReplies(); }
         StateHasChanged();
     }
 
