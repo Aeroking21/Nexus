@@ -25,11 +25,12 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
       
         <button class="btn btn-primary" style="margin-left: 20px;" onclick="OpenPopup()">New Event</button>
-        @* <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button> *@
         
         <div id="popupContainer">
             <div id="popupContent">
                 <h2 style="color: #0078d4 !important;">Add Event</h2>
+                <div class="row">
+                <div class="column">
                 <form>
                     <div class="mb-3">
                         <label for="subject">Subject</label>
@@ -39,49 +40,46 @@
                         <label for="attendees">Attendees</label>
                         <input @bind="attendees" id="attendees" class="form-control" />
                     </div>
-                    <div class="row">
-                        <div class="col">
-                            <div class="mb-3">
+                        <div class="mb-3">
                                 <label for="start">Start</label>
                                 <input @bind="start" type="datetime-local" id="date" class="form-control" />
-                            </div>
                         </div>
-                        <div class="col">
                             <div class="mb-3">
                                 <label for="end">End</label>
                                 <input @bind="end" type="datetime-local" id="end" class="form-control" />
-                            </div>
-                        </div>
-                    </div>
+                        </div>                       
                     <div class="mb-3">
                         <label for="body">Body</label>
                         <textarea @bind="body" id="body" class="form-control"></textarea>
                     </div>
                 </form>
-                <button class="btn btn-primary me-2" @onclick="AddEvent">Standard</button>
-                <button class ="btn btn-primary me-2" @onclick="createOnlineMeeting">Online</button>
-                <button class="btn btn-primary me-2" @onclick="AddRecurringEvent"> Recurring</button>
-                <button class="btn btn-primary me-2 " style="margin-top: 5px;" onclick="ClosePopup()">Cancel</button>
+                </div>
+                <div class="column">
+                <button class="btn btn-primary me-2" @onclick="AddEvent">Create</button>
+                <button class="btn btn-primary" style="margin-left: 20px;" @onclick="FindMeetingTimes">Suggested Meeting Times</button>
+                <div class="contained">
+                @if (meetSuggestions.Count != 0){                 
+                    foreach (var suggestion in meetSuggestions)
+                        {
+                            <span>
+                                 <div class="card-suggestion">
+                                    <h5 class="title">Suggestion</h5>
+                                    <p class="duration" > 
+                                        <span class="start">Start: @(suggestion.Item1) </span>
+                                        <span class="end">End: @(suggestion.Item2) </span>
+                                    </p>
+                                    <p class="availability">Available: everyone &#10003;</p>
+                                </div>
+                            </span>
+                        } 
+                }
+                </div>
+                <button class="btn btn-primary me-2" onclick="ClosePopup()">Cancel</button>
+                </div>
+                </div>
             </div>
-            @* <div class="btn btn-primary me-2" @onclick="weeklyview" style="margin-top: 5px;">Weekly View</div> *@
         </div>
         <div class="grid-container">
-            <div class="grid-item">
-                @* <div class="display-week">
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-primary" @onclick="PreviousWeek">Previous</button>
-                        <button class="btn btn-primary" @onclick="Today">Today</button>
-                        <button class="btn btn-primary" @onclick="NextWeek">Next</button>
-                    </div>  
-                    <table class="calendar-table">
-                        <thead>
-                            <tr>
-                                <th>@weekday</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div> *@
-            </div>
             <div class="grid-item">
                 <div class="display-month">
                     <h2 style="color: #0078d4;">@MonthToText() @year</h2>
@@ -317,34 +315,7 @@
             .GetAuthenticatedClient();
         var dateTimeFormat =
              $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-         @* var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
-        {
-            requestConfiguration.QueryParameters.StartDateTime = "2022-05-01T19:00:00-08:00";
-            requestConfiguration.QueryParameters.EndDateTime = "2023-07-30T19:00:00-08:00";
-        });
 
-        var pageIterator = 
-            Microsoft.Graph.PageIterator<Microsoft.Graph.Beta.Models.Event>
-            .CreatePageIterator(
-        graphClient,
-        eventPage,
-        // Callback executed for each item in
-        // the collection
-        (msg) =>
-        {
-            Console.WriteLine(msg.Subject);
-            events.Add(msg);
-            return true;
-        },
-        // Used to configure subsequent page
-        // requests
-        (req) =>
-        {
-            // Re-add the header to subsequent requests
-            req.Headers.Add("Prefer", "outlook.body-content-type=\"text\"");
-            return req;
-        });
-        await pageIterator.IterateAsync(); *@
 
         var eventPage = await graphClient.Me.Calendar.CalendarView.GetAsync((requestConfiguration) =>
         {
@@ -360,6 +331,7 @@
             eventPage,
             (msg) =>
             {
+                Console.WriteLine(msg.Subject);
                 events.Add(msg);
                 return true;
             },
@@ -370,6 +342,16 @@
             }
             );
         await pageIterator.IterateAsync();
+
+
+
+
+// Print the subject of each event
+foreach (var eventItem in events)
+{
+    Console.WriteLine(eventItem.Subject);
+}
+
 
         await base.OnInitializedAsync();
         await LoadCalendar();
@@ -558,7 +540,6 @@
 
 
     @* ----------------------------------------Adding Events --------------------------- *@
-
     public async Task AddEvent()
     {
         var newEvent = new Microsoft.Graph.Beta.Models.Event
@@ -579,7 +560,6 @@
                 DateTime = end.ToString("o"),
                 TimeZone = userTimeZone
             },
-         
             Attendees = new List<Microsoft.Graph.Beta.Models.Attendee>()
         };
 
@@ -602,6 +582,7 @@
                 .Events
                 .PostAsync(newEvent);
             events = await getEvents();
+            Console.WriteLine(userTimeZone.ToString());
             subject = "";
             attendees = "";
             start = new DateTime(DateTime.Today.Ticks);
@@ -610,142 +591,7 @@
         }
         catch (Exception ex)
         {
-        }
-    }
-
-
-    public async Task AddRecurringEvent (){
-        // start right now is in this format dd/mm/yyyy hh:mm:ss
-        // I need it in yyyy-mm-dd
-        var currentstart = start.ToString()[0..10];
-        var currentend = end.ToString()[0..10];
-        var startArray = currentstart.Split("/");
-        var endArray = currentend.Split("/");
-        var newstart = startArray[2] + "-" + startArray[1] + "-" + startArray[0];
-        var newend = endArray[2] + "-" + endArray[1] + "-" + endArray[0];
-        start = DateTime.Parse(newstart);
-        end = DateTime.Parse(newend);
-
-        var newEvent = new Microsoft.Graph.Beta.Models.Event
-        {
-            Subject = subject,
-            Body = new Microsoft.Graph.Beta.Models.ItemBody
-            {
-                ContentType = Microsoft.Graph.Beta.Models.BodyType.Text,
-                Content = body
-            },
-            Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = "2017-04-04T12:00:00",
-                TimeZone = userTimeZone
-            },
-            End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = "2023-09-04T13:00:00",
-                TimeZone = userTimeZone
-            },
-            Recurrence = new PatternedRecurrence
-            {
-                Pattern = new RecurrencePattern
-                {
-                    Type = RecurrencePatternType.Weekly,
-                    Interval = 1,
-                    DaysOfWeek = new List<DayOfWeekObject?>
-                    {
-                        DayOfWeekObject.Monday,
-                    },
-                },
-                Range = new RecurrenceRange
-                {
-                    Type = RecurrenceRangeType.EndDate,
-                    StartDate = new Date(start),
-                    EndDate = new Date(end),
-                },
-            },
-            Attendees = new List<Microsoft.Graph.Beta.Models.Attendee>()
-        };
-
-        var attendeesArray = attendees.Split(';');
-        foreach (var attendee in attendeesArray)
-        {
-            newEvent.Attendees.Add(new Microsoft.Graph.Beta.Models.Attendee
-            {
-                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
-                {
-                    Address = attendee.Trim()
-                },
-                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
-            });
-        }
-
-        try
-        {
-            await graphClient.Me
-                .Events
-                .PostAsync(newEvent);
-            events = await getEvents();
-            subject = "";
-            attendees = "";
-            start = new DateTime(DateTime.Today.Ticks);
-            end = new DateTime(DateTime.Today.Ticks);
-            body = "";
-        }
-        catch (Exception ex)
-        {
-        }
-    }
-
-    public async Task createOnlineMeeting(){
-        var newEvent = new Microsoft.Graph.Beta.Models.Event
-        {
-            Subject = subject,
-            Body = new Microsoft.Graph.Beta.Models.ItemBody
-            {
-                ContentType = Microsoft.Graph.Beta.Models.BodyType.Text,
-                Content = body
-            },
-            Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = start.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
-            {
-                DateTime = end.ToString("o"),
-                TimeZone = userTimeZone
-            },
-            IsOnlineMeeting = true,
-	        OnlineMeetingProvider = OnlineMeetingProviderType.TeamsForBusiness,
-            Attendees = new List<Microsoft.Graph.Beta.Models.Attendee>()
-        };
-
-        var attendeesArray = attendees.Split(';');
-        foreach (var attendee in attendeesArray)
-        {
-            newEvent.Attendees.Add(new Microsoft.Graph.Beta.Models.Attendee
-            {
-                EmailAddress = new Microsoft.Graph.Beta.Models.EmailAddress
-                {
-                    Address = attendee.Trim()
-                },
-                Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
-            });
-        }
-
-        try
-        {
-            await graphClient.Me
-                .Events
-                .PostAsync(newEvent);
-            events = await getEvents();
-            subject = "";
-            attendees = "";
-            start = new DateTime(DateTime.Today.Ticks);
-            end = new DateTime(DateTime.Today.Ticks);
-            body = "";
-        }
-        catch (Exception ex)
-        {
+            Console.WriteLine(ex.Message);
         }
     }
 
@@ -758,17 +604,22 @@
             {
                 config.Headers.Add("Prefer", $"outlook.timezone=\"{userTimeZone}\"");
             });
-        events = 
+        events =
             eventPage?
             .Value ?? new List<Microsoft.Graph.Beta.Models.Event>();
-        
+
         await LoadCalendar();
         return events.ToList();
     }
 
-     public List<string> meetingTimesSuggestions = new List<string>();
-    @* public async Task FindMeetingTimes(){
+
+List<Tuple<string, string>> meetSuggestions = new List<Tuple<string, string>>();
+
+    public async Task FindMeetingTimes()
+    {
+        Console.WriteLine("FindMeetingTimes");   
         var attendeesArray = attendees.Split(';');
+        Console.WriteLine(start.ToString());
         var attendeesList = new List<Microsoft.Graph.Beta.Models.AttendeeBase>();
         foreach (var attendee in attendeesArray)
         {
@@ -781,50 +632,51 @@
                 Type = Microsoft.Graph.Beta.Models.AttendeeType.Required
             });
         }
-        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
 
+        var meetingTimeSuggestionsRequestBody = new Microsoft.Graph.Beta.Me.FindMeetingTimes.FindMeetingTimesPostRequestBody
         {
             Attendees = attendeesList,
-            TimeConstraint = new Microsoft.Graph.Beta.Models.TimeConstraint
+            TimeConstraint = new TimeConstraint
             {
-                Timeslots = new List<Microsoft.Graph.Beta.Models.TimeSlot>
+                ActivityDomain = ActivityDomain.Work,
+                TimeSlots = new List<TimeSlot>
                 {
-                    new Microsoft.Graph.Beta.Models.TimeSlot
+                    new TimeSlot
                     {
-                        Start = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        Start = new DateTimeTimeZone
                         {
                             DateTime = start.ToString("o"),
-                            TimeZone = userTimeZone
+                            TimeZone = userTimeZone,
                         },
-                        End = new Microsoft.Graph.Beta.Models.DateTimeTimeZone
+                        End = new DateTimeTimeZone
                         {
                             DateTime = end.ToString("o"),
                             TimeZone = userTimeZone
-                        }
-                    }
-                }
-            },
-            MeetingDuration = new Microsoft.Graph.Beta.Duration
-            {
-                Time = "PT1H"
+                        },
+                    },
+                },
             },
             MaxCandidates = 5,
             ReturnSuggestionReasons = true,
-            MinimumAttendeePercentage = 100
+            MinimumAttendeePercentage = 100,
         };
-        var meetingTimeSuggestionsResult = 
-            await graphClient
-                .Me
-                .FindMeetingTimes(meetingTimeSuggestionsRequestBody)
-                .Request()
-                .PostAsync();
-        foreach(var suggestion in meetingTimeSuggestionsResult.MeetingTimeSuggestions){
-            meetingTimesSuggestions
-            .Add(suggestion.MeetingTimeSlot.Start.DateTime);
+
+        var result = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody, (requestConfiguration) =>
+            {
+                requestConfiguration.Headers.Add("Prefer", "outlook.timezone=\"Pacific Standard Time\"");
+            });
+        @* var meetingTimeSuggestionsResult = await graphClient.Me.FindMeetingTimes.PostAsync(meetingTimeSuggestionsRequestBody); *@
+
+        foreach (var suggestion in result.MeetingTimeSuggestions)
+        {
+            meetSuggestions
+            .Add(new Tuple<string, string>((suggestion.MeetingTimeSlot.Start.DateTime)[12..16], (suggestion.MeetingTimeSlot.End.DateTime)[12..16]));
         }
+
+      
         StateHasChanged();
     }
-   *@
+
 
     @* ---------------------------------------- AI Transcript Function --------------------------- *@
 
@@ -848,59 +700,54 @@
         }
     }
 
-     public string ConvertWebVttStreamToString(Stream? stream)
+    public string ConvertWebVttStreamToString(Stream? stream)
+    {
+        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
         {
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
+            return reader.ReadToEnd();
         }
+    }
 
     protected async Task<string> SummaryHelperFunction(string meetingLink){
-         var originalString = "JoinWebUrl eq '1234'";
+        var originalString = "JoinWebUrl eq '1234'";
         string modifiedLink = originalString.Replace("'1234'", $"'{meetingLink}'");
 
-
-        var me = 
-            await 
-            graphClient
-            .Me
-            .GetAsync();
-
-        var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+        try
         {
-            requestConfiguration
-            .QueryParameters
-            .Filter = modifiedLink;
-        });
+            var me = await graphClient.Me.GetAsync();
 
-        var transcripts2 = 
-            await graphClient
-            .Users[me.Id]
-            .OnlineMeetings[meetingInfo.Value[0].Id]
-            .Transcripts
-            .GetAsync();
+            var meetingInfo = await graphClient.Me.OnlineMeetings.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration
+                .QueryParameters
+                .Filter = modifiedLink;
+            });
 
+            var transcripts2 = await graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts.GetAsync();
 
-        var requestInformation = 
-            graphClient
-            .Users[me.Id]
-            .OnlineMeetings[meetingInfo.Value[0].Id]
-            .Transcripts[transcripts2.Value[0].Id]
-            .Content
-            .ToGetRequestInformation();
-        
-        requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
-        requestInformation.QueryParameters.Add("format", "text/vtt");
-        var content2 = 
-            await graphClient
-            .RequestAdapter
-            .SendPrimitiveAsync<Stream>(requestInformation);
+            var requestInformation = graphClient.Users[me.Id].OnlineMeetings[meetingInfo.Value[0].Id].Transcripts[transcripts2.Value[0].Id]
+                .Content
+                .ToGetRequestInformation();
 
-        var string2 = ConvertWebVttStreamToString(content2);
-        return string2;
-        
+            requestInformation.UrlTemplate += "{?format}"; // Add the format query parameter to the template and query parameter.
+            requestInformation.QueryParameters.Add("format", "text/vtt");
+
+            var transcript_stream = await graphClient.RequestAdapter.SendPrimitiveAsync<Stream>(requestInformation);
+
+            var transcript_content = ConvertWebVttStreamToString(transcript_stream);
+
+            return transcript_content;
+        }
+
+        catch
+        {
+            Console.WriteLine("Unable to get Transcript");
+        }
+
+        return "Unable to get Transcript";
+
     }
+
     protected async void GetContent(string meetingLink)
     {
         OnOpen();
@@ -978,6 +825,7 @@
         overallSummary = string.Join(" ", summaries);
         summaries.Clear();
         summary = overallSummary;
+        Console.WriteLine("Generated AI summary");
 
     }
 
@@ -1011,15 +859,16 @@
     public string fileName = "";
 
 
-     private async Task WriteToOneNote(string meetingLink)
+    private async Task WriteToOneNote(string meetingLink)
     {
 
-        string string2; 
+        string string2;
         string2 = await SummaryHelperFunction(meetingLink);
         await summariseText(string2);
 
         if (summary == "")
         {
+            Console.WriteLine("No summary to write to OneNote");
             noSummary = true;
             return;
         }
@@ -1086,7 +935,8 @@
             };
         var pageResult = await graphClient.RequestAdapter.SendAsync<OnenotePage>(requestInformation, OnenotePage.CreateFromDiscriminatorValue, errorMapping);
         isWriting = false; // Set the flag to indicate that writing to OneNote is complete
-    } 
+        Console.WriteLine("Done");
+    }
 
 
 }
