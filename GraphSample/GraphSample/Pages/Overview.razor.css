@@ -655,12 +655,13 @@ $delete2-red: red;
     margin-left: 10px;
 }
 
-.pChatBar {
+.chatMessageBlock {
     padding: 20px;
     border-radius: 10px;
     border: 1px solid #cdd4d4;
     box-shadow: 0 0 3px rgba(33, 33, 33, .2);
 }
+
 
     .isend {
         width: 40%;

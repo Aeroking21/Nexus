@@ -312,26 +312,47 @@
                             <div class="pChatBarContainer">
                                 @if (currentChat != null)
                                 {
-                                    <div class="pChatBar">
-                                        @foreach (var thisChat in myChatReplies)
-                                        {
-                                            @if (@thisChat?.From?.User?.Id == myID)
+                                    <div class="chatMessageBlock">
+                                        <div class="pChatBar">
+                                            @foreach (var thisChat in myChatReplies)
                                             {
-                                                <div class="isend">
-                                                    <div class="chatname">@thisChat?.From?.User?.DisplayName</div>
-                                                    <div class="chattime">@thisChat?.CreatedDateTime</div>
-                                                    <div class="chatcontent">@((MarkupString)thisChat?.Body?.Content)</div>
-                                                </div>
+                                                @if (@thisChat?.From?.User?.Id == myID)
+                                                {
+                                                    <div class="isend">
+                                                        <div class="chatname">@thisChat?.From?.User?.DisplayName</div>
+                                                        <div class="chattime">@thisChat?.CreatedDateTime</div>
+                                                        <div class="chatcontent">@((MarkupString)thisChat?.Body?.Content)</div>
+                                                    </div>
+                                                }
+                                                else if (@thisChat?.From?.User?.Id != null)
+                                                {
+                                                    <div class="theysend">
+                                                        <div class="chatname">@thisChat?.From?.User?.DisplayName</div>
+                                                        <div class="chattime">@thisChat?.CreatedDateTime</div>
+                                                        <div class="chatcontent">@((MarkupString)thisChat?.Body?.Content)</div>
+                                                    </div>
+                                                }
                                             }
-                                            else if (@thisChat?.From?.User?.Id != null)
-                                            {
-                                                <div class="theysend">
-                                                    <div class="chatname">@thisChat?.From?.User?.DisplayName</div>
-                                                    <div class="chattime">@thisChat?.CreatedDateTime</div>
-                                                    <div class="chatcontent">@((MarkupString)thisChat?.Body?.Content)</div>
-                                                </div>
-                                            }
-                                        }
+                                        </div>
+
+                                        <div class="teamInteract" hidden="@(!newChatMessageBool)">
+
+                                            <FluentTextArea @bind-Value=newChatMessageContent style="width: 95%;" size="large"></FluentTextArea>
+
+                                            <div class="teamMsgInteract">
+                                                <button class="btn2 btn-delete2" @onclick="() => sendChatMessage(false)">
+                                                    <span class="mdi mdi-close mdi-20px"></span>
+                                                    <span class="mdi mdi-close-outline mdi-20px"></span>
+                                                </button>
+
+                                                <button class="btn2 btn-delete2" @onclick="() => newChatMessage(newChatMessageContent)">
+                                                    <span class="mdi mdi-send-outline mdi-20px"></span>
+                                                    <span class="mdi mdi-send mdi-20px"></span>
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                        <span class="mdi mdi-plus-circle" style="color: blue; font-size: 40px;" @onclick="() => sendChatMessage(true)" hidden="@newChatMessageBool"></span>
                                     </div>
                                 }
                             </div>
@@ -465,7 +486,7 @@
             //await getChannels();
             await displayChannelData();
         }
-        else if (page == 2) { await getChats("hi"); }
+        else if (page == 2) { await getChats("hi"); await getChatReplies(); }
         else if (page == 3) { }
         else
         {
@@ -502,7 +523,6 @@
                 if (addresses != "All") { config.QueryParameters.Filter = "(from/emailAddress/address) eq '" + addresses; }
 
                 config.QueryParameters.Select = new string[] { "subject", "sender", "body", "isRead", "bodyPreview" };
-                //config.QueryParameters.Orderby = new string[] { "receivedDateTime desc" };
             });
 
         /*
@@ -565,7 +585,16 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         var teamPage = await graphClient.Me.JoinedTeams.GetAsync();
-        myTeams = teamPage?.Value ?? new List<Team>();
+
+        if (addresses != "All")
+        {
+            var tempTeams = new List<Team>();
+            foreach (var myTeam in teamPage.Value) {
+                if (myTeam.DisplayName.ToLower() == addresses) { tempTeams.Add(myTeam); Console.WriteLine("///////////////////////////////////////"); Console.WriteLine(myTeam.DisplayName); Console.WriteLine("///////////////////////////////////////"); }
+            }
+            myTeams = tempTeams ?? new List<Team>();
+        }
+        else { myTeams = teamPage?.Value ?? new List<Team>(); }
     }
 
     /*
@@ -689,7 +718,7 @@
             },
         };
         var result = await graphClient.Teams[currentTeam.Id].Channels[currentChannel.Id].Messages[currMessage.Id].Replies.PostAsync(requestBody);
-        await refreshContent(1);
+        await refreshContent(2);
     }
 
     /*
@@ -711,8 +740,34 @@
     {
         graphClient = clientFactory.GetAuthenticatedClient();
         var thisChat = await graphClient.Me.Chats[currentChat.Id].Messages.GetAsync();
+        var thisChatTemp = thisChat?.Value;
+        thisChatTemp.Reverse();
 
-        myChatReplies = thisChat?.Value ?? new List<ChatMessage>();
+        myChatReplies = thisChatTemp ?? new List<ChatMessage>();
+    }
+
+    // Create new chat message
+    string? newChatMessageContent;
+    private bool newChatMessageBool { get; set; } = false;
+    private void sendChatMessage(bool change) { newChatMessageBool = change; }
+
+    public async void newChatMessage(string content)
+    {
+        graphClient = clientFactory.GetAuthenticatedClient();
+
+        var requestBody = new ChatMessage
+        {
+            Body = new ItemBody
+            {
+                Content = content,
+            },
+        };
+
+        newChatMessageContent = String.Empty;
+        newChatMessageBool = false;
+
+        var result = await graphClient.Chats[currentChat.Id].Messages.PostAsync(requestBody);
+        await refreshContent(2);
     }
 
     /*
@@ -724,15 +779,6 @@
     /* ASYNCHRONOUSLY GET EVENTs */
     public async Task getCal(string addresses)
     {
-        // Get the user
-        //var user = (await authenticationStateTask).User;
-        //var graphTimeZone = user.GetUserGraphTimeZone();
-        //dateTimeFormat = $"{user.GetUserGraphDateFormat()} {user.GetUserGraphTimeFormat()}";
-
-        // Calculate the start and end of the current week in user's time zone
-        //var startOfWeek = GetUtcStartOfWeekInTimeZone(DateTime.Today, graphTimeZone);
-        //var endOfWeek = startOfWeek.AddDays(7);
-
         graphClient = clientFactory.GetAuthenticatedClient();
 
         /*
@@ -759,6 +805,7 @@
                 config.QueryParameters.Top = 15;
             });
         myEvents.Clear();
+
         var pageIterator =
             PageIterator<Event, EventCollectionResponse>
             .CreatePageIterator(
@@ -781,36 +828,6 @@
         });
         await pageIterator.IterateAsync();
 
-    }
-
-    /*
-    * NEW GROUP ADDED - UPDATE ASYNC
-    */
-    public string mailQuery { get; set; } = "All";
-    public string teamQuery { get; set; } = "All";
-    public string calQuery { get; set; } = "All";
-
-    async void UpdateGroup(ChangeEventArgs args)
-    {
-        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
-        {
-            string searchTerm = args.Value.ToString()!.ToLower();
-            if (searchTerm == "all")
-            {
-                mailQuery = "All";
-                teamQuery = "All";
-                calQuery = "All";
-                await refreshContent(4);
-            }
-            else
-            {
-                mailQuery = searchTerm.Split(';')[0] + "'";
-                teamQuery = searchTerm.Split(';')[1] + "'";
-                calQuery = searchTerm.Split(';')[2] + "'";
-
-                await refreshContent(4);
-            }
-        }
     }
 
     /*
@@ -916,6 +933,40 @@
     }
 
     /*
+    * NEW GROUP ADDED - UPDATE ASYNC
+    */
+    public string mailQuery { get; set; } = "All";
+    public string teamQuery { get; set; } = "All";
+    public string calQuery { get; set; } = "All";
+
+    async void UpdateGroup(ChangeEventArgs args)
+    {
+        if (args is not null && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+        {
+            string searchTerm = args.Value.ToString()!.ToLower();
+            if (searchTerm == "all")
+            {
+                mailQuery = "All";
+                teamQuery = "All";
+                calQuery = "All";
+                await refreshContent(4);
+            }
+            else
+            {
+                mailQuery = searchTerm.Split(';')[0] + "'";
+                teamQuery = searchTerm.Split(';')[1];
+                calQuery = searchTerm.Split(';')[2] + "'";
+
+                Console.WriteLine("mailQuery " + mailQuery);
+                Console.WriteLine("teamQuery " + teamQuery);
+                Console.WriteLine("calQuery " + calQuery);
+
+                await refreshContent(4);
+            }
+        }
+    }
+
+    /*
     * CREATE LOCAL CLASS TO STORE GROUPS.
     * ALSO SEND TO API MONGO DB
     */
@@ -930,7 +981,9 @@
 
     string? placename { get; set; } = string.Empty;
     string? selectedGroupValue;
-    private List<GroupItem> myGroups = new();
+    private List<GroupItem> myGroups = new() {
+        { new GroupItem { Name = "ikd", mailName = "ikd@7qp7mb.onmicrosoft.com", teamName = "Mark 8 Project Team", calName = "All" } }
+    };
 
 
     /*
@@ -947,34 +1000,92 @@
 
     List<Option<string>> mailOptions = new()
     {
-        { new Option<string> { Value = "1", Text = "One" } },
-        { new Option<string> { Value = "2", Text = "Two"} },
-        { new Option<string> { Value = "3", Text = "Three" } }
-
+        { new Option<string> { Value = "AdeleV@7qp7mb.onmicrosoft.com", Text = "AdeleV@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "AlexW@7qp7mb.onmicrosoft.com", Text = "AlexW@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "ajp20@7qp7mb.onmicrosoft.com", Text = "ajp20@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "brendon@7qp7mb.onmicrosoft.com", Text = "brendon@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "ccl19@7qp7mb.onmicrosoft.com", Text = "ccl19@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "DiegoS@7qp7mb.onmicrosoft.com", Text = "DiegoS@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "extraadmin@7qp7mb.onmicrosoft.com", Text = "extraadmin@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "GradyA@7qp7mb.onmicrosoft.com", Text = "GradyA@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "HenriettaM@7qp7mb.onmicrosoft.com", Text = "HenriettaM@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "ikd@7qp7mb.onmicrosoft.com", Text = "ikd@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "IsaiahL@7qp7mb.onmicrosoft.com", Text = "IsaiahL@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "JohannaL@7qp7mb.onmicrosoft.com", Text = "JohannaL@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "JoniS@7qp7mb.onmicrosoft.com", Text = "JoniS@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "LeeG@7qp7mb.onmicrosoft.com", Text = "LeeG@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "LidiaH@7qp7mb.onmicrosoft.com", Text = "LidiaH@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "LynneR@7qp7mb.onmicrosoft.com", Text = "LynneR@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "maha@7qp7mb.onmicrosoft.com", Text = "maha@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "MeganB@7qp7mb.onmicrosoft.com", Text = "MeganB@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "MiriamG@7qp7mb.onmicrosoft.com", Text = "MiriamG@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "NestorW@7qp7mb.onmicrosoft.com", Text = "NestorW@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "PattiF@7qp7mb.onmicrosoft.com", Text = "PattiF@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "PradeepG@7qp7mb.onmicrosoft.com", Text = "PradeepG@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "sarimbaig@7qp7mb.onmicrosoft.com", Text = "sarimbaig@7qp7mb.onmicrosoft.com"} }
     };
 
     List<Option<string>> teamOptions = new()
     {
-        { new Option<string> { Value = "1", Text = "One" } },
-        { new Option<string> { Value = "2", Text = "Two"} },
-        { new Option<string> { Value = "3", Text = "Three" } }
-
+        { new Option<string> { Value = "Digital Initiative Public Relations", Text = "Digital Initiative Public Relations" } },
+        { new Option<string> { Value = "Mark 8 Project Team", Text = "Mark 8 Project Team"} },
+        { new Option<string> { Value = "MSFT", Text = "MSFT" } },
+        { new Option<string> { Value = "MSFT1", Text = "MSFT1"} },
+        { new Option<string> { Value = "MSFT2", Text = "MSFT2"} },
+        { new Option<string> { Value = "MSFT3", Text = "MSFT3"} },
+        { new Option<string> { Value = "Project Alpha", Text = "Project Alpha"} },
+        { new Option<string> { Value = "Retail", Text = "Retail"} },
+        { new Option<string> { Value = "Sales and Marketing", Text = "Sales and Marketing"} },
+        { new Option<string> { Value = "Sample Site Team", Text = "Sample Site Team"} },
+        { new Option<string> { Value = "Test", Text = "Test"} },
+        { new Option<string> { Value = "U.S. Sales", Text = "U.S. Sales"} }
     };
 
     List<Option<string>> calOptions = new()
     {
-        { new Option<string> { Value = "1", Text = "One" } },
-        { new Option<string> { Value = "2", Text = "Two"} },
-        { new Option<string> { Value = "3", Text = "Three" } }
-
+        { new Option<string> { Value = "AdeleV@7qp7mb.onmicrosoft.com", Text = "AdeleV@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "AlexW@7qp7mb.onmicrosoft.com", Text = "AlexW@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "ajp20@7qp7mb.onmicrosoft.com", Text = "ajp20@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "brendon@7qp7mb.onmicrosoft.com", Text = "brendon@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "ccl19@7qp7mb.onmicrosoft.com", Text = "ccl19@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "DiegoS@7qp7mb.onmicrosoft.com", Text = "DiegoS@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "extraadmin@7qp7mb.onmicrosoft.com", Text = "extraadmin@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "GradyA@7qp7mb.onmicrosoft.com", Text = "GradyA@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "HenriettaM@7qp7mb.onmicrosoft.com", Text = "HenriettaM@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "ikd@7qp7mb.onmicrosoft.com", Text = "ikd@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "IsaiahL@7qp7mb.onmicrosoft.com", Text = "IsaiahL@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "JohannaL@7qp7mb.onmicrosoft.com", Text = "JohannaL@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "JoniS@7qp7mb.onmicrosoft.com", Text = "JoniS@7qp7mb.onmicrosoft.com" } },
+        { new Option<string> { Value = "LeeG@7qp7mb.onmicrosoft.com", Text = "LeeG@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "LidiaH@7qp7mb.onmicrosoft.com", Text = "LidiaH@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "LynneR@7qp7mb.onmicrosoft.com", Text = "LynneR@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "maha@7qp7mb.onmicrosoft.com", Text = "maha@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "MeganB@7qp7mb.onmicrosoft.com", Text = "MeganB@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "MiriamG@7qp7mb.onmicrosoft.com", Text = "MiriamG@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "NestorW@7qp7mb.onmicrosoft.com", Text = "NestorW@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "PattiF@7qp7mb.onmicrosoft.com", Text = "PattiF@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "PradeepG@7qp7mb.onmicrosoft.com", Text = "PradeepG@7qp7mb.onmicrosoft.com"} },
+        { new Option<string> { Value = "sarimbaig@7qp7mb.onmicrosoft.com", Text = "sarimbaig@7qp7mb.onmicrosoft.com"} }
     };
 
     void addToGroup(string m, string t, string c)
     {
-        if (!string.IsNullOrWhiteSpace(placename) && !string.IsNullOrWhiteSpace(m) && !string.IsNullOrWhiteSpace(t) && !string.IsNullOrWhiteSpace(c))
+        if(m == "") { m = "All"; };
+        if(t == "") { t = "All"; };
+        if (c == "") { c = "All"; };
+
+        if (!string.IsNullOrWhiteSpace(placename))
         {
             myGroups.Add(new GroupItem { Name = placename, mailName = m, teamName = t, calName = c });
         }
+
+        placename = String.Empty;
+        selectedCalOption = default;
+        calValue = String.Empty;
+        selectedMailOption = default!;
+        mailValue = String.Empty;
+        selectedTeamOption = default!;
+        teamValue = String.Empty;
     }
 
 }
