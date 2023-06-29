@@ -758,7 +758,7 @@
                 config.QueryParameters.EndDateTime = "2023-06-30T19:00:00-08:00";
                 config.QueryParameters.Top = 15;
             });
-
+        myEvents.Clear();
         var pageIterator =
             PageIterator<Event, EventCollectionResponse>
             .CreatePageIterator(
@@ -768,7 +768,6 @@
         // the collection
         (msg) =>
         {
-            Console.WriteLine(msg.Subject);
             myEvents.Add(msg);
             return true;
         },
