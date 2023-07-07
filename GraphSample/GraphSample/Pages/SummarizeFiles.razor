@@ -288,8 +288,6 @@
 
     // Event handler for the "Summarise" button click
     protected async Task SummariseText(string content){
-
-        // Perform summarisation until the overall summary is less than 3000 characters
         var summaries = new List<string>();
         var overallSummary = "";
         Console.WriteLine("Inside ai: " + content);
@@ -373,45 +371,37 @@
         var document = new GcPdfDocument();
         document.Load(stream);
         var text = document.GetText();
-
         return text;
     }
 
     private string ExtractTextFromWord(Stream stream)
     {
         var text = "";
-
         using (var document = WordprocessingDocument.Open(stream, false))
         {
             var body = document.MainDocumentPart.Document.Body;
             text = body.InnerText;
         }
-
         return text;
     }
 
     private string ExtractTextFromPowerPoint(Stream stream)
     {
         var text = "";
-
         using (var presentation = PresentationDocument.Open(stream, false))
         {
             var slideText = "";
-
             foreach (var slidePart in presentation.PresentationPart.SlideParts)
             {
                 var slide = slidePart.Slide;
                 var paragraphs = slide.Descendants<DocumentFormat.OpenXml.Drawing.Paragraph>();
-
                 foreach (var paragraph in paragraphs)
                 {
                     slideText += paragraph.InnerText + " ";
                 }
             }
-
             text = slideText.Trim();
         }
-
         return text;
     }
 
